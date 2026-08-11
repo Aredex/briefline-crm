@@ -1,0 +1,36 @@
+// Canonical error codes — shared catalogue (openapi-and-errors.md §3).
+//
+// Exceptions carry { code, detail, errors? } as their response object; the
+// global ProblemDetailsFilter (API-004) converts them into RFC 9457 documents.
+import type { FieldError } from '../dto/problem-detail.dto'
+
+export const ErrorCodes = {
+  INVALID_CREDENTIALS: 'INVALID_CREDENTIALS',
+  TOKEN_INVALID: 'TOKEN_INVALID',
+  TOKEN_EXPIRED: 'TOKEN_EXPIRED',
+  INACTIVE_USER: 'INACTIVE_USER',
+  CSRF_INVALID: 'CSRF_INVALID',
+  RATE_LIMITED: 'RATE_LIMITED',
+  VALIDATION_ERROR: 'VALIDATION_ERROR',
+  EMAIL_ALREADY_EXISTS: 'EMAIL_ALREADY_EXISTS',
+  USER_NOT_FOUND: 'USER_NOT_FOUND',
+  CLIENT_NOT_FOUND: 'CLIENT_NOT_FOUND',
+  CLIENT_ARCHIVED: 'CLIENT_ARCHIVED',
+  CANNOT_ASSIGN_ARCHIVED_CLIENT: 'CANNOT_ASSIGN_ARCHIVED_CLIENT',
+  LAST_ADMIN: 'LAST_ADMIN',
+  CONCURRENT_MODIFICATION: 'CONCURRENT_MODIFICATION',
+  // PH-06 (TASK-API-001..008): task + dashboard error catalogue (§3.6).
+  TASK_NOT_FOUND: 'TASK_NOT_FOUND',
+  STALE_VERSION: 'STALE_VERSION',
+  TASK_ARCHIVED: 'TASK_ARCHIVED',
+  ASSIGNEE_REQUIRED: 'ASSIGNEE_REQUIRED',
+  BLOCKED_REASON_REQUIRED: 'BLOCKED_REASON_REQUIRED',
+  INACTIVE_ASSIGNEE: 'INACTIVE_ASSIGNEE',
+  FORBIDDEN: 'FORBIDDEN',
+  NOT_FOUND: 'NOT_FOUND',
+  INTERNAL_ERROR: 'INTERNAL_ERROR',
+} as const
+
+export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes]
+
+export type { FieldError }

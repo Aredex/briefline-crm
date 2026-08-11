@@ -1,0 +1,211 @@
+/*
+ * Task card (TASK-FE-002) — compact card with badges, meta and the permanent
+ * "Move to…" action. 44px interactive targets (--touch-target), focus visible.
+ */
+
+.task-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--duration-fast) var(--ease-standard);
+}
+
+.task-card--dragging {
+  opacity: 0.55;
+  box-shadow: var(--shadow-lg);
+}
+
+/* Drag handle — focusable button (keyboard-first, TASK-FE-011).
+   touch-action: none keeps the pointer sensor from hijacking scroll/tap. */
+.task-card__handle {
+  position: absolute;
+  top: var(--space-3);
+  left: var(--space-1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-gray-400);
+  cursor: grab;
+  touch-action: none;
+}
+
+.task-card__handle:hover {
+  background: var(--color-gray-100);
+  color: var(--color-gray-600);
+}
+
+.task-card__handle:active {
+  cursor: grabbing;
+}
+
+.task-card__handle:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 1px;
+}
+
+.task-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.task-card__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.task-card__title {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: var(--leading-tight);
+}
+
+.task-card__title a {
+  color: var(--color-gray-900);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+}
+
+.task-card__title a:hover {
+  text-decoration: underline;
+  color: var(--color-primary-700);
+}
+
+.task-card__title a:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+.task-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-gray-500);
+}
+
+.task-card__client {
+  color: var(--color-gray-600);
+}
+
+.task-card__assignee,
+.task-card__due {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+/* Overdue is NEVER color-only (AC-08): red text + clock icon + the word. */
+.task-card__due--overdue {
+  color: var(--color-danger-600);
+  font-weight: 600;
+}
+
+.task-card__footer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* ---------- "Move to…" menu (TASK-FE-008) ---------- */
+
+.move-menu {
+  position: relative;
+}
+
+.move-menu__trigger {
+  min-height: var(--touch-target);
+}
+
+.move-menu__dropdown {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 200px;
+  padding: var(--space-2);
+  background: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+}
+
+.move-menu__current {
+  padding: var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-gray-500);
+}
+
+.move-menu__hint {
+  margin: 0;
+  padding: var(--space-1) var(--space-2) var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-warning-700);
+}
+
+.move-menu__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: var(--touch-target);
+  padding: var(--space-2);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font-size: var(--text-sm);
+  text-align: left;
+  color: var(--color-gray-800);
+  cursor: pointer;
+}
+
+.move-menu__item:hover:not(:disabled) {
+  background: var(--color-gray-100);
+}
+
+.move-menu__item:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: -2px;
+}
+
+.move-menu__item:disabled {
+  color: var(--color-gray-400);
+  cursor: not-allowed;
+}
+
+.move-menu__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.move-menu__dot--active {
+  background: var(--color-primary-600);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .task-card {
+    transition: none;
+  }
+}

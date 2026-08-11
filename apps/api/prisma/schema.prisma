@@ -1,0 +1,169 @@
+// schema.prisma
+// Location: apps/api/prisma/schema.prisma (PH-02 workspace layout, ADR-005).
+// Generated client output target: packages/api-contract/src/generated/prisma
+// (DATA-001 spec). If the schema lives at a different depth, adjust the
+// relative path depth but keep the destination package.
+// Prisma 7.9.1: generator "prisma-client" is the Rust-free client; the
+// @prisma/adapter-pg driver adapter is REQUIRED at runtime and is configured
+// in code (PrismaService), not here. previewFeatures is empty in v7 — no
+// v5/v6 boilerplate (prisma-client-js, driverAdapters).
+
+generator client {
+  provider        = "prisma-client"
+  output          = "../../../packages/api-contract/src/generated/prisma"
+  previewFeatures = []
+}
+
+// Prisma 7 (P1012): datasource `url`/`directUrl` no longer live in the schema.
+// The runtime connection is the driver adapter (PrismaService, DATABASE_URL
+// pooled); the CLI connection lives in prisma.config.ts (DIRECT_URL direct).
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum UserRole {
+  ADMIN
+  MEMBER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum ClientStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum TaskStatus {
+  BACKLOG
+  PENDING
+  IN_PROGRESS
+  BLOCKED
+  COMPLETED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TaskChangeEvent {
+  CREATED
+  TITLE_CHANGED
+  STATUS_CHANGED
+  PRIORITY_CHANGED
+  ASSIGNEE_CHANGED
+  DUE_DATE_CHANGED
+  ARCHIVED
+  REOPENED
+}
+
+// ---------------------------------------------------------------------------
+// Models
+// ---------------------------------------------------------------------------
+
+// User — PRD §11; ADR-001 (auth), ADR-002 (normalized email).
+// passwordHash is never returned by the API (ADR-001.4, D-19).
+model User {
+  id           String     @id @default(uuid()) @db.Uuid
+  email        String     @unique @db.VarChar(254) // normalized: trim().toLowerCase() (ADR-002)
+  name         String     @db.VarChar(100)
+  role         UserRole   @default(MEMBER)
+  status       UserStatus @default(ACTIVE)
+  passwordHash String     @db.VarChar(255) // Argon2id PHC string (NFR-SEC-001)
+  lastLoginAt  DateTime?  @db.Timestamptz(6) // set only at login (AUTH-001)
+  createdAt    DateTime   @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime   @updatedAt @db.Timestamptz(6)
+
+  createdClients Client[]     @relation("ClientCreator")
+  createdTasks   Task[]       @relation("TaskCreator")
+  assignedTasks  Task[]       @relation("TaskAssignee")
+  archivedTasks  Task[]       @relation("TaskArchiver")
+  taskChanges    TaskChange[] @relation("TaskChangeActor")
+}
+
+// Client — PRD §11; BR-005/006; FR-CLI-001..006.
+model Client {
+  id           String       @id @default(uuid()) @db.Uuid
+  companyName  String       @db.VarChar(160)
+  industry     String?      @db.VarChar(80)
+  contactName  String       @db.VarChar(100)
+  contactEmail String       @db.VarChar(254) // normalized (ADR-002 invariant, D-16)
+  phone        String?      @db.VarChar(32)
+  status       ClientStatus @default(ACTIVE)
+  notes        String?      @db.VarChar(2000)
+  createdById  String       @db.Uuid
+  createdAt    DateTime     @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime     @updatedAt @db.Timestamptz(6)
+
+  creator User  @relation("ClientCreator", fields: [createdById], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  tasks   Task[]
+
+  @@index([status])        // FR-CLI-001 status filter
+  @@index([companyName])   // FR-CLI-001 search anchor (see D-15)
+  @@index([createdById])   // FK integrity (AP-07)
+}
+
+// Task — PRD §11-12; BR-007..016; ADR-003 (dueDate), ADR-004 (version).
+// Row-local CHECK constraints (version >= 1; blocked reason rules) are added
+// manually to the initial migration — Prisma schema cannot express CHECKs.
+// See the initial migration (0_init/migration.sql) for the exact SQL.
+model Task {
+  id            String       @id @default(uuid()) @db.Uuid
+  title         String       @db.VarChar(160)
+  description   String?      @db.VarChar(5000)
+  status        TaskStatus   @default(BACKLOG)
+  priority      TaskPriority @default(MEDIUM)
+  assigneeId    String?      @db.Uuid // required when status != BACKLOG (BR-009, app-enforced, D-11)
+  clientId      String?      @db.Uuid // archived-client association rejected by app (FR-CLI-006)
+  dueDate       DateTime?    @db.Date // date-only deadline (ADR-003, BR-020)
+  blockedReason String?      @db.VarChar(500) // required iff BLOCKED (BR-010); cleared on unblock (BR-011)
+  creatorId     String       @db.Uuid
+  version       Int          @default(1) // optimistic lock (ADR-004, DEC-034); CHECK version >= 1
+  archivedAt    DateTime?    @db.Timestamptz(6) // archived marker (BR-016, D-18)
+  archivedById  String?      @db.Uuid
+  createdAt     DateTime     @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @db.Timestamptz(6)
+
+  assignee User?     @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  client   Client?   @relation(fields: [clientId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  creator  User      @relation("TaskCreator", fields: [creatorId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  archiver User?     @relation("TaskArchiver", fields: [archivedById], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  changes  TaskChange[]
+
+  @@index([status, priority, dueDate, updatedAt]) // board slice + DEC-035 sort (D-14)
+  @@index([assigneeId])    // My Tasks (FR-DASH-002) + FK
+  @@index([creatorId])     // creator-scope lookups (BR-013) + FK
+  @@index([clientId])      // client detail related tasks (FR-CLI-005) + FK
+  @@index([archivedAt])    // admin archived view (FR-TASK-011, BR-016)
+  @@index([archivedById])  // FK integrity (AP-07)
+}
+
+// TaskChange — PRD §11; BR-017/018; FR-HIST-001..004.
+// Append-only: no update/delete routes (TASK-API-007). History survives task
+// changes; taskId FK is Restrict — never Cascade (PH-03 guard, D-6).
+model TaskChange {
+  id        String          @id @default(uuid()) @db.Uuid
+  taskId    String          @db.Uuid
+  actorId   String          @db.Uuid
+  event     TaskChangeEvent
+  field     String?         @db.VarChar(50) // changed field name (D-7)
+  oldValue  String?         @db.VarChar(2000) // JSON-serialized (D-7, D-9)
+  newValue  String?         @db.VarChar(2000) // JSON-serialized (D-7, D-9)
+  createdAt DateTime        @default(now()) @db.Timestamptz(6)
+
+  task  Task @relation(fields: [taskId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  actor User @relation("TaskChangeActor", fields: [actorId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([taskId, createdAt]) // history timeline (FR-HIST-001/003) + taskId FK
+  @@index([actorId])           // FK integrity (AP-07)
+}

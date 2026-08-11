@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+*.tsbuildinfo
+
+# Environment — secrets are NEVER committed (AP-04, AP-45)
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Test output
+coverage/
+test-results/
+playwright-report/
+playwright/.cache/
+
+# NOTE: packages/api-contract/src/generated/api-types.ts is intentionally NOT
+# ignored — generated contract types are checked in (ADR-005, REP-006) and
+# regeneration must produce no diff.
+
+# OS
+.DS_Store
+
+# Editors
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Misc
+.tmp/
+*.tgz

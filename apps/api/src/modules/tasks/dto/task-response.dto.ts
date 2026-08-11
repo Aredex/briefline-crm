@@ -1,0 +1,89 @@
+// Task response shapes — TASK-API-001..010 (PH-06).
+//
+// The API NEVER exposes the Prisma Task/TaskChange models directly — every
+// response goes through the mapper (tasks.mapper.ts). The Prisma model carries
+// raw FK columns (assigneeId, creatorId, archivedById); the API exposes the
+// resolved `assignee`/`creator`/`archivedBy` user refs and `client` refs.
+import type {
+  TaskChangeEvent,
+  TaskPriority,
+  TaskStatus,
+} from '../../../../../../packages/api-contract/src/generated/prisma/client'
+
+export interface UserRef {
+  id: string
+  name: string
+}
+
+export interface ClientRef {
+  id: string
+  companyName: string
+}
+
+export interface PageMeta {
+  page: number
+  limit: number
+  total: number
+}
+
+/** Compact task card (board, lists, my tasks) — no description or history. */
+export interface TaskSummary {
+  id: string
+  title: string
+  status: TaskStatus
+  priority: TaskPriority
+  assignee: UserRef | null
+  client: ClientRef | null
+  /** Date-only deadline, serialized 'YYYY-MM-DD' (ADR-003). */
+  dueDate: string | null
+  version: number
+  updatedAt: Date
+}
+
+/** Full task representation. */
+export interface TaskResponse {
+  id: string
+  title: string
+  description: string | null
+  status: TaskStatus
+  priority: TaskPriority
+  assignee: UserRef | null
+  client: ClientRef | null
+  dueDate: string | null
+  blockedReason: string | null
+  creator: UserRef
+  version: number
+  archivedAt: Date | null
+  archivedBy: UserRef | null
+  createdAt: Date
+  updatedAt: Date
+}
+
+/** Append-only history entry; version = task version after this mutation (D-5). */
+export interface TaskChangeResponse {
+  id: string
+  taskId: string
+  version: number
+  event: TaskChangeEvent
+  field: string | null
+  oldValue: string | null
+  newValue: string | null
+  actor: UserRef
+  createdAt: Date
+}
+
+/** GET /tasks/board — separate backlog plus the four active columns (DEC-035). */
+export interface BoardData {
+  backlog: TaskSummary[]
+  columns: {
+    PENDING: TaskSummary[]
+    IN_PROGRESS: TaskSummary[]
+    BLOCKED: TaskSummary[]
+    COMPLETED: TaskSummary[]
+  }
+}
+
+export interface BoardResponse {
+  data: BoardData
+  meta: { total: number }
+}

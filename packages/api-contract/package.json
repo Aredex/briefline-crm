@@ -1,0 +1,21 @@
+{
+  "name": "@briefline/api-contract",
+  "version": "1.0.0",
+  "private": true,
+  "description": "OpenAPI v1 source of truth and generated TypeScript types — integration boundary (ADR-005)",
+  "exports": {
+    ".": "./src/generated/api-types.ts"
+  },
+  "scripts": {
+    "generate": "openapi-typescript openapi.yaml -o src/generated/api-types.ts",
+    "validate": "openapi-typescript openapi.yaml -o src/generated/api-types.ts --check",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "openapi-typescript": "7.13.0"
+  },
+  "dependencies": {
+    "@prisma/client": "7.9.1"
+  }
+}

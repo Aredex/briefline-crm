@@ -1,0 +1,186 @@
+# CI-001 — Initial PR CI (PH-02)
+#
+# Gates = verify_cmd del protocolo de desarrollo:
+#   backend  pnpm typecheck && pnpm test && pnpm test:e2e
+#   frontend pnpm typecheck && pnpm test
+#
+# Pines obligatorios (technology-matrix.md / CR-06):
+#   - runner ubuntu-24.04 (NUNCA ubuntu-latest)
+#   - Node 24 (24.19.0 LTS actual; Node 20 se retira del runner el 2026-09-16)
+#   - pnpm 10 (pnpm/action-setup@v4, version: 10)
+#   - postgres:17-alpine (mismo major que Neon en producción)
+#
+# Instalación: pnpm install --frozen-lockfile (nunca regenera pnpm-lock.yaml).
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Lint, Typecheck & Test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: briefline
+          POSTGRES_PASSWORD: briefline-test
+          POSTGRES_DB: briefline_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter @briefline/api prisma:generate
+
+      # prisma migrate deploy ANTES de los tests de integración (PH-03 DB-008):
+      # valida que la migración inicial funcione contra una BD vacía.
+      # DIRECT_URL se define porque el datasource declara directUrl = env("DIRECT_URL")
+      # (data-model.md §2); en local/CI ambas apuntan al service container.
+      - name: Run migrations
+        run: pnpm --filter @briefline/api prisma:migrate:deploy
+        env:
+          DATABASE_URL: postgresql://briefline:briefline-test@localhost:5432/briefline_test
+          DIRECT_URL: postgresql://briefline:briefline-test@localhost:5432/briefline_test
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: TypeCheck
+        run: pnpm typecheck
+
+      - name: Unit & Integration Tests
+        run: pnpm test
+        env:
+          DATABASE_URL: postgresql://briefline:briefline-test@localhost:5432/briefline_test
+
+      - name: Build
+        run: pnpm build
+
+  e2e:
+    name: E2E Tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    needs: quality # solo corre si quality pasa (ahorra minutos de la cuota free)
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: briefline
+          POSTGRES_PASSWORD: briefline-test
+          POSTGRES_DB: briefline_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter @briefline/api prisma:generate
+
+      - name: Run migrations
+        run: pnpm --filter @briefline/api prisma:migrate:deploy
+        env:
+          DATABASE_URL: postgresql://briefline:briefline-test@localhost:5432/briefline_test
+          DIRECT_URL: postgresql://briefline:briefline-test@localhost:5432/briefline_test
+
+      # Cache de browsers Playwright (~/.cache/ms-playwright): la key se
+      # invalida con cada bump del lockfile (qa-tooling-verification.md §CI).
+      - name: Cache Playwright browsers
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/pnpm-lock.yaml') }}
+
+      # Requisito: el script playwright:install de @briefline/web debe instalar
+      # con --with-deps (browsers + dependencias del sistema; technology-matrix.md).
+      - name: Install Playwright browsers
+        run: pnpm --filter @briefline/web playwright:install
+
+      # Playwright arranca la app vía webServer (build + preview en puerto 4173,
+      # qa-tooling-verification.md §Playwright Configuration).
+      - name: Run E2E tests
+        run: pnpm test:e2e
+        env:
+          DATABASE_URL: postgresql://briefline:briefline-test@localhost:5432/briefline_test
+          JWT_SECRET: ci-test-jwt-secret
+          CSRF_SECRET: ci-test-csrf-secret
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14

@@ -1,0 +1,153 @@
+/*
+ * Task board layout (TASK-FE-001/004). Desktop ≥1024px: four-column grid.
+ * Tablet/mobile: the same groups stack vertically (grouped list by status) —
+ * never a page-level horizontal scroll (TASK-FE-004, §4 of the wireframes).
+ */
+
+.task-board {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* ---------- Backlog (collapsible) ---------- */
+
+.task-backlog {
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-md);
+  background: var(--color-white);
+}
+
+.task-backlog__toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: var(--touch-target);
+  padding: var(--space-3) var(--space-4);
+  border: none;
+  background: transparent;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-gray-800);
+  cursor: pointer;
+  border-radius: var(--radius-md);
+}
+
+.task-backlog__toggle:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: -2px;
+}
+
+.task-backlog__chevron {
+  transition: transform var(--duration-fast) var(--ease-standard);
+}
+
+.task-backlog__chevron.is-open {
+  transform: rotate(180deg);
+}
+
+.task-backlog__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--color-gray-100);
+  font-size: var(--text-xs);
+  color: var(--color-gray-600);
+}
+
+/* Internal scroll, capped height — never page scroll (§2.3). */
+.task-backlog__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-height: 40vh;
+  overflow-y: auto;
+  padding: 0 var(--space-4) var(--space-4);
+}
+
+.task-backlog__empty {
+  margin: 0;
+  padding: var(--space-2) 0;
+  font-size: var(--text-sm);
+  color: var(--color-gray-500);
+}
+
+/* ---------- Active columns ---------- */
+
+.task-board__columns {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+  align-items: start;
+}
+
+@media (min-width: 1024px) {
+  .task-board__columns {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.task-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  border-radius: var(--radius-md);
+}
+
+/* Drop target feedback while dragging (not color-only: outline + background). */
+.task-column--drop {
+  outline: 2px dashed var(--color-primary-600);
+  outline-offset: 4px;
+  background: var(--color-primary-50);
+}
+
+.task-column__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0;
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-gray-200);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-gray-800);
+}
+
+.task-column__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--color-gray-100);
+  font-size: var(--text-xs);
+  color: var(--color-gray-600);
+}
+
+.task-column__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-height: 48px; /* keeps a visible drop zone when empty */
+}
+
+.task-column__empty {
+  margin: 0;
+  padding: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--color-gray-400);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .task-backlog__chevron {
+    transition: none;
+  }
+}

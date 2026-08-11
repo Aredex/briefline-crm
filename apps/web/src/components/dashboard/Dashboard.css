@@ -1,0 +1,256 @@
+/*
+ * Dashboard (DASH-001/002/003) — KPI grid, My Tasks, Recent activity.
+ * Wireframe §2.2: KPI grid auto-fits 180px cards; sections use the 4px
+ * spacing scale and semantic tokens (ui.css .card/skeleton reuse).
+ */
+
+/* ---------- KPI cards ---------- */
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.kpi-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  background: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  color: inherit;
+  text-decoration: none;
+  transition:
+    box-shadow var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard);
+}
+
+.kpi-card:hover,
+.kpi-card:focus-visible {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.kpi-card:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+/* Icon squircle — 20px glyph on a tinted surface per semantic tone. */
+.kpi-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-2);
+}
+
+.kpi-card--primary .kpi-card__icon {
+  color: var(--color-info-700);
+  background: var(--color-info-50);
+}
+.kpi-card--warning .kpi-card__icon {
+  color: var(--color-warning-700);
+  background: var(--color-warning-50);
+}
+.kpi-card--danger .kpi-card__icon {
+  color: var(--color-error-700);
+  background: var(--color-error-50);
+}
+.kpi-card--success .kpi-card__icon {
+  color: var(--color-success-700);
+  background: var(--color-success-50);
+}
+
+.kpi-card__value {
+  font-size: var(--text-3xl);
+  font-weight: 700;
+  line-height: var(--leading-tight);
+  font-variant-numeric: tabular-nums;
+}
+
+.kpi-card__skeleton {
+  width: 3.5ch;
+  height: var(--text-3xl);
+}
+
+.kpi-card__label {
+  font-size: var(--text-sm);
+  color: var(--color-gray-600);
+}
+
+/* ---------- Sections ---------- */
+
+.dashboard-sections {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+}
+
+@media (min-width: var(--breakpoint-lg)) {
+  .dashboard-sections {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+}
+
+.dashboard-section {
+  background: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-5);
+}
+
+.dashboard-section__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.dashboard-section__title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.dashboard-section__link {
+  font-size: var(--text-sm);
+  color: var(--color-primary-700);
+  text-decoration: none;
+}
+
+.dashboard-section__link:hover,
+.dashboard-section__link:focus-visible {
+  text-decoration: underline;
+}
+
+.dashboard-section__link:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ---------- My Tasks ---------- */
+
+.my-tasks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.my-tasks__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-gray-100);
+}
+
+.my-tasks__item:last-child {
+  border-bottom: none;
+}
+
+.my-tasks__title {
+  color: var(--color-gray-900);
+  font-weight: 500;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.my-tasks__title:hover,
+.my-tasks__title:focus-visible {
+  color: var(--color-primary-700);
+  text-decoration: underline;
+}
+
+.my-tasks__title:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.my-tasks__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.my-tasks__due {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--color-gray-600);
+}
+
+.my-tasks__due--overdue {
+  color: var(--color-error-700);
+  font-weight: 600;
+}
+
+/* ---------- Recent activity ---------- */
+
+.recent-activity {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.recent-activity__item {
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-gray-100);
+}
+
+.recent-activity__item:last-child {
+  border-bottom: none;
+}
+
+.recent-activity__line {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-gray-600);
+}
+
+.recent-activity__actor {
+  font-weight: 600;
+  color: var(--color-gray-900);
+}
+
+.recent-activity__task {
+  color: var(--color-primary-700);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.recent-activity__task:hover,
+.recent-activity__task:focus-visible {
+  text-decoration: underline;
+}
+
+.recent-activity__task:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.recent-activity__time {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--color-gray-600);
+}

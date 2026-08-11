@@ -1,0 +1,105 @@
+/*
+ * Design tokens — Briefline CRM web
+ * Source of truth: .claude/plans/ux-wireframes-tokens.md §3 (tokens) and §5 (a11y contract).
+ * Scale: 4px grid. All colors meet WCAG AA on their intended surfaces.
+ */
+
+:root {
+  /* Typography — system stack, no webfonts (fast, no FOUT) */
+  --font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --text-xs: 0.75rem; /* 12px */
+  --text-sm: 0.875rem; /* 14px */
+  --text-base: 1rem; /* 16px */
+  --text-lg: 1.125rem; /* 18px */
+  --text-xl: 1.25rem; /* 20px */
+  --text-2xl: 1.5rem; /* 24px */
+  --text-3xl: 1.875rem; /* 30px */
+  --text-4xl: 2.25rem; /* 36px */
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+
+  /* Brand */
+  --color-white: #ffffff;
+  --color-surface: #f9fafb;
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-600: #2563eb; /* fills */
+  --color-primary-700: #1d4ed8; /* text on light */
+  --color-focus-ring: #2563eb;
+
+  /* Neutrals */
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+
+  /* Semantic — success */
+  --color-success-50: #f0fdf4;
+  --color-success-700: #15803d;
+  --color-success-border: #bbf7d0;
+
+  /* Semantic — warning */
+  --color-warning-50: #fffbeb;
+  --color-warning-700: #b45309;
+  --color-warning-border: #fde68a;
+
+  /* Semantic — error */
+  --color-error-50: #fef2f2;
+  --color-error-700: #b91c1c;
+  --color-error-border: #fecaca;
+  --color-danger-600: #dc2626;
+
+  /* Semantic — info */
+  --color-info-50: #eff6ff;
+  --color-info-700: #1d4ed8;
+  --color-info-border: #bfdbfe;
+
+  /* Priority — HIGH (danger-adjacent) */
+  --color-high-50: #fff7ed;
+  --color-high-700: #c2410c;
+  --color-high-border: #fed7aa;
+
+  /* Spacing — 4px scale */
+  --space-1: 0.25rem; /* 4px */
+  --space-2: 0.5rem; /* 8px */
+  --space-3: 0.75rem; /* 12px */
+  --space-4: 1rem; /* 16px */
+  --space-5: 1.25rem; /* 20px */
+  --space-6: 1.5rem; /* 24px */
+  --space-7: 2rem; /* 32px */
+  --space-8: 2.5rem; /* 40px */
+  --space-9: 3rem; /* 48px */
+  --space-10: 4rem; /* 64px */
+
+  /* Radii */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-full: 9999px;
+
+  /* Elevation */
+  --shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.06);
+  --shadow-md: 0 2px 8px rgba(17, 24, 39, 0.08);
+  --shadow-lg: 0 8px 24px rgba(17, 24, 39, 0.12);
+
+  /* Motion */
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-slow: 300ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Layout */
+  --header-height: 56px;
+  --content-max-width: 1200px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+
+  /* Touch */
+  --touch-target: 44px;
+}

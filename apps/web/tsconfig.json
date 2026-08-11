@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "lib": ["ES2024", "DOM", "DOM.Iterable"],
+    "types": ["node", "vitest/globals"],
+    // Vite apps are ESM with bundler resolution (import.meta.env, extensionless
+    // relative imports); NodeNext from the base config only fits node packages.
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "moduleDetection": "force",
+    // @types/react 19 merges the Component interface into the class, which
+    // makes noImplicitOverride flag class lifecycle members inconsistently.
+    "noImplicitOverride": false
+  },
+  "include": ["src", "test", "vite.config.ts", "vitest.config.ts", "vitest.setup.ts"]
+}

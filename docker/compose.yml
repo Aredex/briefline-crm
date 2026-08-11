@@ -1,0 +1,34 @@
+# REP-005 — Local development PostgreSQL (docker compose)
+#
+# Postgres 17 (alineado con Neon, el proveedor de producción — ver
+# devops-platform-validation.md y technology-matrix.md).
+#
+# Credenciales SOLO de desarrollo local; nunca reutilizar en producción
+# (PH-12 OPS-005: los secrets viven en Render/Neon/GitHub, no en el repo).
+#
+# Uso:
+#   docker compose -f docker/compose.yml up -d
+#   docker compose -f docker/compose.yml down      # detener (conserva el volumen)
+#   docker compose -f docker/compose.yml down -v   # detener y borrar datos
+#   docker compose -f docker/compose.yml ps        # estado + healthcheck
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: briefline-db
+    environment:
+      POSTGRES_USER: briefline
+      POSTGRES_PASSWORD: briefline-local
+      POSTGRES_DB: briefline
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U briefline -d briefline']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
