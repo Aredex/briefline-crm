@@ -38,9 +38,10 @@ import type { ArchiveTaskDto } from './dto/archive-task.dto'
 import type { ChangeTaskStatusDto } from './dto/change-task-status.dto'
 import type { CreateTaskDto } from './dto/create-task.dto'
 import type { TaskQueryDto } from './dto/task-query.dto'
-import type { BoardResponse, PageMeta, TaskChangeResponse, TaskResponse, TaskSummary } from './dto/task-response.dto'
+import type { BoardResponse, PageMeta, TaskChangeResponse, TaskDetailResponse, TaskResponse, TaskSummary } from './dto/task-response.dto'
 import type { UpdateTaskDto } from './dto/update-task.dto'
 import { toDateOnly, toTaskChange, toTaskResponse, toTaskSummary, type ChangeWithActor, type TaskWithRefs } from './tasks.mapper'
+import { toTaskComment } from '../comments/comments.mapper'
 import { canArchiveTask, canEditTask, canViewTask } from './tasks.policy'
 
 const TASK_NOT_FOUND = {
@@ -173,13 +174,27 @@ export class TasksService {
     return { data: tasks.map(toTaskResponse), meta: { page: query.page, limit: query.limit, total } }
   }
 
-  /** TASK-API-010 — detail (archived: admin only, member 404 BOLA-safe). */
-  async findOne(id: string, actor: AuthUser): Promise<TaskResponse> {
-    const task = await this.resolveTask(this.prisma, id)
+  /**
+   * TASK-API-010 — detail (archived: admin only, member 404 BOLA-safe).
+   *
+   * PC-03 (COMM-001): the detail carries the task's last 5 comments, newest
+   * first, from a separate query inside the same transaction (never a nested
+   * include — the thread list endpoint owns the full paginated shape).
+   */
+  async findOne(id: string, actor: AuthUser): Promise<TaskDetailResponse> {
+    const [task, comments] = await this.prisma.$transaction([
+      this.prisma.task.findUnique({ where: { id }, include: TASK_INCLUDE }),
+      this.prisma.comment.findMany({
+        where: { taskId: id },
+        include: { author: { select: { id: true, name: true } } },
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        take: 5,
+      }),
+    ])
     if (!task || !canViewTask(actor, task)) {
       throw new NotFoundException(TASK_NOT_FOUND)
     }
-    return toTaskResponse(task)
+    return { ...toTaskResponse(task), comments: comments.map(toTaskComment) }
   }
 
   /**

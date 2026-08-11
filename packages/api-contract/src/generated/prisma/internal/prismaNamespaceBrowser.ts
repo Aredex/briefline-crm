@@ -55,6 +55,7 @@ export const ModelName = {
   Client: 'Client',
   Contact: 'Contact',
   Task: 'Task',
+  Comment: 'Comment',
   TaskChange: 'TaskChange'
 } as const
 
@@ -141,6 +142,17 @@ export const TaskScalarFieldEnum = {
 } as const
 
 export type TaskScalarFieldEnum = (typeof TaskScalarFieldEnum)[keyof typeof TaskScalarFieldEnum]
+
+
+export const CommentScalarFieldEnum = {
+  id: 'id',
+  taskId: 'taskId',
+  authorId: 'authorId',
+  content: 'content',
+  createdAt: 'createdAt'
+} as const
+
+export type CommentScalarFieldEnum = (typeof CommentScalarFieldEnum)[keyof typeof CommentScalarFieldEnum]
 
 
 export const TaskChangeScalarFieldEnum = {

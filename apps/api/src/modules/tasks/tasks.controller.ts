@@ -40,7 +40,7 @@ import { ArchiveTaskDto } from './dto/archive-task.dto'
 import { ChangeTaskStatusDto } from './dto/change-task-status.dto'
 import { CreateTaskDto } from './dto/create-task.dto'
 import { TaskQueryDto } from './dto/task-query.dto'
-import type { BoardResponse, PageMeta, TaskChangeResponse, TaskResponse, TaskSummary } from './dto/task-response.dto'
+import type { BoardResponse, PageMeta, TaskChangeResponse, TaskDetailResponse, TaskResponse, TaskSummary } from './dto/task-response.dto'
 import { UpdateTaskDto } from './dto/update-task.dto'
 import { TasksService } from './tasks.service'
 
@@ -95,7 +95,7 @@ export class TasksController {
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  async findOne(@Param('id', UUID_PIPE) id: string, @CurrentUser() user: AuthUser): Promise<{ data: TaskResponse }> {
+  async findOne(@Param('id', UUID_PIPE) id: string, @CurrentUser() user: AuthUser): Promise<{ data: TaskDetailResponse }> {
     return { data: await this.tasksService.findOne(id, user) }
   }
 

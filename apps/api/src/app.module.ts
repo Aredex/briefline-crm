@@ -26,6 +26,7 @@ import { UsersModule } from './modules/users/users.module'
 import { ClientsModule } from './modules/clients/clients.module'
 import { ContactsModule } from './modules/contacts/contacts.module'
 import { TasksModule } from './modules/tasks/tasks.module'
+import { CommentsModule } from './modules/comments/comments.module'
 import { DashboardModule } from './modules/dashboard/dashboard.module'
 
 @Module({
@@ -54,6 +55,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module'
     ClientsModule,
     ContactsModule,
     TasksModule,
+    CommentsModule,
     DashboardModule,
     HealthModule,
     // OPS-001 (PH-12): unified production build — Nest serves the built Vite

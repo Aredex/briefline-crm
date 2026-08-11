@@ -9,6 +9,7 @@ import type {
   TaskPriority,
   TaskStatus,
 } from '../../../../../../packages/api-contract/src/generated/prisma/client'
+import type { TaskComment } from '../../comments/dto/comment-response.dto'
 
 export interface UserRef {
   id: string
@@ -70,6 +71,11 @@ export interface TaskChangeResponse {
   newValue: string | null
   actor: UserRef
   createdAt: Date
+}
+
+/** GET /tasks/:id — task plus its last 5 comments, newest first (PC-03, COMM-001). */
+export interface TaskDetailResponse extends TaskResponse {
+  comments: TaskComment[]
 }
 
 /** GET /tasks/board — separate backlog plus the four active columns (DEC-035). */

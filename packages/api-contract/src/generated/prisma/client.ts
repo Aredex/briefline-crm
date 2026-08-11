@@ -62,6 +62,11 @@ export type Contact = Prisma.ContactModel
  */
 export type Task = Prisma.TaskModel
 /**
+ * Model Comment
+ * 
+ */
+export type Comment = Prisma.CommentModel
+/**
  * Model TaskChange
  * 
  */
