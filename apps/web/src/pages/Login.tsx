@@ -34,10 +34,12 @@ type LoginError =
   | { kind: 'rate-limited'; retryAfterSeconds: number }
   | { kind: 'server' }
 
-const DEMO_ACCOUNTS = [
-  { label: 'Administrator', email: 'admin@northstar.digital', password: 'Briefline2026!' },
-  { label: 'Member', email: 'member@northstar.digital', password: 'Briefline2026!' },
-]
+const DEMO_ACCOUNTS = import.meta.env.PROD
+  ? []
+  : [
+      { label: 'Administrator', email: 'admin@northstar.digital', password: 'Briefline2026!' },
+      { label: 'Member', email: 'member@northstar.digital', password: 'Briefline2026!' },
+    ]
 
 export function Login() {
   const { login } = useAuth()

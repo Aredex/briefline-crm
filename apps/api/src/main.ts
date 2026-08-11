@@ -11,6 +11,7 @@ import cookieParser from 'cookie-parser'
 import { NestFactory } from '@nestjs/core'
 import { ConfigService } from '@nestjs/config'
 import { VersioningType } from '@nestjs/common'
+import type { NextFunction, Request, Response } from 'express'
 import type { NestExpressApplication } from '@nestjs/platform-express'
 import { AppModule } from './app.module'
 import { AppValidationPipe } from './common/pipes/app-validation.pipe'
@@ -25,6 +26,12 @@ async function bootstrap(): Promise<void> {
   const nodeEnv = configService.get<string>('NODE_ENV') ?? 'development'
 
   app.use(helmet())
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    if (req.path.startsWith('/api')) {
+      res.setHeader('Cache-Control', 'no-store')
+    }
+    next()
+  })
   app.enableCors({
     origin: (configService.get<string>('CORS_ORIGINS') ?? 'http://localhost:5173')
       .split(',')

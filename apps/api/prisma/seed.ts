@@ -784,6 +784,10 @@ function assertFixtureInvariants(plans: TaskPlan[]): void {
 // ---------------------------------------------------------------------------
 
 async function main(): Promise<void> {
+  if (process.env.NODE_ENV === 'production') {
+    console.error('❌ Seed cannot run in production.')
+    process.exit(1)
+  }
   const connectionString = process.env.DATABASE_URL
   if (!connectionString) {
     console.error('prisma:seed requires DATABASE_URL (Neon pooled URL for runtime).')
