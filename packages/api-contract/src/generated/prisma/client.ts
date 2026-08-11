@@ -86,3 +86,8 @@ export type ChecklistItem = Prisma.ChecklistItemModel
  * 
  */
 export type TaskChange = Prisma.TaskChangeModel
+/**
+ * Model ClientChange
+ * 
+ */
+export type ClientChange = Prisma.ClientChangeModel

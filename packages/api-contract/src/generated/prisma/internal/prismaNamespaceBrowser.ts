@@ -59,7 +59,8 @@ export const ModelName = {
   TaskLabel: 'TaskLabel',
   Comment: 'Comment',
   ChecklistItem: 'ChecklistItem',
-  TaskChange: 'TaskChange'
+  TaskChange: 'TaskChange',
+  ClientChange: 'ClientChange'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -202,6 +203,20 @@ export const TaskChangeScalarFieldEnum = {
 } as const
 
 export type TaskChangeScalarFieldEnum = (typeof TaskChangeScalarFieldEnum)[keyof typeof TaskChangeScalarFieldEnum]
+
+
+export const ClientChangeScalarFieldEnum = {
+  id: 'id',
+  clientId: 'clientId',
+  actorId: 'actorId',
+  event: 'event',
+  field: 'field',
+  oldValue: 'oldValue',
+  newValue: 'newValue',
+  createdAt: 'createdAt'
+} as const
+
+export type ClientChangeScalarFieldEnum = (typeof ClientChangeScalarFieldEnum)[keyof typeof ClientChangeScalarFieldEnum]
 
 
 export const SortOrder = {

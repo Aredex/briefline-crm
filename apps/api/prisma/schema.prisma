@@ -84,12 +84,13 @@ model User {
   createdAt    DateTime   @default(now()) @db.Timestamptz(6)
   updatedAt    DateTime   @updatedAt @db.Timestamptz(6)
 
-  createdClients Client[]     @relation("ClientCreator")
-  createdTasks   Task[]       @relation("TaskCreator")
-  assignedTasks  Task[]       @relation("TaskAssignee")
-  archivedTasks  Task[]       @relation("TaskArchiver")
-  taskChanges    TaskChange[] @relation("TaskChangeActor")
-  comments       Comment[]    @relation("CommentAuthor")
+  createdClients Client[]        @relation("ClientCreator")
+  createdTasks   Task[]          @relation("TaskCreator")
+  assignedTasks  Task[]          @relation("TaskAssignee")
+  archivedTasks  Task[]          @relation("TaskArchiver")
+  taskChanges    TaskChange[]    @relation("TaskChangeActor")
+  clientChanges  ClientChange[]  @relation("ClientChangeActor")
+  comments       Comment[]       @relation("CommentAuthor")
 }
 
 // Client — PRD §11; BR-005/006; FR-CLI-001..006.
@@ -106,9 +107,10 @@ model Client {
   createdAt    DateTime     @default(now()) @db.Timestamptz(6)
   updatedAt    DateTime     @updatedAt @db.Timestamptz(6)
 
-  creator  User      @relation("ClientCreator", fields: [createdById], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  creator  User           @relation("ClientCreator", fields: [createdById], references: [id], onDelete: Restrict, onUpdate: Cascade)
   tasks    Task[]
   contacts Contact[]
+  changes  ClientChange[]
 
   @@index([status])        // FR-CLI-001 status filter
   @@index([companyName])   // FR-CLI-001 search anchor (see D-15)
@@ -271,4 +273,29 @@ model TaskChange {
 
   @@index([taskId, createdAt]) // history timeline (FR-HIST-001/003) + taskId FK
   @@index([actorId])           // FK integrity (AP-07)
+}
+
+// ClientChange — PC-06 (CHIST-001). Append-only client mutation audit.
+// Same spirit as TaskChange: no update/delete routes; every entry records the
+// authenticated actor; oldValue/newValue are JSON-serialized (D-7/D-9).
+// `event` is a free-form VarChar (not a Prisma enum) so new event types never
+// need a DB-level enum migration: CREATED | FIELD_CHANGED | STATUS_CHANGED |
+// ARCHIVED. clientId FK is Cascade — client changes are child rows of the
+// client and vanish with it (same spirit as comments, PC-03).
+model ClientChange {
+  id        String   @id @default(uuid()) @db.Uuid
+  clientId  String   @db.Uuid
+  actorId   String   @db.Uuid
+  event     String   @db.VarChar(50)
+  field     String?  @db.VarChar(50) // changed field name (D-7)
+  oldValue  String?  @db.Text // JSON-serialized (D-7, D-9)
+  newValue  String?  @db.Text // JSON-serialized (D-7, D-9)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  actor  User   @relation("ClientChangeActor", fields: [actorId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([clientId])
+  @@index([actorId])
+  @@map("client_changes")
 }

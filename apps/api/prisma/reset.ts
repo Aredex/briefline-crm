@@ -32,12 +32,12 @@ async function main(): Promise<void> {
     // protection for anything the seed does not own (AP-58: tests never rely
     // on this — they run migrations + their own fixtures).
     await prisma.$executeRawUnsafe(
-      'TRUNCATE "task_labels", "labels", "comments", "checklist_items", "contacts", "TaskChange", "Task", "Client", "User" RESTART IDENTITY CASCADE',
+      'TRUNCATE "task_labels", "labels", "comments", "checklist_items", "contacts", "TaskChange", "client_changes", "Task", "Client", "User" RESTART IDENTITY CASCADE',
     )
     const stats = await runSeed(prisma)
     console.log(
       `Reset complete: ${stats.users} users, ${stats.clients} clients, ` +
-        `${stats.tasks} tasks, ${stats.changes} task changes.`,
+        `${stats.tasks} tasks, ${stats.changes} task changes, ${stats.clientChanges} client changes.`,
     )
   } catch (err) {
     console.error('Reset failed:', err instanceof Error ? err.message : err)

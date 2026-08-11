@@ -1,10 +1,10 @@
 // Deterministic demo seed — PH-03 DB-005 (data-model.md §8).
 //
 // Northstar Digital Studio demo data: 8 users, 12 clients, 3 contacts,
-// 36 tasks, 124 TaskChange events, 3 comments (PC-03), 5 labels with 11
-// task-label links (PC-04), 4 checklist items (PC-05), fixed formal-v4 UUIDs,
-// timestamps relative to seed execution time (overdue / due-today /
-// recently-completed states stay stable on every run).
+// 36 tasks, 124 TaskChange events, 20 ClientChange events (PC-06), 3 comments
+// (PC-03), 5 labels with 11 task-label links (PC-04), 4 checklist items
+// (PC-05), fixed formal-v4 UUIDs, timestamps relative to seed execution time
+// (overdue / due-today / recently-completed states stay stable on every run).
 //
 // Idempotency: fixed IDs + deleteMany-by-id before createMany, all inside one
 // interactive $transaction — safe to run repeatedly (AP-43; PH-03 verification
@@ -36,7 +36,8 @@ export const DEMO_PASSWORD_HASH =
 // ---------------------------------------------------------------------------
 // Fixed UUIDs (data-model §8.6): 00000000-0000-4000-8000-0000000000NN
 // users …001-008, clients …101-112, tasks …201-236, changes …301+,
-// contacts …401-403, comments …501-503, labels …601-605, checklist …701+
+// contacts …401-403, comments …501-503, labels …601-605, checklist …701+,
+// client changes …801+ (PC-06)
 // ---------------------------------------------------------------------------
 
 // 12-hex last segment (data-model §8.6): '01' -> …001, '301' -> …301.
@@ -89,6 +90,28 @@ export const SEED_IDS = {
     ck702: uuid('702'),
     ck703: uuid('703'),
     ck704: uuid('704'),
+  },
+  clientChanges: {
+    cc801: uuid('801'),
+    cc802: uuid('802'),
+    cc803: uuid('803'),
+    cc804: uuid('804'),
+    cc805: uuid('805'),
+    cc806: uuid('806'),
+    cc807: uuid('807'),
+    cc808: uuid('808'),
+    cc809: uuid('809'),
+    cc810: uuid('810'),
+    cc811: uuid('811'),
+    cc812: uuid('812'),
+    cc813: uuid('813'),
+    cc814: uuid('814'),
+    cc815: uuid('815'),
+    cc816: uuid('816'),
+    cc817: uuid('817'),
+    cc818: uuid('818'),
+    cc819: uuid('819'),
+    cc820: uuid('820'),
   },
   tasks: {
     t201: uuid('201'),
@@ -194,6 +217,19 @@ interface TaskChangeSeed {
   taskId: string
   actorId: string
   event: TaskChangeEvent
+  field: string | null
+  oldValue: string | null
+  newValue: string | null
+  createdAt: Date
+}
+
+// PC-06 (CHIST-001): event is a free-form string ('CREATED' | 'FIELD_CHANGED'
+// | 'STATUS_CHANGED' | 'ARCHIVED'); values JSON-serialized (D-7/D-9).
+interface ClientChangeSeed {
+  id: string
+  clientId: string
+  actorId: string
+  event: string
   field: string | null
   oldValue: string | null
   newValue: string | null
@@ -360,6 +396,56 @@ function buildClients(): ClientSeed[] {
     mk(c.c111, 'Harbor Consulting Group', 'Consulting', 'Inés Puig', 'ines@harborconsulting.demo', null, 'ARCHIVED', 'Portfolio complete 2025 — archived.', u.admin1),
     mk(c.c112, 'Digital Nest Agency', 'Digital Agency', 'Javier Costa', 'javier@digitalnest.demo', '+34 610 123 112', 'ARCHIVED', null, u.admin2),
   ]
+}
+
+// ---------------------------------------------------------------------------
+// Client changes — 20 (PC-06, CHIST-001) — append-only client audit demo
+// ---------------------------------------------------------------------------
+// Every client carries a CREATED event (actor = creator, at creation time).
+// A few clients carry FIELD_CHANGED / STATUS_CHANGED / ARCHIVED events that
+// are consistent with their CURRENT row values (§8.2): the oldValue is the
+// previous value, the newValue the current one. Timestamps are fixed offsets
+// so the demo history looks alive but stays deterministic.
+// - c101 Nova Cloudworks (ACTIVE): industry + notes edited
+// - c102 Brightline Commerce (ACTIVE): contact email edited
+// - c105 EduBridge Academy (ACTIVE): contact name edited
+// - c109 Urban Retail Co. (INACTIVE): ACTIVE -> INACTIVE transition
+// - c111 Harbor Consulting (ARCHIVED): archived
+// - c112 Digital Nest Agency (ARCHIVED): INACTIVE then archived
+
+function buildClientChanges(clients: ClientSeed[]): ClientChangeSeed[] {
+  const u = SEED_IDS.users
+  const c = SEED_IDS.clients
+  const cc = SEED_IDS.clientChanges
+  const byClient = new Map(clients.map((cl) => [cl.id, cl]))
+
+  // 12 CREATED events, ids …801-812 in the same order as buildClients().
+  const events: ClientChangeSeed[] = clients.map((client, i) => ({
+    id: cc[`cc${String(801 + i)}` as keyof typeof cc],
+    clientId: client.id,
+    actorId: client.createdById,
+    event: 'CREATED',
+    field: null,
+    oldValue: null,
+    newValue: null,
+    createdAt: client.createdAt,
+  }))
+
+  const client = (id: string): ClientSeed => byClient.get(id)!
+
+  // …813-820: field/status edits consistent with the CURRENT row values (§8.2).
+  events.push(
+    { id: cc.cc813, clientId: c.c101, actorId: u.admin1, event: 'FIELD_CHANGED', field: 'industry', oldValue: ser('Strategy'), newValue: ser('SaaS'), createdAt: hoursAgo(40 * 24) },
+    { id: cc.cc814, clientId: c.c101, actorId: u.admin1, event: 'FIELD_CHANGED', field: 'notes', oldValue: 'null', newValue: ser(client(c.c101).notes ?? 'Expanding to EMEA in Q4.'), createdAt: hoursAgo(5 * 24) },
+    { id: cc.cc815, clientId: c.c102, actorId: u.admin1, event: 'FIELD_CHANGED', field: 'contactEmail', oldValue: ser('info@brightlinecommerce.demo'), newValue: ser('daniel@brightlinecommerce.demo'), createdAt: hoursAgo(20 * 24) },
+    { id: cc.cc816, clientId: c.c105, actorId: u.member1, event: 'FIELD_CHANGED', field: 'contactName', oldValue: ser('Camila Rios'), newValue: ser('Camila Ríos'), createdAt: hoursAgo(15 * 24) },
+    { id: cc.cc817, clientId: c.c109, actorId: u.member3, event: 'STATUS_CHANGED', field: 'status', oldValue: ser('ACTIVE'), newValue: ser('INACTIVE'), createdAt: hoursAgo(25 * 24) },
+    { id: cc.cc818, clientId: c.c111, actorId: u.admin1, event: 'ARCHIVED', field: null, oldValue: null, newValue: null, createdAt: hoursAgo(100 * 24) },
+    { id: cc.cc819, clientId: c.c112, actorId: u.admin2, event: 'STATUS_CHANGED', field: 'status', oldValue: ser('ACTIVE'), newValue: ser('INACTIVE'), createdAt: hoursAgo(60 * 24) },
+    { id: cc.cc820, clientId: c.c112, actorId: u.admin2, event: 'ARCHIVED', field: null, oldValue: null, newValue: null, createdAt: hoursAgo(30 * 24) },
+  )
+
+  return events
 }
 
 // ---------------------------------------------------------------------------
@@ -770,6 +856,7 @@ interface SeedStats {
   contacts: number
   tasks: number
   changes: number
+  clientChanges: number
   comments: number
   labels: number
   taskLabels: number
@@ -783,6 +870,7 @@ interface SeedStats {
 export async function runSeed(prisma: PrismaClient): Promise<SeedStats> {
   const users = buildUsers()
   const clients = buildClients()
+  const clientChanges = buildClientChanges(clients)
   const contacts = buildContacts()
   const comments = buildComments()
   const labels = buildLabels()
@@ -797,6 +885,7 @@ export async function runSeed(prisma: PrismaClient): Promise<SeedStats> {
   const allCommentIds = comments.map((c) => c.id)
   const allLabelIds = labels.map((l) => l.id)
   const allChecklistItemIds = checklistItems.map((i) => i.id)
+  const allClientChangeIds = clientChanges.map((ch) => ch.id)
   const allChangeIds = Array.from(
     { length: taskPlans.reduce((sum, p) => sum + p.changes.length + 1, 0) },
     (_, i) => uuid(String(301 + i)),
@@ -872,11 +961,13 @@ export async function runSeed(prisma: PrismaClient): Promise<SeedStats> {
     await tx.taskChange.deleteMany({ where: { id: { in: allChangeIds } } })
     await tx.task.deleteMany({ where: { id: { in: allTaskIds } } })
     await tx.contact.deleteMany({ where: { id: { in: allContactIds } } }) // children before parents
+    await tx.clientChange.deleteMany({ where: { id: { in: allClientChangeIds } } }) // children before parents
     await tx.client.deleteMany({ where: { id: { in: allClientIds } } })
     await tx.user.deleteMany({ where: { id: { in: allUserIds } } })
 
     await tx.user.createMany({ data: users })
     await tx.client.createMany({ data: clients })
+    await tx.clientChange.createMany({ data: clientChanges })
     await tx.contact.createMany({ data: contacts })
     await tx.task.createMany({ data: tasks })
     await tx.taskChange.createMany({ data: changes })
@@ -892,6 +983,7 @@ export async function runSeed(prisma: PrismaClient): Promise<SeedStats> {
     contacts: contacts.length,
     tasks: tasks.length,
     changes: changes.length,
+    clientChanges: clientChanges.length,
     comments: comments.length,
     labels: labels.length,
     taskLabels: taskLabels.length,
@@ -1049,6 +1141,7 @@ async function main(): Promise<void> {
     console.log(
       `Seed complete: ${stats.users} users, ${stats.clients} clients, ` +
         `${stats.contacts} contacts, ${stats.tasks} tasks, ${stats.changes} task changes, ` +
+        `${stats.clientChanges} client changes, ` +
         `${stats.comments} comments, ${stats.labels} labels, ${stats.taskLabels} task-label links, ` +
         `${stats.checklistItems} checklist items.`,
     )

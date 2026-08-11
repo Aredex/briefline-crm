@@ -27,18 +27,37 @@ export interface ClientResponse {
   updatedAt: Date
 }
 
+/**
+ * Append-only client audit entry (PC-06, CHIST-001). Same shape as the
+ * TaskChange history entries, minus the derived version: the timeline is
+ * newest-first and entries carry the resolved actor { id, name }.
+ */
+export interface ClientChangeResponse {
+  id: string
+  clientId: string
+  event: string
+  field: string | null
+  oldValue: string | null
+  newValue: string | null
+  actor: UserRef
+  createdAt: Date
+}
+
 export interface PageMeta {
   page: number
   limit: number
   total: number
 }
 
-/** GET /clients/:id — client plus its paginated related-task summary (FR-CLI-005)
- *  and its contact list, primary first (PC-01, PH-14). */
+/** GET /clients/:id — client plus its paginated related-task summary (FR-CLI-005),
+ *  its contact list, primary first (PC-01, PH-14) and its last 5 audit events,
+ *  newest first (PC-06, CHIST-001 — same spirit as the task detail's last-5
+ *  comments). The full paginated timeline lives on GET /clients/:id/history. */
 export interface ClientWithTasksResponse {
   client: ClientResponse
   relatedTasks: { data: TaskSummary[]; meta: PageMeta }
   contacts: ContactResponse[]
+  history: ClientChangeResponse[]
 }
 
 export type { TaskSummary }

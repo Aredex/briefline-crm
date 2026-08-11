@@ -405,7 +405,8 @@ export const ModelName = {
   TaskLabel: 'TaskLabel',
   Comment: 'Comment',
   ChecklistItem: 'ChecklistItem',
-  TaskChange: 'TaskChange'
+  TaskChange: 'TaskChange',
+  ClientChange: 'ClientChange'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -421,7 +422,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "client" | "contact" | "task" | "label" | "taskLabel" | "comment" | "checklistItem" | "taskChange"
+    modelProps: "user" | "client" | "contact" | "task" | "label" | "taskLabel" | "comment" | "checklistItem" | "taskChange" | "clientChange"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1091,6 +1092,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    ClientChange: {
+      payload: Prisma.$ClientChangePayload<ExtArgs>
+      fields: Prisma.ClientChangeFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ClientChangeFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClientChangePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ClientChangeFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClientChangePayload>
+        }
+        findFirst: {
+          args: Prisma.ClientChangeFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClientChangePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ClientChangeFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClientChangePayload>
+        }
+        findMany: {
+          args: Prisma.ClientChangeFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClientChangePayload>[]
+        }
+        create: {
+          args: Prisma.ClientChangeCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClientChangePayload>
+        }
+        createMany: {
+          args: Prisma.ClientChangeCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ClientChangeCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClientChangePayload>[]
+        }
+        delete: {
+          args: Prisma.ClientChangeDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClientChangePayload>
+        }
+        update: {
+          args: Prisma.ClientChangeUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClientChangePayload>
+        }
+        deleteMany: {
+          args: Prisma.ClientChangeDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ClientChangeUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ClientChangeUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClientChangePayload>[]
+        }
+        upsert: {
+          args: Prisma.ClientChangeUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClientChangePayload>
+        }
+        aggregate: {
+          args: Prisma.ClientChangeAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateClientChange>
+        }
+        groupBy: {
+          args: Prisma.ClientChangeGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ClientChangeGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ClientChangeCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ClientChangeCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1254,6 +1329,20 @@ export const TaskChangeScalarFieldEnum = {
 } as const
 
 export type TaskChangeScalarFieldEnum = (typeof TaskChangeScalarFieldEnum)[keyof typeof TaskChangeScalarFieldEnum]
+
+
+export const ClientChangeScalarFieldEnum = {
+  id: 'id',
+  clientId: 'clientId',
+  actorId: 'actorId',
+  event: 'event',
+  field: 'field',
+  oldValue: 'oldValue',
+  newValue: 'newValue',
+  createdAt: 'createdAt'
+} as const
+
+export type ClientChangeScalarFieldEnum = (typeof ClientChangeScalarFieldEnum)[keyof typeof ClientChangeScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -1592,6 +1681,7 @@ export type GlobalOmitConfig = {
   comment?: Prisma.CommentOmit
   checklistItem?: Prisma.ChecklistItemOmit
   taskChange?: Prisma.TaskChangeOmit
+  clientChange?: Prisma.ClientChangeOmit
 }
 
 /* Types for Logging */

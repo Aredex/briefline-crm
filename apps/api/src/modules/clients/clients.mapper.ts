@@ -1,12 +1,29 @@
-// Client -> ClientResponse mapper — CLI-API-001..005 (PH-05).
+// Client -> ClientResponse mapper — CLI-API-001..006 (PH-05), PC-06 (CHIST-001).
 //
-// The single place where the Prisma Client row is shaped into the API contract:
-// `createdById` becomes the resolved `createdBy` user ref, and no internal
-// columns leak into responses. Every response path MUST go through it.
-import type { Client as PrismaClient } from '../../../../../packages/api-contract/src/generated/prisma/client'
-import type { ClientResponse, TaskSummary } from './dto/client-response.dto'
+// The single place where the Prisma Client/ClientChange rows are shaped into
+// the API contract: `createdById` becomes the resolved `createdBy` user ref,
+// and no internal columns leak into responses. Every response path MUST go
+// through it.
+import type { Client as PrismaClient, ClientChange } from '../../../../../packages/api-contract/src/generated/prisma/client'
+import type { ClientChangeResponse, ClientResponse, TaskSummary } from './dto/client-response.dto'
 
 export type ClientWithCreator = PrismaClient & { creator: { id: string; name: string } }
+
+export type ChangeWithActor = ClientChange & { actor: { id: string; name: string } }
+
+/** Audit entry shape: FK columns become the resolved actor ref (PC-06). */
+export function toClientChange(change: ChangeWithActor): ClientChangeResponse {
+  return {
+    id: change.id,
+    clientId: change.clientId,
+    event: change.event,
+    field: change.field,
+    oldValue: change.oldValue,
+    newValue: change.newValue,
+    actor: change.actor,
+    createdAt: change.createdAt,
+  }
+}
 
 export function toClientResponse(client: ClientWithCreator): ClientResponse {
   return {
