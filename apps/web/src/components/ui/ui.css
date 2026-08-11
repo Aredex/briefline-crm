@@ -1025,6 +1025,40 @@
   white-space: nowrap;
 }
 
+/* ---------- PC-02: sortable table headers + clickable rows (TaskList) ---------- */
+
+.data-table__sort {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.data-table__sort:hover {
+  color: var(--color-gray-900);
+}
+
+.data-table__sort:focus-visible {
+  outline: 2px solid var(--color-primary-600);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.data-table__sort-indicator {
+  display: inline-flex;
+}
+
+.data-table tbody tr[data-clickable='true'] {
+  cursor: pointer;
+}
+
 .avatar-mini {
   display: inline-flex;
   align-items: center;

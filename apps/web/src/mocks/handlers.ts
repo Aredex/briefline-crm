@@ -12,6 +12,7 @@ import { API_PREFIX } from '../api/client'
 import type {
   BoardResponse,
   ClientResponse,
+  ContactResponse,
   FieldError,
   ProblemDetails,
   TaskPriority,
@@ -21,6 +22,7 @@ import type {
 } from '../api/types'
 import {
   ALL_CLIENTS,
+  ALL_CONTACTS,
   ALL_TASKS,
   ALL_USERS,
   DEMO_PASSWORD,
@@ -100,17 +102,30 @@ function findUser(userId: string): UserResponse | undefined {
   return ALL_USERS.find((item) => item.id === userId)
 }
 
+/** CONT-001: at most one primary contact per client. */
+function contactWithEmailInClient(email: string, clientId: string): ContactResponse | undefined {
+  return ALL_CONTACTS.find(
+    (contact) => contact.client.id === clientId && contact.email?.toLowerCase() === email.toLowerCase(),
+  )
+}
+
+/** Contractual sort (CONT-API-002): primary first, then lastName/firstName asc. */
+function sortContacts(items: ContactResponse[]): ContactResponse[] {
+  return [...items].sort((a, b) => {
+    if (a.isPrimary !== b.isPrimary) return a.isPrimary ? -1 : 1
+    if (a.lastName !== b.lastName) return a.lastName < b.lastName ? -1 : 1
+    if (a.firstName !== b.firstName) return a.firstName < b.firstName ? -1 : 1
+    return 0
+  })
+}
+
 /* ---------- Auth ---------- */
 
   /* ---------- Tasks & board ---------- */
 
 const PRIORITY_RANK: Record<TaskPriority, number> = { URGENT: 4, HIGH: 3, MEDIUM: 2, LOW: 1 }
 
-function taskNotArchived(task: TaskResponse) {
-    return !task.archivedAt
-  }
-
-  /** Board sorting is contractual (server-side): priority desc, due asc (nulls last), updatedAt desc. */
+/** Board sorting is contractual (server-side): priority desc, due asc (nulls last), updatedAt desc. */
 function compareBoardTasks(a: TaskResponse, b: TaskResponse) {
     const priorityDiff = PRIORITY_RANK[b.priority] - PRIORITY_RANK[a.priority]
     if (priorityDiff !== 0) return priorityDiff
@@ -120,6 +135,22 @@ function compareBoardTasks(a: TaskResponse, b: TaskResponse) {
       return a.dueDate < b.dueDate ? -1 : 1
     }
     return b.updatedAt.localeCompare(a.updatedAt)
+  }
+
+  /** PC-02 (LIST-001): allowlisted list sort. created/updatedAt are ISO strings (lexicographic). */
+function compareListTasks(a: TaskResponse, b: TaskResponse, field: string, order: 'asc' | 'desc') {
+    let cmp = 0
+    if (field === 'priority') {
+      cmp = PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority]
+    } else if (field === 'dueDate') {
+      if (a.dueDate === null && b.dueDate !== null) cmp = 1
+      else if (a.dueDate !== null && b.dueDate === null) cmp = -1
+      else if (a.dueDate !== null && b.dueDate !== null) cmp = a.dueDate < b.dueDate ? -1 : a.dueDate > b.dueDate ? 1 : 0
+    } else {
+      const fieldKey = field as 'title' | 'status'
+      cmp = a[fieldKey] < b[fieldKey] ? -1 : a[fieldKey] > b[fieldKey] ? 1 : 0
+    }
+    return order === 'asc' ? cmp : -cmp
   }
 
 function canEditTask(user: UserResponse, task: TaskResponse) {
@@ -293,6 +324,44 @@ export const handlers = [
       meta: { total: filtered.length },
     }
     return json(board)
+  }),
+
+  // PC-02 (LIST-002): paginated list view (GET /tasks). Mirrors the real
+  // service: active tasks only, the same filters as the board, and the
+  // allowlisted sort (LIST-001) with the createdAt desc default.
+  http.get(`${API_PREFIX}/tasks`, ({ request }) => {
+    const user = currentUser()
+    if (!user) return unauthorized()
+    const url = new URL(request.url)
+    const q = (url.searchParams.get('q') ?? '').trim().toLowerCase()
+    const status = url.searchParams.get('status') as TaskStatus | null
+    const priority = url.searchParams.get('priority') as TaskPriority | null
+    const assigneeId = url.searchParams.get('assigneeId')
+    const clientId = url.searchParams.get('clientId')
+    const sort = url.searchParams.get('sort')
+    const order: 'asc' | 'desc' = url.searchParams.get('order') === 'asc' ? 'asc' : 'desc'
+
+    const matches = (task: TaskResponse) => {
+      if (task.archivedAt) return false
+      if (status && task.status !== status) return false
+      if (priority && task.priority !== priority) return false
+      if (assigneeId && task.assignee?.id !== assigneeId) return false
+      if (clientId && task.client?.id !== clientId) return false
+      if (q && !task.title.toLowerCase().includes(q) && !(task.description ?? '').toLowerCase().includes(q)) {
+        return false
+      }
+      return true
+    }
+
+    const LIST_SORT_FIELDS = new Set(['title', 'priority', 'status', 'dueDate', 'createdAt', 'updatedAt'])
+    const filtered = ALL_TASKS.filter(matches)
+    if (sort && LIST_SORT_FIELDS.has(sort)) {
+      filtered.sort((a, b) => compareListTasks(a, b, sort, order))
+    } else {
+      filtered.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    }
+    const { page, limit } = parsePage(url, 25)
+    return json(paginate(filtered, page, limit))
   }),
 
   http.get(`${API_PREFIX}/tasks/archived`, ({ request }) => {
@@ -675,6 +744,219 @@ export const handlers = [
     return json(client)
   }),
 
+  /* ---------- Contacts ---------- */
+
+  http.get(`${API_PREFIX}/contacts`, ({ request }) => {
+    if (!currentUser()) return unauthorized()
+    const url = new URL(request.url)
+    const { page, limit } = parsePage(url, 10)
+    const q = (url.searchParams.get('q') ?? '').trim().toLowerCase()
+    const clientId = url.searchParams.get('clientId')
+    const isPrimary = url.searchParams.get('isPrimary')
+
+    // Reads are team-wide (CONT-002); the sort is contractual.
+    let items = ALL_CONTACTS
+    if (clientId) items = items.filter((contact) => contact.client.id === clientId)
+    if (isPrimary === 'true') items = items.filter((contact) => contact.isPrimary)
+    if (isPrimary === 'false') items = items.filter((contact) => !contact.isPrimary)
+    if (q) {
+      items = items.filter(
+        (contact) =>
+          `${contact.firstName} ${contact.lastName}`.toLowerCase().includes(q) ||
+          contact.firstName.toLowerCase().includes(q) ||
+          contact.lastName.toLowerCase().includes(q) ||
+          (contact.email ?? '').toLowerCase().includes(q),
+      )
+    }
+    return json(paginate(sortContacts(items), page, limit))
+  }),
+
+  http.post(`${API_PREFIX}/contacts`, async ({ request }) => {
+    const user = currentUser()
+    if (!user) return unauthorized()
+    if (user.role !== 'ADMIN') {
+      return problem(403, 'FORBIDDEN', 'Forbidden', 'Only administrators can create contacts.')
+    }
+    const body = (await request.json()) as {
+      clientId?: string
+      firstName?: string
+      lastName?: string
+      email?: string
+      phone?: string
+      role?: string
+    }
+    const errors: FieldError[] = []
+    if (!body.clientId) {
+      errors.push({ field: 'clientId', message: 'Select a client.', code: 'REQUIRED' })
+    }
+    if (!body.firstName?.trim()) {
+      errors.push({ field: 'firstName', message: 'First name is required.', code: 'REQUIRED' })
+    }
+    if (!body.lastName?.trim()) {
+      errors.push({ field: 'lastName', message: 'Last name is required.', code: 'REQUIRED' })
+    }
+    if (body.email && !/^\S+@\S+\.\S+$/.test(body.email.trim())) {
+      errors.push({ field: 'email', message: 'Enter a valid email address.', code: 'INVALID_FORMAT' })
+    }
+    if (errors.length > 0) {
+      return problem(400, 'VALIDATION_ERROR', 'Validation failed', 'The request payload is invalid.', { errors })
+    }
+    if (!body.clientId || !ALL_CLIENTS.some((client) => client.id === body.clientId)) {
+      return problem(404, 'CLIENT_NOT_FOUND', 'Client not found', 'The requested client does not exist.')
+    }
+    const email = body.email?.trim().toLowerCase()
+    if (email && contactWithEmailInClient(email, body.clientId)) {
+      return problem(
+        409,
+        'CONTACT_EMAIL_EXISTS',
+        'Contact email already exists',
+        'A contact with this email already exists for this client.',
+        {
+          errors: [
+            {
+              field: 'email',
+              message: 'A contact with this email already exists for this client.',
+              code: 'CONTACT_EMAIL_EXISTS',
+            },
+          ],
+        },
+      )
+    }
+    const now = new Date().toISOString()
+    const client = ALL_CLIENTS.find((item) => item.id === body.clientId)!
+    const contact: ContactResponse = {
+      id: crypto.randomUUID(),
+      client: { id: client.id, companyName: client.companyName },
+      firstName: body.firstName!.trim(),
+      lastName: body.lastName!.trim(),
+      email: email || null,
+      phone: body.phone?.trim() || null,
+      role: body.role?.trim() || null,
+      isPrimary: false,
+      createdAt: now,
+      updatedAt: now,
+    }
+    ALL_CONTACTS.push(contact)
+    return json(contact, { status: 201 })
+  }),
+
+  http.get(`${API_PREFIX}/contacts/:contactId`, ({ params }) => {
+    if (!currentUser()) return unauthorized()
+    const contact = ALL_CONTACTS.find((item) => item.id === params.contactId)
+    if (!contact) {
+      return problem(
+        404,
+        'CONTACT_NOT_FOUND',
+        'Contact not found',
+        'The requested contact does not exist or is not visible to you.',
+      )
+    }
+    return json(contact)
+  }),
+
+  http.patch(`${API_PREFIX}/contacts/:contactId`, async ({ params, request }) => {
+    if (currentUser()?.role !== 'ADMIN') {
+      return problem(403, 'FORBIDDEN', 'Forbidden', 'Only administrators can update contacts.')
+    }
+    const contact = ALL_CONTACTS.find((item) => item.id === params.contactId)
+    if (!contact) {
+      return problem(404, 'CONTACT_NOT_FOUND', 'Contact not found', 'The requested contact does not exist.')
+    }
+    const body = (await request.json()) as {
+      firstName?: string
+      lastName?: string
+      email?: string
+      phone?: string
+      role?: string
+    }
+    // Empty body → 400 (CONT-API-004).
+    if (!['firstName', 'lastName', 'email', 'phone', 'role'].some((key) => key in body)) {
+      return problem(400, 'VALIDATION_ERROR', 'Validation failed', 'At least one field is required.')
+    }
+    if (body.firstName !== undefined) {
+      if (!body.firstName.trim()) {
+        return problem(400, 'VALIDATION_ERROR', 'Validation failed', 'First name is required.', {
+          errors: [{ field: 'firstName', message: 'First name is required.', code: 'REQUIRED' }],
+        })
+      }
+      contact.firstName = body.firstName.trim()
+    }
+    if (body.lastName !== undefined) {
+      if (!body.lastName.trim()) {
+        return problem(400, 'VALIDATION_ERROR', 'Validation failed', 'Last name is required.', {
+          errors: [{ field: 'lastName', message: 'Last name is required.', code: 'REQUIRED' }],
+        })
+      }
+      contact.lastName = body.lastName.trim()
+    }
+    if (body.email !== undefined) {
+      const email = body.email.trim().toLowerCase()
+      if (email && !/^\S+@\S+\.\S+$/.test(email)) {
+        return problem(400, 'VALIDATION_ERROR', 'Validation failed', 'Enter a valid email address.', {
+          errors: [{ field: 'email', message: 'Enter a valid email address.', code: 'INVALID_FORMAT' }],
+        })
+      }
+      const duplicate = email ? contactWithEmailInClient(email, contact.client.id) : undefined
+      if (duplicate && duplicate.id !== contact.id) {
+        return problem(
+          409,
+          'CONTACT_EMAIL_EXISTS',
+          'Contact email already exists',
+          'A contact with this email already exists for this client.',
+          {
+            errors: [
+              {
+                field: 'email',
+                message: 'A contact with this email already exists for this client.',
+                code: 'CONTACT_EMAIL_EXISTS',
+              },
+            ],
+          },
+        )
+      }
+      contact.email = email || null
+    }
+    if (body.phone !== undefined) contact.phone = body.phone?.trim() || null
+    if (body.role !== undefined) contact.role = body.role?.trim() || null
+    contact.updatedAt = new Date().toISOString()
+    return json(contact)
+  }),
+
+  http.post(`${API_PREFIX}/contacts/:contactId/primary`, ({ params }) => {
+    const user = currentUser()
+    if (!user) return unauthorized()
+    if (user.role !== 'ADMIN') {
+      return problem(403, 'FORBIDDEN', 'Forbidden', 'Only administrators can change the primary contact.')
+    }
+    const contact = ALL_CONTACTS.find((item) => item.id === params.contactId)
+    if (!contact) {
+      return problem(404, 'CONTACT_NOT_FOUND', 'Contact not found', 'The requested contact does not exist.')
+    }
+    // Idempotent: marking the current primary is a 200 no-op (CONT-API-005).
+    if (!contact.isPrimary) {
+      ALL_CONTACTS.forEach((item) => {
+        if (item.client.id === contact.client.id && item.isPrimary) item.isPrimary = false
+      })
+      contact.isPrimary = true
+      contact.updatedAt = new Date().toISOString()
+    }
+    return json(contact)
+  }),
+
+  http.delete(`${API_PREFIX}/contacts/:contactId`, ({ params }) => {
+    const user = currentUser()
+    if (!user) return unauthorized()
+    if (user.role !== 'ADMIN') {
+      return problem(403, 'FORBIDDEN', 'Forbidden', 'Only administrators can delete contacts.')
+    }
+    const index = ALL_CONTACTS.findIndex((item) => item.id === params.contactId)
+    if (index === -1) {
+      return problem(404, 'CONTACT_NOT_FOUND', 'Contact not found', 'The requested contact does not exist.')
+    }
+    const [deleted] = ALL_CONTACTS.splice(index, 1)
+    return json(deleted)
+  }),
+
   /* ---------- Users ---------- */
 
   http.get(`${API_PREFIX}/users`, ({ request }) => {
@@ -869,9 +1151,11 @@ export function mockResetData() {
   ALL_CLIENTS.splice(0, ALL_CLIENTS.length, ...structuredClone(INITIAL_CLIENTS))
   ALL_TASKS.splice(0, ALL_TASKS.length, ...structuredClone(INITIAL_TASKS))
   ALL_USERS.splice(0, ALL_USERS.length, ...structuredClone(INITIAL_USERS))
+  ALL_CONTACTS.splice(0, ALL_CONTACTS.length, ...structuredClone(INITIAL_CONTACTS))
 }
 
 /** Module-load snapshots of the fixtures (mockResetData restores from these). */
 const INITIAL_CLIENTS = structuredClone(ALL_CLIENTS)
 const INITIAL_TASKS = structuredClone(ALL_TASKS)
 const INITIAL_USERS = structuredClone(ALL_USERS)
+const INITIAL_CONTACTS = structuredClone(ALL_CONTACTS)

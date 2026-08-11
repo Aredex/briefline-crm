@@ -126,6 +126,42 @@ export interface ClientWithTasksResponse {
   relatedTasks: Paginated<TaskSummary>
 }
 
+/* ---------- Contacts ---------- */
+
+export interface ContactResponse {
+  id: string
+  /** Resolved client ref — the raw clientId FK is never exposed (CONT-API). */
+  client: ClientRef
+  firstName: string
+  lastName: string
+  email: string | null
+  phone: string | null
+  /** Free-text role, e.g. "CEO", "Design Lead", "Accounting". */
+  role: string | null
+  /** At most one primary contact per client (CONT-001). */
+  isPrimary: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ContactCreateInput {
+  clientId: string
+  firstName: string
+  lastName: string
+  email?: string
+  phone?: string
+  role?: string
+}
+
+/** Field-level allowlist (CONT-API-004): isPrimary and clientId are NOT editable here. */
+export interface ContactUpdateInput {
+  firstName?: string
+  lastName?: string
+  email?: string
+  phone?: string
+  role?: string
+}
+
 /* ---------- Tasks ---------- */
 
 export interface TaskSummary {
@@ -256,6 +292,8 @@ export type ErrorCode =
   | 'CLIENT_NOT_FOUND'
   | 'CLIENT_ARCHIVED'
   | 'CANNOT_ARCHIVE_WITH_ACTIVE_TASKS'
+  | 'CONTACT_NOT_FOUND'
+  | 'CONTACT_EMAIL_EXISTS'
   | 'TASK_NOT_FOUND'
   | 'STALE_VERSION'
   | 'TASK_ARCHIVED'

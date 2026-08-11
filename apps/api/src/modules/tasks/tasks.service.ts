@@ -53,33 +53,22 @@ const TASK_ARCHIVED = {
   detail: 'This task is archived and can no longer be modified.',
 }
 
-const ASSIGNEE_REQUIRED = {
-  code: 'ASSIGNEE_REQUIRED',
-  detail: 'Tasks outside the backlog must have an active assignee.',
-}
-
-const BLOCKED_REASON_REQUIRED = {
-  code: 'BLOCKED_REASON_REQUIRED',
-  detail: 'A blocked task requires a non-empty reason.',
-}
-
-const INACTIVE_ASSIGNEE = {
-  code: 'INACTIVE_ASSIGNEE',
-  detail: 'The selected assignee is inactive and cannot receive assignments.',
-}
-
 const FORBIDDEN_EDIT = {
   code: 'FORBIDDEN',
   detail: 'You do not have permission to modify this task.',
 }
 
-// Contractual board/list sort (DEC-035): priority desc, due date asc nulls
-// last, updatedAt desc — deterministic server-side, no manual card order.
+// Contractual board sort (DEC-035): priority desc, due date asc nulls last,
+// updatedAt desc — deterministic server-side, no manual card order. The board
+// never honors query sort/order (LIST-001): its order is contractual.
 const TASK_SORT: Prisma.TaskOrderByWithRelationInput[] = [
   { priority: 'desc' },
   { dueDate: { sort: 'asc', nulls: 'last' } },
   { updatedAt: 'desc' },
 ]
+
+// LIST-001 default list sort: newest first.
+const DEFAULT_LIST_SORT: Prisma.TaskOrderByWithRelationInput[] = [{ createdAt: 'desc' }]
 
 // Server-enforced board cap (TASK-API-009): total cards across backlog and
 // columns never exceeds this bound.
@@ -110,6 +99,7 @@ export class TasksService {
 
   /** TASK-API-010 — paginated active list (archived excluded, BR-016). */
   async findAll(query: TaskQueryDto, actor: AuthUser): Promise<{ data: TaskSummary[]; meta: PageMeta }> {
+    void actor // team-wide view — the guard only enforces authentication
     const where = this.buildWhere(query)
     const [total, tasks] = await this.prisma.$transaction(async (tx) => {
       const [count, rows] = await Promise.all([
@@ -117,7 +107,7 @@ export class TasksService {
         tx.task.findMany({
           where,
           include: TASK_INCLUDE,
-          orderBy: TASK_SORT,
+          orderBy: this.buildOrderBy(query),
           skip: (query.page - 1) * query.limit,
           take: query.limit,
         }),
@@ -173,7 +163,7 @@ export class TasksService {
         tx.task.findMany({
           where,
           include: TASK_INCLUDE,
-          orderBy: { archivedAt: 'desc' },
+          orderBy: this.buildOrderBy(query),
           skip: (query.page - 1) * query.limit,
           take: query.limit,
         }),
@@ -473,6 +463,20 @@ export class TasksService {
   // ---------------------------------------------------------------------------
   // Internal helpers
   // ---------------------------------------------------------------------------
+
+  /**
+   * LIST-001 (PC-02) — allowlisted list sort. All allowed fields are direct
+   * Task columns, so the Prisma orderBy is a plain `{ [field]: direction }`.
+   * Unknown values never reach here (DTO @IsIn rejects them with 400); a
+   * missing sort falls back to createdAt desc. Without an explicit order,
+   * priority defaults to desc (its natural reading), everything else asc.
+   */
+  private buildOrderBy(query: TaskQueryDto): Prisma.TaskOrderByWithRelationInput[] {
+    const field = query.sort
+    if (!field) return DEFAULT_LIST_SORT
+    const direction: Prisma.SortOrder = query.order ?? (field === 'priority' ? 'desc' : 'asc')
+    return [{ [field]: direction }]
+  }
 
   private buildWhere(query: TaskQueryDto, opts: { archived?: boolean } = {}): Prisma.TaskWhereInput {
     const where: Prisma.TaskWhereInput = opts.archived ? { archivedAt: { not: null } } : { archivedAt: null }

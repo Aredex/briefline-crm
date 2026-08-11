@@ -1,4 +1,4 @@
-// Task query params — TASK-API-009/010 (PH-06).
+// Task query params — TASK-API-009/010 (PH-06), list sort (PC-02/LIST-001).
 //
 // Shared by GET /tasks, GET /tasks/board and GET /tasks/archived:
 //   - page/limit: offset pagination (1/25 defaults, max 100 — 400 above).
@@ -6,12 +6,14 @@
 //   - status/priority: enum filters; on the board `status` selects ONE column.
 //   - assigneeId/clientId: UUID filters (malformed ids -> 400 INVALID_FORMAT).
 //   - dueBefore/dueAfter: inclusive date range on dueDate (ADR-003 date-only).
+//   - sort/order: allowlisted list sorting (LIST-001). Any other value fails
+//     validation; the board ignores both (its order is contractual DEC-035).
 //
 // @Type is required everywhere (the global pipe runs with
 // enableImplicitConversion: false — AP-51), so a non-numeric page/limit or a
 // non-date dueBefore/dueAfter fails validation instead of passing through.
 import { Transform, Type } from 'class-transformer'
-import { IsDate, IsEnum, IsInt, IsOptional, IsString, IsUUID, Max, MaxLength, Min } from 'class-validator'
+import { IsDate, IsEnum, IsIn, IsInt, IsOptional, IsString, IsUUID, Max, MaxLength, Min } from 'class-validator'
 import { TaskPriority, TaskStatus } from '../../../../../../packages/api-contract/src/generated/prisma/client'
 
 const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/
@@ -63,4 +65,15 @@ export class TaskQueryDto {
   @Transform(toDateOnly)
   @IsDate()
   dueAfter?: Date
+
+  // LIST-001 (PC-02): allowlisted sort field/direction for the list views.
+  // A sort without order defaults to 'desc' for priority, 'asc' otherwise
+  // (TasksService.buildOrderBy). Default sort: createdAt desc.
+  @IsOptional()
+  @IsIn(['title', 'priority', 'status', 'dueDate', 'createdAt', 'updatedAt'])
+  sort?: string
+
+  @IsOptional()
+  @IsIn(['asc', 'desc'])
+  order?: 'asc' | 'desc'
 }

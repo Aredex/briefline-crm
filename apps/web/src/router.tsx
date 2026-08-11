@@ -16,9 +16,14 @@ import { AppShell } from './components/layout/AppShell'
 import { ErrorState } from './components/ui/ErrorState'
 import { ArchivedTasks } from './pages/ArchivedTasks'
 import { Board } from './pages/Board'
+import { TaskList } from './pages/TaskList'
 import { ClientCreate } from './pages/ClientCreate'
 import { ClientDetail } from './pages/ClientDetail'
 import { ClientList } from './pages/ClientList'
+import { ContactCreate } from './pages/ContactCreate'
+import { ContactDetail } from './pages/ContactDetail'
+import { ContactEdit } from './pages/ContactEdit'
+import { ContactList } from './pages/ContactList'
 import { Dashboard } from './pages/Dashboard'
 import { Forbidden } from './pages/Forbidden'
 import { Login } from './pages/Login'
@@ -33,7 +38,7 @@ async function ensureSession(): Promise<UserResponse | null> {
   const existing = getSession()
   if (existing) return existing
   try {
-    const user = await api.get<UserResponse>('/auth/me')
+    const user = await api.get<UserResponse>('/auth/me', { skipUnauthorizedRedirect: true })
     setSession(user)
     return user
   } catch (error) {
@@ -105,11 +110,17 @@ export function createAppRouter() {
             { index: true, loader: () => redirect('/dashboard') },
             { path: 'dashboard', element: <Dashboard /> },
             { path: 'tasks', element: <Board /> },
+            // PC-02: static route before tasks/:taskId (router ranks it anyway).
+            { path: 'tasks/list', element: <TaskList /> },
             { path: 'tasks/archived', element: <ArchivedTasks />, loader: requireAdmin },
             { path: 'tasks/:taskId', element: <TaskDetail /> },
             { path: 'clients', element: <ClientList /> },
             { path: 'clients/new', element: <ClientCreate /> },
             { path: 'clients/:clientId', element: <ClientDetail /> },
+            { path: 'contacts', element: <ContactList /> },
+            { path: 'contacts/new', element: <ContactCreate />, loader: requireAdmin },
+            { path: 'contacts/:contactId', element: <ContactDetail /> },
+            { path: 'contacts/:contactId/edit', element: <ContactEdit />, loader: requireAdmin },
             { path: 'users', element: <Users />, loader: requireAdmin },
             { path: 'profile', element: <Profile /> },
           ],

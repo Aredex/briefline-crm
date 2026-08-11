@@ -211,6 +211,23 @@ export function IconEdit(props: IconProps) {
   )
 }
 
+/** Sort indicators (PC-02 task list table headers). Decorative by design. */
+export function IconArrowUp(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M10 16V4.5M5.5 9 10 4.5 14.5 9" />
+    </svg>
+  )
+}
+
+export function IconArrowDown(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M10 4v11.5M5.5 11 10 15.5 14.5 11" />
+    </svg>
+  )
+}
+
 /** Drag handle (grip) — the ONLY pointer affordance of the sortable card. */
 export function IconGripVertical(props: IconProps) {
   return (

@@ -15,12 +15,16 @@ export interface NavItem {
   to: string
   label: string
   adminOnly?: boolean
+  /** NavLink end prop — exact-match only (PC-02: "Tasks" vs "/tasks/list"). */
+  end?: boolean
 }
 
 const NAV_ITEMS: NavItem[] = [
   { to: '/dashboard', label: 'Dashboard' },
-  { to: '/tasks', label: 'Tasks' },
+  { to: '/tasks', label: 'Tasks', end: true },
+  { to: '/tasks/list', label: 'Task List' },
   { to: '/clients', label: 'Clients' },
+  { to: '/contacts', label: 'Contacts' },
   { to: '/users', label: 'Users', adminOnly: true },
   { to: '/profile', label: 'Profile' },
 ]
@@ -80,6 +84,7 @@ export function AppShell({ children }: AppShellProps) {
       <NavLink
         key={item.to}
         to={item.to}
+        end={item.end}
         className={({ isActive }) => `app-nav__link${isActive ? ' is-active' : ''}`}
         onClick={onNavigate}
       >

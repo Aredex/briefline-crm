@@ -8,6 +8,7 @@
 import type {
   BoardResponse,
   ClientResponse,
+  ContactResponse,
   Kpis,
   RecentActivityItem,
   TaskChange,
@@ -127,6 +128,49 @@ export const ALL_CLIENTS: ClientResponse[] = [
   NIMBUS_CLIENT,
   ARCHIVED_CLIENT,
 ]
+
+/* ---------- Contacts ---------- */
+
+export const SOFIA_CONTACT: ContactResponse = {
+  id: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+  client: { id: BLUEBIRD_CLIENT.id, companyName: BLUEBIRD_CLIENT.companyName },
+  firstName: 'Sofia',
+  lastName: 'Lindqvist',
+  email: 'sofia@bluebirdcoffee.example',
+  phone: '+34 600 123 456',
+  role: 'CEO',
+  isPrimary: true,
+  createdAt: '2026-02-10T10:00:00.000Z',
+  updatedAt: '2026-08-02T09:00:00.000Z',
+}
+
+export const JONAS_CONTACT: ContactResponse = {
+  id: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
+  client: { id: BLUEBIRD_CLIENT.id, companyName: BLUEBIRD_CLIENT.companyName },
+  firstName: 'Jonas',
+  lastName: 'Berg',
+  email: 'jonas@bluebirdcoffee.example',
+  phone: null,
+  role: 'Head of Operations',
+  isPrimary: false,
+  createdAt: '2026-04-12T09:30:00.000Z',
+  updatedAt: '2026-07-22T10:00:00.000Z',
+}
+
+export const DANIEL_CONTACT: ContactResponse = {
+  id: 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
+  client: { id: VELA_CLIENT.id, companyName: VELA_CLIENT.companyName },
+  firstName: 'Daniel',
+  lastName: 'Okafor',
+  email: 'daniel@vela.example',
+  phone: null,
+  role: 'CTO',
+  isPrimary: true,
+  createdAt: '2026-03-22T15:30:00.000Z',
+  updatedAt: '2026-07-18T12:00:00.000Z',
+}
+
+export const ALL_CONTACTS: ContactResponse[] = [SOFIA_CONTACT, JONAS_CONTACT, DANIEL_CONTACT]
 
 /* ---------- Tasks ---------- */
 
