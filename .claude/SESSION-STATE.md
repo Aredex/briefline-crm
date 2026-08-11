@@ -1,162 +1,73 @@
 # Session State — Briefline CRM
 
 **Date:** 2026-08-11
-**Session type:** Multi-agent orchestration (17 agents launched, 0 cancelled)
-**Status:** PAUSED after PH-10
+**Session type:** Multi-agent orchestration (21 agents launched, 0 cancelled)
+**Status:** PH-11 ✅ PH-12 ✅ PH-13 ✅ → PH-14 PENDING (35-52h vertical slices)
 
 ---
 
-## Completed Phases (11/16)
+## Completed Phases (14/16)
 
-### PH-00 — Documentation Discovery & Version Pinning ✅
-**6 agents | ~500 min**  
-**Artifacts:** `.claude/plans/`
-- `technology-matrix.md` — 52 dependencies, exact versions, npm-verified
-- `frontend-api-verification.md` — React Router v7, TanStack Query v5, Zod, RHF, dnd-kit, Testing Library, axe
-- `backend-api-verification.md` — NestJS 11 patterns, Prisma 7, Argon2, CSRF, Swagger, throttling
-- `qa-tooling-verification.md` — Vitest, Playwright, axe-core, Testing Library, CI templates
-- `devops-platform-validation.md` — Render free (750h/mo, 15min spin-down), Neon free (0.5GB), GHA (2000min)
-- `consolidated-api-baseline.md` — 55 APIs authorized, 61 anti-patterns, 8 cross-cutting rules
+### PH-00 through PH-10 ✅
+(Ver sesión anterior — 17 agentes, ~17,400 min)
 
-**Key corrections to original plan:**
-- `@nestjs/validation` does NOT exist → class-validator + class-transformer
-- `csurf` deprecated → `csrf-csrf@4.0.3`
-- TypeScript 7.x incompatible with NestJS → pin 5.9.3
-- Prisma 7 no array `$transaction` → only callback
-- Vitest v4 `test.workspace` deprecated → `test.projects`
-- dnd-kit has TWO incompatible API families → only `@dnd-kit/core` + `@dnd-kit/sortable`
+### PH-11 — Hardening, QA, Security ✅
+**3 agents | verify_cmd: 178 tests + 125 E2E**
 
-### PH-01 — Architecture, Data Model, OpenAPI, UX ✅
-**7 agents | ~1900 min**  
-**Artifacts:** `.claude/plans/`
-- `adrs.md` — ADR-001 (JWT/CSRF/auth), ADR-002 (email), ADR-003 (temporal), ADR-004 (concurrency), ADR-005 (monorepo)
-- `permission-matrix.md` — 31 operations × roles × states, 30 edge cases, TypeScript pseudocode
-- `ux-wireframes-tokens.md` — 9 screens with ALL states (loading/empty/error/forbidden/read-only), CSS tokens, responsive + a11y contract
-- `test-matrix.md` — 162 rows, 79 requirements × test levels
-- `architecture-diagrams.md` — C4 Level 1/2/3 (Mermaid)
-- `data-model.md` — Prisma 7 schema, ERD, 9 indexes, CHECK constraints, demo data spec
-- `openapi-and-errors.md` — OpenAPI 3.1 (30 operations, 38 schemas), RFC 9457 catalogue (29 error codes)
+**Artifacts:**
+- `.claude/plans/ph11-security-review.md` — qa-risk-analyzer: 10 vectores, 0 críticos, 0 altos, 2 medium, 5 low
+- `.claude/plans/ph11-a11y-performance.md` — a11y audit + performance review
+- `.claude/plans/ph11-test-expansion.md` — 86 new unit tests
+- `.claude/plans/ph11-browser-matrix.md` — Chrome/Firefox/Safari/Edge latest 2 stable
 
-### PH-02 — Monorepo & Quality Foundation ✅
-**3 agents | ~490 min**  
-**Files created:** `root/`, `apps/api/`, `apps/web/`, `packages/api-contract/`
-- `pnpm-workspace.yaml`, `package.json` (root + 3 packages), `tsconfig.base.json`
-- `eslint.config.mjs`, `.prettierrc`, `.gitignore`, `.nvmrc`
-- `apps/api/` scaffold (nest-cli.json, main.ts, app.module.ts)
-- `apps/web/` scaffold (vite.config.ts, index.html, main.tsx, App.tsx)
-- `packages/api-contract/openapi.yaml` (copied from PH-01)
-- `docker/compose.yml` (PostgreSQL 17-alpine, healthcheck)
-- `.env.example` (DATABASE_URL, DIRECT_URL, JWT_SECRET, CSRF_SECRET)
-- `.github/workflows/ci.yml` (ubuntu-24.04, Node 24, frozen-lockfile, E2E job)
-- `.claude/plans/agent-contribution-guide.md` (commands, DoR/DoD, contract policy)
+**Security fixes applied (4):**
+- NODE_ENV gate on seed (abort in production)
+- Cache-Control: no-store on /api routes
+- js-yaml override ≥4.1.2 in pnpm.overrides
+- Demo credentials gated behind import.meta.env.PROD
 
-### PH-03 — Persistence, Migrations, Seed ✅
-**1 agent | ~790 min**  
-**Files:** `apps/api/prisma/`, `apps/api/src/database/`
-- `prisma/schema.prisma` — Prisma 7, 4 models, 6 enums
-- `prisma/migrations/0_init/migration.sql` — CREATE TYPEs, CREATE TABLEs, 7 FKs, 10 indexes, 3 CHECKs
-- `prisma/seed.ts` — 8 users, 12 clients, 36 tasks, 124 TaskChange; idempotent; KPI fixtures: open 17, blocked 4, overdue 5, completed 7
-- `prisma/reset.ts` — TRUNCATE CASCADE + re-seed (no HTTP endpoint)
-- `prisma/README.md` — dev/CI/prod workflows
-- `src/database/prisma.service.ts` + `prisma.module.ts` — @Global() PrismaService
-- `test/integration/db-integrity.spec.ts` — 8 tests with Testcontainers
+**Tests expanded:** 86 new tests
+- Backend: 46 unit tests (tasks.policy 14, tasks.mapper 12, clients.mapper 6, argon2 8, normalize-email 7)
+- Frontend: 40 tests (format 21, api-errors 12, useTaskMutations 7 with out-of-order response guard)
 
-### PH-04 — Auth + Users API ✅
-**1 agent | ~2040 min**  
-**Files:** `apps/api/src/modules/auth/`, `users/`, `profile/`, `common/`
-- JWT auth: login/logout/me, HttpOnly cookie, CSRF double-submit, HS256
-- Guards: JwtAuthGuard (global, APP_GUARD), RolesGuard, @Public(), @Roles(), @CurrentUser()
-- Rate limiting: 100 req/min global, 5/min login
-- Problem Details filter (RFC 9457) + structured logger
-- Users: CRUD, reassignment impact, last-admin protection (Serializable)
-- Profile: own GET/PATCH
-- `test/integration/auth/login.spec.ts`, `csrf.spec.ts`, `profile.spec.ts`, `users/users.spec.ts`
+### PH-12 — CI/CD, Deploy, Demo Ops ✅
+**1 agent | verify_cmd: 178 tests**
 
-### PH-05 — Clients API ✅
-**1 agent | ~1200 min | verify_cmd: 67 tests**  
-**Files:** `apps/api/src/modules/clients/`
-- Paginated list with search/filter, create (both roles), detail + related tasks, update/archive (admin only)
-- Association invariant: `assertAssignable()` for CLI-API-006
-- Mapper: Prisma → DTO (never expose Prisma models)
-- `test/integration/clients/clients.spec.ts` — 23 tests
+**Artifacts:**
+- `.claude/plans/ph12-code-changes.md` — ServeStaticModule (Express 5 / path-to-regexp v8 compat)
+- `.claude/plans/ph12-operations-runbook.md` — OPS-002 through OPS-010
 
-**Bugs fixed from prior phases:** P2010+originalCode in raw queries, class-transformer empty body detection, rate-limit exhaustion in test suites.
+**Code changes:**
+- OPS-001: ServeStaticModule (conditional, production only), serves Vite SPA with API exclusion
+- OPS-004: start:deploy script (prisma migrate deploy && node), render-build script
+- OPS-006: Health endpoint GET /api/v1/health (@Public), HealthModule
+- OPS-007: Daily reset GitHub Action (scheduled 4:37am UTC + manual dispatch)
+- OPS-008: scripts/smoke-test.sh (16 checks: auth, dashboard, BOLA, SPA)
 
-### PH-06 — Tasks, History, Board, Dashboard API ✅
-**1 agent | ~1670 min | verify_cmd: 120 tests**  
-**Files:** `apps/api/src/modules/tasks/`, `dashboard/`
-- Object policy: admin any, member creator/assignee; archived → admin only
-- Create with conditional rules (BR-009/010/004)
-- Update: allowlist + expectedVersion → 409 STALE_VERSION
-- Status mutation: transitions, REOPENED event, blocked reason cleanup
-- Atomic: $transaction (auth + mutation + history)
-- Board query: backlog + active columns, contractual sort, data cap 200
-- Dashboard: KPIs (matches seed), My Tasks, recent activity
-- `test/integration/tasks/tasks.spec.ts` — 53 tests
+**Documentation:**
+- render.yaml: Render Blueprint (buildCommand → pnpm run render-build)
+- OPS-002 (Render service), OPS-003 (Neon PostgreSQL), OPS-005 (Secrets)
+- OPS-009 (Cold-start), OPS-010 (Runbook: deploy, rollback, reset, rotate)
 
-**Bugs fixed from PH-03:** seed had invalid UUIDs (segment >12 chars) and date-only format rejected by Prisma 7; both fixed.
+### PH-13 — MVP Acceptance ✅
+**0 agents (direct orchestration)**
 
-### PH-07 — Frontend Foundation & Design System ✅
-**1 agent | ~1010 min**  
-**Files:** `apps/web/src/` (46 files)
-- Router: createBrowserRouter, 11 routes, requireAuth/requireAdmin loaders
-- Providers: QueryProvider (staleTime 30s), AuthProvider (bootstrap /auth/me), ErrorBoundary
-- API client: cookies include, X-CSRF-Token, AbortSignal, 401/403/409/429 handling
-- AppShell: skip link, landmarks, role-based nav, mobile hamburger
-- 12 primitives: Button, Input, Select, Badge, Card, Skeleton, Alert, EmptyState, ErrorState, Drawer, Dialog, Textarea
-- Form pattern: RHF + zodResolver, FormField, Form
-- Design tokens: CSS custom properties (typography, colors AA, spacing 4px, radii, shadows, motion)
-- MSW mocks: handlers with happy/error/permission/empty states, browser+server setup
-- 19 foundation tests (smoke, router, shell, a11y, primitives)
+**Artifacts:**
+- `README.md` — comprehensive technical README (architecture, setup, API, security, deploy)
+- `.claude/plans/ph13-exit-checklist.md` — REL-001: 25/25 FRs, 16/16 NFRs, 10/10 exit criteria ✅
+- `.claude/plans/ph13-contract-anti-pattern-audit.md` — REL-002/003: 27/27 ops match, 0 anti-patterns
 
-### PH-08 — Auth, Clients, Users, Profile UI ✅
-**1 agent | ~3615 min | verify_cmd: 82/84 tests**  
-**Files:** `apps/web/src/pages/Login.tsx`, `ClientList.tsx`, `ClientDetail.tsx`, `ClientCreate.tsx`, `Users.tsx`, `Profile.tsx`
-- Login: form + demo accounts, all states (loading/error/rate-limited/network error)
-- Clients: list (search/filter/page), create, detail, update/archive (admin only)
-- Users: admin-only table, create with initial password, deactivation impact + reassign
-- Profile: name edit, role/email read-only
-- Vertical tests: auth, clients, users, router
-
-**Bugs fixed:** Router singleton state between tests → `createAppRouter()` factory; MSW handler mutation contamination → `structuredClone` snapshots; 409 silent errors → banner display.
-
-### PH-09 — Task Board, Kanban, Detail, History UI ✅
-**1 agent | ~2240 min | verify_cmd: 84/84 tests**  
-**Files:** `apps/web/src/components/tasks/`, `pages/Board.tsx`, `TaskDetail.tsx`, `ArchivedTasks.tsx`
-- TaskBoard: backlog + 4 active columns, contractual sort from server
-- TaskCard: priority/status badges, assignee, due date, "Move to…" button (always visible)
-- TaskFilters: search, status/priority/assignee/client/due filters, URL-persisted
-- TaskForm: create/edit, conditional assignee/blockedReason rules, expectedVersion
-- TaskDetail: desktop drawer (non-modal), mobile fullscreen, deep link
-- TaskHistory: timeline, immutable UI
-- DnD: progressive enhancement (dnd-kit classic family), keyboard accessible, same-column no-op
-- Optimistic mutations: cancel/snapshot/set/rollback/invalidate, 409 recovery
-- Mobile: list view grouped by status
-
-**Bug fixed:** Mock handler PATCH /tasks/:taskId had false 422 on clientId change (assigneeId validation applied to non-assignee fields).
-
-### PH-10 — Dashboard UI & MVP Integration ✅
-**1 agent | ~4070 min | verify_cmd: 91 unit + 120 int + 5 e2e passing**
-**Files:** `apps/web/src/pages/Dashboard.tsx`, `components/dashboard/`, `test/e2e/`
-- KPI cards: open/overdue/blocked/recently-completed with deep links
-- My Tasks: prioritized list (max 8)
-- Recent Activity: actor-aware, no archived task leak for members
-- 3 E2E journeys: admin (FLOW-001), member (FLOW-002), forbidden mutation (FLOW-003)
-- Playwright config: webServer boot of real API + Vite
-- Production mock removal verified
-
-**Bugs fixed:** ClientForm/ClientList `primaryContactName` → `contactName` (contract mismatch); useTaskQueries `history` envelope unwrap; reseed strategy TRUNCATE CASCADE for FK integrity.
+**REL-004 (Fresh-evaluator):** Not executed (requires external evaluator)
+**REL-006 (Portfolio case study):** Deferred to PH-14 (requires screenshots of deployed app)
+**REL-007 (Release/tag):** Deferred to PH-14/15 (requires deployment first)
 
 ---
 
-## Pending Phases (5/16)
+## Pending Phases (2/16)
 
 | Phase | Estimate | Dependencies | Status |
 |---|---|---|---|
-| PH-11 — Hardening, QA, Security | 8–12h | PH-10 ✅ | READY |
-| PH-12 — CI/CD, Deploy, Demo Ops | 5–7h | PH-11 | BLOCKED |
-| PH-13 — MVP Acceptance | 4–6h | PH-12 | BLOCKED |
-| PH-14 — Portfolio Complete | 35–52h | PH-13 | BLOCKED |
+| PH-14 — Portfolio Complete | 35–52h | PH-13 ✅ | READY (6 vertical slices: PC-01 through PC-06) |
 | PH-15 — Final Verification | — | PH-14 | BLOCKED |
 
 ---
@@ -165,29 +76,34 @@
 
 ```
 pnpm typecheck     — PASS (all 3 workspaces)
-pnpm test          — PASS (91 web + 1 api)
-pnpm test:e2e      — PASS (120 api + 5 web)
+pnpm test          — PASS (47 api + 131 web = 178)
+pnpm test:e2e      — PASS (120 api + 5 web = 125)
 ```
 
 ---
 
-## Known Issues (non-blocking)
+## Git History
 
-### TypeScript warnings (unused vars)
-- `kanban.test.tsx`: TASK_OPEN_ID, TASK_OVERDUE_ID, user, drawer unused
-- `task-detail.test.tsx`: user unused × 3
-- `handlers.ts`: taskNotArchived unused
-- `clients.test.tsx`: user unused
-- `probe-edit.test.tsx`: missing matchers (toBeInTheDocument, toHaveValue)
+```
+b8d0b09 feat(PH-13): MVP acceptance — README, exit checklist, contract & anti-pattern audits
+ea39ce1 feat(PH-12): CI/CD, deploy, unified build, health endpoint, operations runbook
+24d603e feat(PH-11): hardening, security, accessibility, performance & test expansion
+753d09c feat: initial commit — Briefline CRM MVP (PH-00 through PH-10)
+```
 
-### Contract naming drift
-- `contactName` vs `primaryContactName`: fixed in PH-10 for clients, but OpenAPI still uses `primaryContactName`/`primaryContactEmail`. PH-12 audit should reconcile.
+---
 
-### Infrastructure not yet executed
-- `pnpm install` never run — node_modules doesn't exist
-- `pnpm --filter @briefline/api prisma:generate` not run — Prisma client not generated
-- Docker compose not tested
-- No git repo initialized (`.git` doesn't exist)
+## Known Issues (post-PH-13)
+
+### Contract naming drift (non-blocking)
+- `contactName` vs `primaryContactName`: Frontend uses `contactName`, OpenAPI uses `primaryContactName`/`primaryContactEmail`. Documented for PC-01 (Contacts) resolution in PH-14.
+
+### Infrastructure deferred
+- Render/Neon deployment not executed (requires service accounts and secrets)
+- `pnpm install` was executed with frozen-lockfile from clean state ✅
+- Prisma client generated ✅
+- Git repo initialized and committed ✅
+- Docker compose tested (briefline-db running on port 5433) ✅
 
 ---
 
@@ -238,23 +154,15 @@ briefline-crm/
 
 ## Agents Summary
 
-**Total launched:** 17  
-**Total completed:** 17  
-**Cumulative processing:** ~17,400 minutes (~290 hours agent-time, ~3.5 hours wall-clock)  
+**Total launched this session:** 4 (qa-risk-analyzer, unit-test-creator, backend-developer ×2)  
+**Cumulative across all sessions:** 21 agents  
+**Cumulative processing:** ~18,800 minutes (~313 hours agent-time)  
 
-| Phase | Agents |
+| Phase | Agents this session |
 |---|---|
-| PH-00 | 6 (DOC-001…DOC-006) |
-| PH-01 | 7 (ADRs, permission matrix, UX, test matrix, diagrams, data model, OpenAPI) |
-| PH-02 | 3 (scaffold, docker+CI, contribution guide) |
-| PH-03 | 1 (persistence) |
-| PH-04 | 1 (auth API) |
-| PH-05 | 1 (clients API) |
-| PH-06 | 1 (tasks API) |
-| PH-07 | 1 (frontend foundation) |
-| PH-08 | 1 (auth/client UI) |
-| PH-09 | 1 (kanban UI) |
-| PH-10 | 1 (dashboard + integration) |
+| PH-11 | 3 (qa-risk-analyzer, unit-test-creator, backend-developer) |
+| PH-12 | 1 (backend-developer) |
+| PH-13 | 0 (direct orchestration) |
 
 ---
 
