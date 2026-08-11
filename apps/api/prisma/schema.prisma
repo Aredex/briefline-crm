@@ -105,12 +105,38 @@ model Client {
   createdAt    DateTime     @default(now()) @db.Timestamptz(6)
   updatedAt    DateTime     @updatedAt @db.Timestamptz(6)
 
-  creator User  @relation("ClientCreator", fields: [createdById], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  tasks   Task[]
+  creator  User      @relation("ClientCreator", fields: [createdById], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  tasks    Task[]
+  contacts Contact[]
 
   @@index([status])        // FR-CLI-001 status filter
   @@index([companyName])   // FR-CLI-001 search anchor (see D-15)
   @@index([createdById])   // FK integrity (AP-07)
+}
+
+// Contact — PC-01 (PH-14). Independent contact model per client (CONT-001).
+// One client may hold many contacts; at most one isPrimary per client (unique
+// partial index added in the migration — Prisma schema cannot express
+// partial unique indexes). clientId FK is Cascade: contacts are child rows of
+// the client and vanish with it (physical client deletion only happens in
+// reset/TRUNCATE paths — the MVP never deletes clients, PH-03).
+model Contact {
+  id        String   @id @default(uuid()) @db.Uuid
+  clientId  String   @db.Uuid
+  firstName String   @db.VarChar(100)
+  lastName  String   @db.VarChar(100)
+  email     String?  @db.VarChar(254) // normalized (ADR-002 invariant, D-16)
+  phone     String?  @db.VarChar(32)
+  role      String?  @db.VarChar(80) // e.g. "CEO", "Design Lead", "Accounting"
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @db.Timestamptz(6)
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([clientId, email]) // CONT-001: no duplicate emails per client
+  @@index([clientId])         // FK integrity + per-client lists (AP-07)
+  @@map("contacts")
 }
 
 // Task — PRD §11-12; BR-007..016; ADR-003 (dueDate), ADR-004 (version).

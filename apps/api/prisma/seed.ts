@@ -1,9 +1,9 @@
 // Deterministic demo seed — PH-03 DB-005 (data-model.md §8).
 //
-// Northstar Digital Studio demo data: 8 users, 12 clients, 36 tasks,
-// 124 TaskChange events, fixed formal-v4 UUIDs, timestamps relative to seed
-// execution time (overdue / due-today / recently-completed states stay stable
-// on every run).
+// Northstar Digital Studio demo data: 8 users, 12 clients, 3 contacts,
+// 36 tasks, 124 TaskChange events, fixed formal-v4 UUIDs, timestamps relative
+// to seed execution time (overdue / due-today / recently-completed states stay
+// stable on every run).
 //
 // Idempotency: fixed IDs + deleteMany-by-id before createMany, all inside one
 // interactive $transaction — safe to run repeatedly (AP-43; PH-03 verification
@@ -64,6 +64,11 @@ export const SEED_IDS = {
     c110: uuid('110'),
     c111: uuid('111'),
     c112: uuid('112'),
+  },
+  contacts: {
+    ct401: uuid('401'),
+    ct402: uuid('402'),
+    ct403: uuid('403'),
   },
   tasks: {
     t201: uuid('201'),
@@ -147,6 +152,19 @@ interface ClientSeed {
   status: ClientStatus
   notes: string | null
   createdById: string
+  createdAt: Date
+  updatedAt: Date
+}
+
+interface ContactSeed {
+  id: string
+  clientId: string
+  firstName: string
+  lastName: string
+  email: string | null
+  phone: string | null
+  role: string | null
+  isPrimary: boolean
   createdAt: Date
   updatedAt: Date
 }
@@ -291,6 +309,46 @@ function buildClients(): ClientSeed[] {
     mk(c.c110, 'GreenPath Nonprofit', 'Nonprofit', 'Hugo León', 'hugo@greenpath.demo', null, 'INACTIVE', null, u.member3),
     mk(c.c111, 'Harbor Consulting Group', 'Consulting', 'Inés Puig', 'ines@harborconsulting.demo', null, 'ARCHIVED', 'Portfolio complete 2025 — archived.', u.admin1),
     mk(c.c112, 'Digital Nest Agency', 'Digital Agency', 'Javier Costa', 'javier@digitalnest.demo', '+34 610 123 112', 'ARCHIVED', null, u.admin2),
+  ]
+}
+
+// ---------------------------------------------------------------------------
+// Contacts — 3 (PC-01, PH-14) — data-model §8.2 extension
+// ---------------------------------------------------------------------------
+// ct401 (Nova Cloudworks, primary) mirrors the client's legacy contactName/
+// contactEmail; ct402 is a second contact of the same client (CONT-001:
+// multiple contacts per client); ct403 is the single primary of Brightline
+// Commerce. Emails are pre-normalized (ADR-002).
+
+function buildContacts(): ContactSeed[] {
+  const created = hoursAgo(40 * 24)
+  const c = SEED_IDS.clients
+  const ct = SEED_IDS.contacts
+  const mk = (
+    id: string,
+    clientId: string,
+    firstName: string,
+    lastName: string,
+    email: string | null,
+    phone: string | null,
+    role: string | null,
+    isPrimary: boolean,
+  ): ContactSeed => ({
+    id,
+    clientId,
+    firstName,
+    lastName,
+    email,
+    phone,
+    role,
+    isPrimary,
+    createdAt: created,
+    updatedAt: created,
+  })
+  return [
+    mk(ct.ct401, c.c101, 'Irene', 'Vidal', 'irene@novacloudworks.demo', '+34 610 123 101', 'CEO', true),
+    mk(ct.ct402, c.c101, 'Marc', 'Serra', 'marc@novacloudworks.demo', null, 'Design Lead', false),
+    mk(ct.ct403, c.c102, 'Daniel', 'Roca', 'daniel@brightlinecommerce.demo', '+34 610 123 102', 'CEO', true),
   ]
 }
 
@@ -550,6 +608,7 @@ function buildTaskPlans(): TaskPlan[] {
 interface SeedStats {
   users: number
   clients: number
+  contacts: number
   tasks: number
   changes: number
 }
@@ -561,11 +620,13 @@ interface SeedStats {
 export async function runSeed(prisma: PrismaClient): Promise<SeedStats> {
   const users = buildUsers()
   const clients = buildClients()
+  const contacts = buildContacts()
   const taskPlans = buildTaskPlans()
 
   const allTaskIds = taskPlans.map((p) => p.id)
   const allClientIds = clients.map((c) => c.id)
   const allUserIds = users.map((u) => u.id)
+  const allContactIds = contacts.map((c) => c.id)
   const allChangeIds = Array.from(
     { length: taskPlans.reduce((sum, p) => sum + p.changes.length + 1, 0) },
     (_, i) => uuid(String(301 + i)),
@@ -636,11 +697,13 @@ export async function runSeed(prisma: PrismaClient): Promise<SeedStats> {
   await prisma.$transaction(async (tx) => {
     await tx.taskChange.deleteMany({ where: { id: { in: allChangeIds } } })
     await tx.task.deleteMany({ where: { id: { in: allTaskIds } } })
+    await tx.contact.deleteMany({ where: { id: { in: allContactIds } } }) // children before parents
     await tx.client.deleteMany({ where: { id: { in: allClientIds } } })
     await tx.user.deleteMany({ where: { id: { in: allUserIds } } })
 
     await tx.user.createMany({ data: users })
     await tx.client.createMany({ data: clients })
+    await tx.contact.createMany({ data: contacts })
     await tx.task.createMany({ data: tasks })
     await tx.taskChange.createMany({ data: changes })
   })
@@ -648,6 +711,7 @@ export async function runSeed(prisma: PrismaClient): Promise<SeedStats> {
   return {
     users: users.length,
     clients: clients.length,
+    contacts: contacts.length,
     tasks: tasks.length,
     changes: changes.length,
   }
@@ -802,7 +866,7 @@ async function main(): Promise<void> {
     const stats = await runSeed(prisma)
     console.log(
       `Seed complete: ${stats.users} users, ${stats.clients} clients, ` +
-        `${stats.tasks} tasks, ${stats.changes} task changes.`,
+        `${stats.contacts} contacts, ${stats.tasks} tasks, ${stats.changes} task changes.`,
     )
   } catch (err) {
     console.error('Seed failed:', err instanceof Error ? err.message : err)

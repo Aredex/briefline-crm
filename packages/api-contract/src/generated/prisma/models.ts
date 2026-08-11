@@ -10,6 +10,7 @@
  */
 export type * from './models/User.js'
 export type * from './models/Client.js'
+export type * from './models/Contact.js'
 export type * from './models/Task.js'
 export type * from './models/TaskChange.js'
 export type * from './commonInputTypes.js'

@@ -25,6 +25,7 @@ import type { ClientResponse, ClientWithTasksResponse, PageMeta } from './dto/cl
 import { CreateClientDto } from './dto/create-client.dto'
 import { UpdateClientDto } from './dto/update-client.dto'
 import { toClientResponse, toTaskSummary } from './clients.mapper'
+import { toContactResponse } from '../contacts/contacts.mapper'
 
 const CLIENT_NOT_FOUND = {
   code: 'CLIENT_NOT_FOUND',
@@ -84,13 +85,14 @@ export class ClientsService {
   }
 
   /**
-   * CLI-API-003 — client detail with a paginated related-task summary (FR-CLI-005).
+   * CLI-API-003 — client detail with a paginated related-task summary (FR-CLI-005)
+   * and the client's contact list, primary first (PC-01, PH-14).
    *
-   * No N+1: the client row is a single findUnique, and the task summary is two
-   * queries (count + page) with the join data included. Archived tasks are
-   * excluded (BR-016: archived resources are out of every active view).
-   * BOLA-safe: a member resolving an ARCHIVED client gets 404, identical to an
-   * unknown id (BR-005).
+   * No N+1: the client row is a single findUnique, and the detail is three
+   * queries (task count + task page + contacts) with the join data included.
+   * Archived tasks are excluded (BR-016: archived resources are out of every
+   * active view). BOLA-safe: a member resolving an ARCHIVED client gets 404,
+   * identical to an unknown id (BR-005).
    */
   async findOne(id: string, query: ClientQueryDto, actor: AuthUser): Promise<ClientWithTasksResponse> {
     const client = await this.prisma.client.findUnique({
@@ -104,7 +106,7 @@ export class ClientsService {
       throw new NotFoundException(CLIENT_NOT_FOUND)
     }
 
-    const [total, tasks] = await this.prisma.$transaction([
+    const [total, tasks, contacts] = await this.prisma.$transaction([
       this.prisma.task.count({ where: { clientId: id, archivedAt: null } }),
       this.prisma.task.findMany({
         where: { clientId: id, archivedAt: null },
@@ -117,6 +119,14 @@ export class ClientsService {
         skip: (query.page - 1) * query.limit,
         take: query.limit,
       }),
+      // PC-01 (PH-14): the client's full contact list, primary first
+      // (not paginated — a client holds a handful of contacts; the detail
+      // view is the master record for them).
+      this.prisma.contact.findMany({
+        where: { clientId: id },
+        include: { client: { select: { id: true, companyName: true } } },
+        orderBy: [{ isPrimary: 'desc' }, { lastName: 'asc' }, { firstName: 'asc' }],
+      }),
     ])
 
     return {
@@ -125,6 +135,7 @@ export class ClientsService {
         data: tasks.map(toTaskSummary),
         meta: { page: query.page, limit: query.limit, total },
       },
+      contacts: contacts.map(toContactResponse),
     }
   }
 

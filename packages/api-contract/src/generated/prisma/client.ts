@@ -52,6 +52,11 @@ export type User = Prisma.UserModel
  */
 export type Client = Prisma.ClientModel
 /**
+ * Model Contact
+ * 
+ */
+export type Contact = Prisma.ContactModel
+/**
  * Model Task
  * 
  */

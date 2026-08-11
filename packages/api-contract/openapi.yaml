@@ -941,6 +941,31 @@ paths:
                       page: 1
                       limit: 25
                       total: 2
+                  contacts:
+                    - id: 55555555-5555-4555-8555-555555555555
+                      client:
+                        id: 33333333-3333-4333-8333-333333333333
+                        companyName: Bluebird Coffee Co.
+                      firstName: Sofia
+                      lastName: Lindqvist
+                      email: sofia@bluebirdcoffee.example
+                      phone: +34 600 123 456
+                      role: CEO
+                      isPrimary: true
+                      createdAt: '2026-05-04T09:30:00.000Z'
+                      updatedAt: '2026-07-21T11:00:00.000Z'
+                    - id: 66666666-6666-4666-8666-666666666666
+                      client:
+                        id: 33333333-3333-4333-8333-333333333333
+                        companyName: Bluebird Coffee Co.
+                      firstName: Marta
+                      lastName: González
+                      email: marta@bluebirdcoffee.example
+                      phone: null
+                      role: Design Lead
+                      isPrimary: false
+                      createdAt: '2026-06-12T14:00:00.000Z'
+                      updatedAt: '2026-06-12T14:00:00.000Z'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
@@ -1183,6 +1208,403 @@ paths:
                 instance: /api/v1/clients/33333333-3333-4333-8333-333333333333
                 traceId: e7f8a9b0-c1d2-3456-7890-123456789012
                 code: CLIENT_ARCHIVED
+
+  /contacts:
+    get:
+      tags: [contacts]
+      summary: List contacts
+      description: |
+        Authenticated. Team-wide view (CONT-002). Flat filters: `q` (firstName/lastName/
+        email, case-insensitive, max 100), `clientId` (UUID), `isPrimary` (exactly
+        'true'/'false'). Contractual sort: primary first, then lastName/firstName asc.
+        Offset pagination.
+      operationId: listContacts
+      parameters:
+        - $ref: '#/components/parameters/SearchParam'
+        - $ref: '#/components/parameters/ClientIdFilterParam'
+        - $ref: '#/components/parameters/ContactIsPrimaryFilterParam'
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Paginated contact list
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ContactResponse'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+              example:
+                data:
+                  - id: 55555555-5555-4555-8555-555555555555
+                    client:
+                      id: 33333333-3333-4333-8333-333333333333
+                      companyName: Bluebird Coffee Co.
+                    firstName: Sofia
+                    lastName: Lindqvist
+                    email: sofia@bluebirdcoffee.example
+                    phone: +34 600 123 456
+                    role: CEO
+                    isPrimary: true
+                    createdAt: '2026-05-04T09:30:00.000Z'
+                    updatedAt: '2026-07-21T11:00:00.000Z'
+                  - id: 66666666-6666-4666-8666-666666666666
+                    client:
+                      id: 33333333-3333-4333-8333-333333333333
+                      companyName: Bluebird Coffee Co.
+                    firstName: Marta
+                    lastName: González
+                    email: marta@bluebirdcoffee.example
+                    phone: null
+                    role: Design Lead
+                    isPrimary: false
+                    createdAt: '2026-06-12T14:00:00.000Z'
+                    updatedAt: '2026-06-12T14:00:00.000Z'
+                meta:
+                  page: 1
+                  limit: 25
+                  total: 2
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [contacts]
+      summary: Create contact
+      description: |
+        Admin only (member → 403, CONT-001). firstName/lastName required; email optional,
+        normalized (ADR-002) and unique per client (409 `CONTACT_EMAIL_EXISTS`). Unknown
+        clientId → 404 `CLIENT_NOT_FOUND`. `isPrimary` is not accepted here — the primary
+        transition is POST /contacts/{contactId}/primary.
+      operationId: createContact
+      security:
+        - cookieAuth: []
+          csrfHeader: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateContactRequest'
+            example:
+              clientId: 33333333-3333-4333-8333-333333333333
+              firstName: Lucía
+              lastName: Fernández
+              email: lucia@bluebirdcoffee.example
+              phone: +34 611 222 333
+              role: Accounting
+      responses:
+        '201':
+          description: Contact created
+          headers:
+            Location:
+              description: URL of the created contact
+              schema:
+                type: string
+                example: /api/v1/contacts/55555555-5555-4555-8555-555555555555
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ContactResponse'
+              example:
+                data:
+                  id: 55555555-5555-4555-8555-555555555555
+                  client:
+                    id: 33333333-3333-4333-8333-333333333333
+                    companyName: Bluebird Coffee Co.
+                  firstName: Lucía
+                  lastName: Fernández
+                  email: lucia@bluebirdcoffee.example
+                  phone: +34 611 222 333
+                  role: Accounting
+                  isPrimary: false
+                  createdAt: '2026-08-11T10:00:00.000Z'
+                  updatedAt: '2026-08-11T10:00:00.000Z'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Client not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              example:
+                type: https://briefline-crm.demo/errors/client-not-found
+                title: Client not found
+                status: 404
+                detail: The requested client does not exist or is not visible to you.
+                instance: /api/v1/contacts
+                traceId: b1c2d3e4-f5a6-7890-1234-567890123456
+                code: CLIENT_NOT_FOUND
+        '409':
+          description: Duplicate email for this client
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              example:
+                type: https://briefline-crm.demo/errors/contact-email-exists
+                title: Contact email already exists
+                status: 409
+                detail: A contact with this email already exists for this client.
+                instance: /api/v1/contacts
+                traceId: c2d3e4f5-a6b7-8901-2345-678901234567
+                code: CONTACT_EMAIL_EXISTS
+
+  /contacts/{contactId}:
+    parameters:
+      - $ref: '#/components/parameters/ContactIdParam'
+    get:
+      tags: [contacts]
+      summary: Get contact by ID
+      description: Authenticated. Team-wide view (CONT-002).
+      operationId: getContact
+      responses:
+        '200':
+          description: Contact detail
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ContactResponse'
+              example:
+                data:
+                  id: 55555555-5555-4555-8555-555555555555
+                  client:
+                    id: 33333333-3333-4333-8333-333333333333
+                    companyName: Bluebird Coffee Co.
+                  firstName: Sofia
+                  lastName: Lindqvist
+                  email: sofia@bluebirdcoffee.example
+                  phone: +34 600 123 456
+                  role: CEO
+                  isPrimary: true
+                  createdAt: '2026-05-04T09:30:00.000Z'
+                  updatedAt: '2026-07-21T11:00:00.000Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Contact not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              example:
+                type: https://briefline-crm.demo/errors/contact-not-found
+                title: Contact not found
+                status: 404
+                detail: The requested contact does not exist or is not visible to you.
+                instance: /api/v1/contacts/99999999-9999-4999-8999-999999999999
+                traceId: d3e4f5a6-b7c8-9012-3456-789012345678
+                code: CONTACT_NOT_FOUND
+    patch:
+      tags: [contacts]
+      summary: Update contact
+      description: |
+        Admin only (member → 403, CONT-001). Editable: `firstName`, `lastName`, `email`,
+        `phone`, `role` (field-level DTO allowlist, CONT-API-004). `isPrimary` and
+        `clientId` are NOT editable — the primary transition is
+        POST /contacts/{contactId}/primary. Empty body → 400.
+      operationId: updateContact
+      security:
+        - cookieAuth: []
+          csrfHeader: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateContactRequest'
+            example:
+              email: marta@bluebirdcoffee.example
+              role: Creative Director
+      responses:
+        '200':
+          description: Contact updated
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ContactResponse'
+              example:
+                data:
+                  id: 66666666-6666-4666-8666-666666666666
+                  client:
+                    id: 33333333-3333-4333-8333-333333333333
+                    companyName: Bluebird Coffee Co.
+                  firstName: Marta
+                  lastName: González
+                  email: marta@bluebirdcoffee.example
+                  phone: null
+                  role: Creative Director
+                  isPrimary: false
+                  createdAt: '2026-06-12T14:00:00.000Z'
+                  updatedAt: '2026-08-11T10:15:00.000Z'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Contact not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              example:
+                type: https://briefline-crm.demo/errors/contact-not-found
+                title: Contact not found
+                status: 404
+                detail: The requested contact does not exist or is not visible to you.
+                instance: /api/v1/contacts/99999999-9999-4999-8999-999999999999
+                traceId: e4f5a6b7-c8d9-0123-4567-890123456789
+                code: CONTACT_NOT_FOUND
+        '409':
+          description: Duplicate email for this client
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              example:
+                type: https://briefline-crm.demo/errors/contact-email-exists
+                title: Contact email already exists
+                status: 409
+                detail: A contact with this email already exists for this client.
+                instance: /api/v1/contacts/66666666-6666-4666-8666-666666666666
+                traceId: f5a6b7c8-d9e0-1234-5678-901234567890
+                code: CONTACT_EMAIL_EXISTS
+    delete:
+      tags: [contacts]
+      summary: Delete contact
+      description: |
+        Admin only (member → 403, CONT-001). Physical delete — the MVP has no
+        soft-delete (consistent with the rest of the API). Returns the deleted
+        contact's last-known state.
+      operationId: deleteContact
+      security:
+        - cookieAuth: []
+          csrfHeader: []
+      responses:
+        '200':
+          description: Contact deleted (last-known state returned)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ContactResponse'
+              example:
+                data:
+                  id: 66666666-6666-4666-8666-666666666666
+                  client:
+                    id: 33333333-3333-4333-8333-333333333333
+                    companyName: Bluebird Coffee Co.
+                  firstName: Marta
+                  lastName: González
+                  email: marta@bluebirdcoffee.example
+                  phone: null
+                  role: Design Lead
+                  isPrimary: false
+                  createdAt: '2026-06-12T14:00:00.000Z'
+                  updatedAt: '2026-06-12T14:00:00.000Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Contact not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              example:
+                type: https://briefline-crm.demo/errors/contact-not-found
+                title: Contact not found
+                status: 404
+                detail: The requested contact does not exist or is not visible to you.
+                instance: /api/v1/contacts/99999999-9999-4999-8999-999999999999
+                traceId: a6b7c8d9-e0f1-2345-6789-012345678901
+                code: CONTACT_NOT_FOUND
+
+  /contacts/{contactId}/primary:
+    post:
+      tags: [contacts]
+      summary: Mark contact as primary
+      description: |
+        Admin only (member → 403, CONT-001). Marks the contact as the primary for its
+        client; the previous primary is unset in the SAME transaction. Idempotent:
+        marking the current primary is a 200 no-op. At most one primary per client —
+        backed by the partial unique index contacts_single_primary_per_client.
+      operationId: markContactPrimary
+      security:
+        - cookieAuth: []
+          csrfHeader: []
+      responses:
+        '200':
+          description: Contact marked as primary (or already primary — no-op)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ContactResponse'
+              example:
+                data:
+                  id: 66666666-6666-4666-8666-666666666666
+                  client:
+                    id: 33333333-3333-4333-8333-333333333333
+                    companyName: Bluebird Coffee Co.
+                  firstName: Marta
+                  lastName: González
+                  email: marta@bluebirdcoffee.example
+                  phone: null
+                  role: Design Lead
+                  isPrimary: true
+                  createdAt: '2026-06-12T14:00:00.000Z'
+                  updatedAt: '2026-08-11T10:20:00.000Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Contact not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              example:
+                type: https://briefline-crm.demo/errors/contact-not-found
+                title: Contact not found
+                status: 404
+                detail: The requested contact does not exist or is not visible to you.
+                instance: /api/v1/contacts/99999999-9999-4999-8999-999999999999
+                traceId: b7c8d9e0-f1a2-3456-7890-123456789012
+                code: CONTACT_NOT_FOUND
 
   /tasks/board:
     get:
@@ -2336,6 +2758,22 @@ components:
       schema:
         type: string
         format: uuid
+    ContactIdParam:
+      name: contactId
+      in: path
+      required: true
+      description: UUID of the contact
+      schema:
+        type: string
+        format: uuid
+        example: 55555555-5555-4555-8555-555555555555
+    ContactIsPrimaryFilterParam:
+      name: isPrimary
+      in: query
+      description: Filter by primary flag (exactly 'true' or 'false')
+      schema:
+        type: boolean
+        example: true
     DueBeforeParam:
       name: dueBefore
       in: query
@@ -2601,7 +3039,7 @@ components:
           format: date-time
     ClientWithTasksResponse:
       type: object
-      required: [client, relatedTasks]
+      required: [client, relatedTasks, contacts]
       properties:
         client:
           $ref: '#/components/schemas/ClientResponse'
@@ -2615,6 +3053,55 @@ components:
                 $ref: '#/components/schemas/TaskSummary'
             meta:
               $ref: '#/components/schemas/PaginationMeta'
+        contacts:
+          type: array
+          description: The client's full contact list, primary first (PC-01, PH-14)
+          items:
+            $ref: '#/components/schemas/ContactResponse'
+    ContactResponse:
+      type: object
+      required:
+        - id
+        - client
+        - firstName
+        - lastName
+        - email
+        - phone
+        - role
+        - isPrimary
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        client:
+          $ref: '#/components/schemas/ClientRef'
+        firstName:
+          type: string
+          maxLength: 100
+        lastName:
+          type: string
+          maxLength: 100
+        email:
+          type: [string, 'null']
+          format: email
+          maxLength: 254
+        phone:
+          type: [string, 'null']
+          maxLength: 32
+        role:
+          type: [string, 'null']
+          maxLength: 80
+        isPrimary:
+          type: boolean
+          description: At most one primary contact per client (CONT-001)
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
     TaskSummary:
       type: object
       description: Compact task card (board, lists, my tasks) — no description or history
@@ -3005,6 +3492,52 @@ components:
         notes:
           type: [string, 'null']
           maxLength: 2000
+    CreateContactRequest:
+      type: object
+      description: Admin only (CONT-001). firstName/lastName required; email normalized (ADR-002) and unique per client.
+      required: [clientId, firstName, lastName]
+      properties:
+        clientId:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+          maxLength: 100
+        lastName:
+          type: string
+          maxLength: 100
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        phone:
+          type: string
+          maxLength: 32
+        role:
+          type: string
+          maxLength: 80
+          description: e.g. "CEO", "Design Lead", "Accounting"
+    UpdateContactRequest:
+      type: object
+      description: Admin only; field-level allowlist (CONT-API-004). At least one field required. isPrimary is owned by POST /contacts/{contactId}/primary.
+      minProperties: 1
+      properties:
+        firstName:
+          type: string
+          maxLength: 100
+        lastName:
+          type: string
+          maxLength: 100
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        phone:
+          type: string
+          maxLength: 32
+        role:
+          type: string
+          maxLength: 80
     CreateTaskRequest:
       type: object
       required: [title]

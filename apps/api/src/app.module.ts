@@ -24,6 +24,7 @@ import { HealthModule } from './modules/health/health.module'
 import { ProfileModule } from './modules/profile/profile.module'
 import { UsersModule } from './modules/users/users.module'
 import { ClientsModule } from './modules/clients/clients.module'
+import { ContactsModule } from './modules/contacts/contacts.module'
 import { TasksModule } from './modules/tasks/tasks.module'
 import { DashboardModule } from './modules/dashboard/dashboard.module'
 
@@ -51,6 +52,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module'
     ProfileModule,
     UsersModule,
     ClientsModule,
+    ContactsModule,
     TasksModule,
     DashboardModule,
     HealthModule,

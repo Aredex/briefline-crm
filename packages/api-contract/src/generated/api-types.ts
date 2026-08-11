@@ -370,6 +370,95 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/contacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List contacts
+         * @description Authenticated. Team-wide view (CONT-002). Flat filters: `q` (firstName/lastName/
+         *     email, case-insensitive, max 100), `clientId` (UUID), `isPrimary` (exactly
+         *     'true'/'false'). Contractual sort: primary first, then lastName/firstName asc.
+         *     Offset pagination.
+         */
+        get: operations["listContacts"];
+        put?: never;
+        /**
+         * Create contact
+         * @description Admin only (member → 403, CONT-001). firstName/lastName required; email optional,
+         *     normalized (ADR-002) and unique per client (409 `CONTACT_EMAIL_EXISTS`). Unknown
+         *     clientId → 404 `CLIENT_NOT_FOUND`. `isPrimary` is not accepted here — the primary
+         *     transition is POST /contacts/{contactId}/primary.
+         */
+        post: operations["createContact"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/contacts/{contactId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description UUID of the contact */
+                contactId: components["parameters"]["ContactIdParam"];
+            };
+            cookie?: never;
+        };
+        /**
+         * Get contact by ID
+         * @description Authenticated. Team-wide view (CONT-002).
+         */
+        get: operations["getContact"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete contact
+         * @description Admin only (member → 403, CONT-001). Physical delete — the MVP has no
+         *     soft-delete (consistent with the rest of the API). Returns the deleted
+         *     contact's last-known state.
+         */
+        delete: operations["deleteContact"];
+        options?: never;
+        head?: never;
+        /**
+         * Update contact
+         * @description Admin only (member → 403, CONT-001). Editable: `firstName`, `lastName`, `email`,
+         *     `phone`, `role` (field-level DTO allowlist, CONT-API-004). `isPrimary` and
+         *     `clientId` are NOT editable — the primary transition is
+         *     POST /contacts/{contactId}/primary. Empty body → 400.
+         */
+        patch: operations["updateContact"];
+        trace?: never;
+    };
+    "/contacts/{contactId}/primary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mark contact as primary
+         * @description Admin only (member → 403, CONT-001). Marks the contact as the primary for its
+         *     client; the previous primary is unset in the SAME transaction. Idempotent:
+         *     marking the current primary is a 200 no-op. At most one primary per client —
+         *     backed by the partial unique index contacts_single_primary_per_client.
+         */
+        post: operations["markContactPrimary"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tasks/board": {
         parameters: {
             query?: never;
@@ -727,6 +816,25 @@ export interface components {
                 data: components["schemas"]["TaskSummary"][];
                 meta: components["schemas"]["PaginationMeta"];
             };
+            /** @description The client's full contact list, primary first (PC-01, PH-14) */
+            contacts: components["schemas"]["ContactResponse"][];
+        };
+        ContactResponse: {
+            /** Format: uuid */
+            id: string;
+            client: components["schemas"]["ClientRef"];
+            firstName: string;
+            lastName: string;
+            /** Format: email */
+            email: string | null;
+            phone: string | null;
+            role: string | null;
+            /** @description At most one primary contact per client (CONT-001) */
+            isPrimary: boolean;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
         };
         /** @description Compact task card (board, lists, my tasks) — no description or history */
         TaskSummary: {
@@ -937,6 +1045,27 @@ export interface components {
             primaryContactEmail?: string;
             phone?: string | null;
             notes?: string | null;
+        };
+        /** @description Admin only (CONT-001). firstName/lastName required; email normalized (ADR-002) and unique per client. */
+        CreateContactRequest: {
+            /** Format: uuid */
+            clientId: string;
+            firstName: string;
+            lastName: string;
+            /** Format: email */
+            email?: string;
+            phone?: string;
+            /** @description e.g. "CEO", "Design Lead", "Accounting" */
+            role?: string;
+        };
+        /** @description Admin only; field-level allowlist (CONT-API-004). At least one field required. isPrimary is owned by POST /contacts/{contactId}/primary. */
+        UpdateContactRequest: {
+            firstName?: string;
+            lastName?: string;
+            /** Format: email */
+            email?: string;
+            phone?: string;
+            role?: string;
         };
         CreateTaskRequest: {
             title: string;
@@ -1258,6 +1387,10 @@ export interface components {
         AssigneeIdParam: string;
         /** @description Filter by client (UUID) */
         ClientIdFilterParam: string;
+        /** @description UUID of the contact */
+        ContactIdParam: string;
+        /** @description Filter by primary flag (exactly 'true' or 'false') */
+        ContactIsPrimaryFilterParam: boolean;
         /** @description Only tasks with dueDate on or before this date (inclusive) */
         DueBeforeParam: string;
         /** @description Only tasks with dueDate on or after this date (inclusive) */
@@ -2271,7 +2404,39 @@ export interface operations {
                      *             "limit": 25,
                      *             "total": 2
                      *           }
-                     *         }
+                     *         },
+                     *         "contacts": [
+                     *           {
+                     *             "id": "55555555-5555-4555-8555-555555555555",
+                     *             "client": {
+                     *               "id": "33333333-3333-4333-8333-333333333333",
+                     *               "companyName": "Bluebird Coffee Co."
+                     *             },
+                     *             "firstName": "Sofia",
+                     *             "lastName": "Lindqvist",
+                     *             "email": "sofia@bluebirdcoffee.example",
+                     *             "phone": "+34 600 123 456",
+                     *             "role": "CEO",
+                     *             "isPrimary": true,
+                     *             "createdAt": "2026-05-04T09:30:00.000Z",
+                     *             "updatedAt": "2026-07-21T11:00:00.000Z"
+                     *           },
+                     *           {
+                     *             "id": "66666666-6666-4666-8666-666666666666",
+                     *             "client": {
+                     *               "id": "33333333-3333-4333-8333-333333333333",
+                     *               "companyName": "Bluebird Coffee Co."
+                     *             },
+                     *             "firstName": "Marta",
+                     *             "lastName": "González",
+                     *             "email": "marta@bluebirdcoffee.example",
+                     *             "phone": null,
+                     *             "role": "Design Lead",
+                     *             "isPrimary": false,
+                     *             "createdAt": "2026-06-12T14:00:00.000Z",
+                     *             "updatedAt": "2026-06-12T14:00:00.000Z"
+                     *           }
+                     *         ]
                      *       }
                      *     }
                      */
@@ -2567,6 +2732,474 @@ export interface operations {
                      *       "instance": "/api/v1/clients/33333333-3333-4333-8333-333333333333",
                      *       "traceId": "e7f8a9b0-c1d2-3456-7890-123456789012",
                      *       "code": "CLIENT_ARCHIVED"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    listContacts: {
+        parameters: {
+            query?: {
+                /** @description Case-insensitive search (max 100 characters) */
+                q?: components["parameters"]["SearchParam"];
+                /** @description Filter by client (UUID) */
+                clientId?: components["parameters"]["ClientIdFilterParam"];
+                /** @description Filter by primary flag (exactly 'true' or 'false') */
+                isPrimary?: components["parameters"]["ContactIsPrimaryFilterParam"];
+                /** @description 1-based page number */
+                page?: components["parameters"]["PageParam"];
+                /** @description Page size (max 100; values above 100 are rejected with 400) */
+                limit?: components["parameters"]["LimitParam"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated contact list */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "data": [
+                     *         {
+                     *           "id": "55555555-5555-4555-8555-555555555555",
+                     *           "client": {
+                     *             "id": "33333333-3333-4333-8333-333333333333",
+                     *             "companyName": "Bluebird Coffee Co."
+                     *           },
+                     *           "firstName": "Sofia",
+                     *           "lastName": "Lindqvist",
+                     *           "email": "sofia@bluebirdcoffee.example",
+                     *           "phone": "+34 600 123 456",
+                     *           "role": "CEO",
+                     *           "isPrimary": true,
+                     *           "createdAt": "2026-05-04T09:30:00.000Z",
+                     *           "updatedAt": "2026-07-21T11:00:00.000Z"
+                     *         },
+                     *         {
+                     *           "id": "66666666-6666-4666-8666-666666666666",
+                     *           "client": {
+                     *             "id": "33333333-3333-4333-8333-333333333333",
+                     *             "companyName": "Bluebird Coffee Co."
+                     *           },
+                     *           "firstName": "Marta",
+                     *           "lastName": "González",
+                     *           "email": "marta@bluebirdcoffee.example",
+                     *           "phone": null,
+                     *           "role": "Design Lead",
+                     *           "isPrimary": false,
+                     *           "createdAt": "2026-06-12T14:00:00.000Z",
+                     *           "updatedAt": "2026-06-12T14:00:00.000Z"
+                     *         }
+                     *       ],
+                     *       "meta": {
+                     *         "page": 1,
+                     *         "limit": 25,
+                     *         "total": 2
+                     *       }
+                     *     }
+                     */
+                    "application/json": {
+                        data: components["schemas"]["ContactResponse"][];
+                        meta: components["schemas"]["PaginationMeta"];
+                    };
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    createContact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "clientId": "33333333-3333-4333-8333-333333333333",
+                 *       "firstName": "Lucía",
+                 *       "lastName": "Fernández",
+                 *       "email": "lucia@bluebirdcoffee.example",
+                 *       "phone": "+34 611 222 333",
+                 *       "role": "Accounting"
+                 *     }
+                 */
+                "application/json": components["schemas"]["CreateContactRequest"];
+            };
+        };
+        responses: {
+            /** @description Contact created */
+            201: {
+                headers: {
+                    /** @description URL of the created contact */
+                    Location?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "data": {
+                     *         "id": "55555555-5555-4555-8555-555555555555",
+                     *         "client": {
+                     *           "id": "33333333-3333-4333-8333-333333333333",
+                     *           "companyName": "Bluebird Coffee Co."
+                     *         },
+                     *         "firstName": "Lucía",
+                     *         "lastName": "Fernández",
+                     *         "email": "lucia@bluebirdcoffee.example",
+                     *         "phone": "+34 611 222 333",
+                     *         "role": "Accounting",
+                     *         "isPrimary": false,
+                     *         "createdAt": "2026-08-11T10:00:00.000Z",
+                     *         "updatedAt": "2026-08-11T10:00:00.000Z"
+                     *       }
+                     *     }
+                     */
+                    "application/json": {
+                        data: components["schemas"]["ContactResponse"];
+                    };
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            /** @description Client not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "https://briefline-crm.demo/errors/client-not-found",
+                     *       "title": "Client not found",
+                     *       "status": 404,
+                     *       "detail": "The requested client does not exist or is not visible to you.",
+                     *       "instance": "/api/v1/contacts",
+                     *       "traceId": "b1c2d3e4-f5a6-7890-1234-567890123456",
+                     *       "code": "CLIENT_NOT_FOUND"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Duplicate email for this client */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "https://briefline-crm.demo/errors/contact-email-exists",
+                     *       "title": "Contact email already exists",
+                     *       "status": 409,
+                     *       "detail": "A contact with this email already exists for this client.",
+                     *       "instance": "/api/v1/contacts",
+                     *       "traceId": "c2d3e4f5-a6b7-8901-2345-678901234567",
+                     *       "code": "CONTACT_EMAIL_EXISTS"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    getContact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description UUID of the contact */
+                contactId: components["parameters"]["ContactIdParam"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Contact detail */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "data": {
+                     *         "id": "55555555-5555-4555-8555-555555555555",
+                     *         "client": {
+                     *           "id": "33333333-3333-4333-8333-333333333333",
+                     *           "companyName": "Bluebird Coffee Co."
+                     *         },
+                     *         "firstName": "Sofia",
+                     *         "lastName": "Lindqvist",
+                     *         "email": "sofia@bluebirdcoffee.example",
+                     *         "phone": "+34 600 123 456",
+                     *         "role": "CEO",
+                     *         "isPrimary": true,
+                     *         "createdAt": "2026-05-04T09:30:00.000Z",
+                     *         "updatedAt": "2026-07-21T11:00:00.000Z"
+                     *       }
+                     *     }
+                     */
+                    "application/json": {
+                        data: components["schemas"]["ContactResponse"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            /** @description Contact not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "https://briefline-crm.demo/errors/contact-not-found",
+                     *       "title": "Contact not found",
+                     *       "status": 404,
+                     *       "detail": "The requested contact does not exist or is not visible to you.",
+                     *       "instance": "/api/v1/contacts/99999999-9999-4999-8999-999999999999",
+                     *       "traceId": "d3e4f5a6-b7c8-9012-3456-789012345678",
+                     *       "code": "CONTACT_NOT_FOUND"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    deleteContact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description UUID of the contact */
+                contactId: components["parameters"]["ContactIdParam"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Contact deleted (last-known state returned) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "data": {
+                     *         "id": "66666666-6666-4666-8666-666666666666",
+                     *         "client": {
+                     *           "id": "33333333-3333-4333-8333-333333333333",
+                     *           "companyName": "Bluebird Coffee Co."
+                     *         },
+                     *         "firstName": "Marta",
+                     *         "lastName": "González",
+                     *         "email": "marta@bluebirdcoffee.example",
+                     *         "phone": null,
+                     *         "role": "Design Lead",
+                     *         "isPrimary": false,
+                     *         "createdAt": "2026-06-12T14:00:00.000Z",
+                     *         "updatedAt": "2026-06-12T14:00:00.000Z"
+                     *       }
+                     *     }
+                     */
+                    "application/json": {
+                        data: components["schemas"]["ContactResponse"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            /** @description Contact not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "https://briefline-crm.demo/errors/contact-not-found",
+                     *       "title": "Contact not found",
+                     *       "status": 404,
+                     *       "detail": "The requested contact does not exist or is not visible to you.",
+                     *       "instance": "/api/v1/contacts/99999999-9999-4999-8999-999999999999",
+                     *       "traceId": "a6b7c8d9-e0f1-2345-6789-012345678901",
+                     *       "code": "CONTACT_NOT_FOUND"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    updateContact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description UUID of the contact */
+                contactId: components["parameters"]["ContactIdParam"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "email": "marta@bluebirdcoffee.example",
+                 *       "role": "Creative Director"
+                 *     }
+                 */
+                "application/json": components["schemas"]["UpdateContactRequest"];
+            };
+        };
+        responses: {
+            /** @description Contact updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "data": {
+                     *         "id": "66666666-6666-4666-8666-666666666666",
+                     *         "client": {
+                     *           "id": "33333333-3333-4333-8333-333333333333",
+                     *           "companyName": "Bluebird Coffee Co."
+                     *         },
+                     *         "firstName": "Marta",
+                     *         "lastName": "González",
+                     *         "email": "marta@bluebirdcoffee.example",
+                     *         "phone": null,
+                     *         "role": "Creative Director",
+                     *         "isPrimary": false,
+                     *         "createdAt": "2026-06-12T14:00:00.000Z",
+                     *         "updatedAt": "2026-08-11T10:15:00.000Z"
+                     *       }
+                     *     }
+                     */
+                    "application/json": {
+                        data: components["schemas"]["ContactResponse"];
+                    };
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            /** @description Contact not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "https://briefline-crm.demo/errors/contact-not-found",
+                     *       "title": "Contact not found",
+                     *       "status": 404,
+                     *       "detail": "The requested contact does not exist or is not visible to you.",
+                     *       "instance": "/api/v1/contacts/99999999-9999-4999-8999-999999999999",
+                     *       "traceId": "e4f5a6b7-c8d9-0123-4567-890123456789",
+                     *       "code": "CONTACT_NOT_FOUND"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Duplicate email for this client */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "https://briefline-crm.demo/errors/contact-email-exists",
+                     *       "title": "Contact email already exists",
+                     *       "status": 409,
+                     *       "detail": "A contact with this email already exists for this client.",
+                     *       "instance": "/api/v1/contacts/66666666-6666-4666-8666-666666666666",
+                     *       "traceId": "f5a6b7c8-d9e0-1234-5678-901234567890",
+                     *       "code": "CONTACT_EMAIL_EXISTS"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    markContactPrimary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Contact marked as primary (or already primary — no-op) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "data": {
+                     *         "id": "66666666-6666-4666-8666-666666666666",
+                     *         "client": {
+                     *           "id": "33333333-3333-4333-8333-333333333333",
+                     *           "companyName": "Bluebird Coffee Co."
+                     *         },
+                     *         "firstName": "Marta",
+                     *         "lastName": "González",
+                     *         "email": "marta@bluebirdcoffee.example",
+                     *         "phone": null,
+                     *         "role": "Design Lead",
+                     *         "isPrimary": true,
+                     *         "createdAt": "2026-06-12T14:00:00.000Z",
+                     *         "updatedAt": "2026-08-11T10:20:00.000Z"
+                     *       }
+                     *     }
+                     */
+                    "application/json": {
+                        data: components["schemas"]["ContactResponse"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            /** @description Contact not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "https://briefline-crm.demo/errors/contact-not-found",
+                     *       "title": "Contact not found",
+                     *       "status": 404,
+                     *       "detail": "The requested contact does not exist or is not visible to you.",
+                     *       "instance": "/api/v1/contacts/99999999-9999-4999-8999-999999999999",
+                     *       "traceId": "b7c8d9e0-f1a2-3456-7890-123456789012",
+                     *       "code": "CONTACT_NOT_FOUND"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["ProblemDetails"];
