@@ -40,9 +40,9 @@ export class AuthController {
     @Body() dto: LoginDto,
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<{ data: { csrfToken: string } }> {
-    const { csrfToken } = await this.authService.login(dto, req, res)
-    return { data: { csrfToken } }
+  ): Promise<{ data: { csrfToken: string; user: AuthUser } }> {
+    const { csrfToken, user } = await this.authService.login(dto, req, res)
+    return { data: { csrfToken, user } }
   }
 
   @Post('logout')

@@ -46,7 +46,7 @@ export class AuthService {
     return this.generateCsrfToken(req, res)
   }
 
-  async login(dto: LoginDto, req: Request, res: Response): Promise<{ csrfToken: string }> {
+  async login(dto: LoginDto, req: Request, res: Response): Promise<{ csrfToken: string; user: AuthUser }> {
     const nodeEnv = this.configService.getOrThrow<string>('NODE_ENV')
     const isProduction = nodeEnv === 'production'
     const cookieName = getJwtCookieName(nodeEnv)
@@ -86,7 +86,19 @@ export class AuthService {
     }
 
     this.logger.log('auth.login.success', { event: 'auth.login.success', userId: user.id })
-    return { csrfToken }
+    return {
+      csrfToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        status: user.status,
+        lastLoginAt: user.lastLoginAt,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      },
+    }
   }
 
   async logout(req: Request, res: Response): Promise<{ ok: boolean }> {
