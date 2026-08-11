@@ -7,6 +7,7 @@
     "build": "nest build",
     "start": "node dist/main",
     "start:prod": "node dist/main",
+    "start:deploy": "prisma migrate deploy && node dist/main.js",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src/ test/",
     "test": "vitest run",

@@ -7,7 +7,9 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { APP_FILTER, APP_GUARD } from '@nestjs/core'
+import { ServeStaticModule } from '@nestjs/serve-static'
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler'
+import { resolve } from 'node:path'
 import { validateEnv } from './config/configuration'
 import { ProblemDetailsFilter } from './common/filters/problem-details.filter'
 import { CsrfModule } from './common/csrf/csrf.module'
@@ -18,6 +20,7 @@ import { PrismaModule } from './database/prisma.module'
 import { AuthModule } from './modules/auth/auth.module'
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard'
 import { RolesGuard } from './modules/auth/guards/roles.guard'
+import { HealthModule } from './modules/health/health.module'
 import { ProfileModule } from './modules/profile/profile.module'
 import { UsersModule } from './modules/users/users.module'
 import { ClientsModule } from './modules/clients/clients.module'
@@ -50,6 +53,31 @@ import { DashboardModule } from './modules/dashboard/dashboard.module'
     ClientsModule,
     TasksModule,
     DashboardModule,
+    HealthModule,
+    // OPS-001 (PH-12): unified production build — Nest serves the built Vite
+    // SPA (apps/web/dist) so a single origin serves API + UI.
+    //
+    // serveRoot/renderPath are left at their @nestjs/serve-static v5 defaults:
+    // with Express 5 / path-to-regexp v8 a bare renderPath '*' crashes at boot
+    // (PathError: Missing parameter name) and serveRoot '/' would compile the
+    // fallback route to '//*' (same error). The default '{*any}' fallback is
+    // the v8 equivalent and gives the SPA deep-refresh behavior.
+    //
+    // The exclude must also use v8 syntax ('/api/{*any}') — the v6-era
+    // '/api/(.*)' from the old docs throws `Unexpected ( at index 5` at
+    // request time. Excluded paths fall through to the regular 404 handling.
+    //
+    // ServeStaticModule registers in onModuleInit, i.e. AFTER the Nest router:
+    // controllers win for /api/*, static acts as the final fallback layer
+    // (helmet -> cache-control -> [Nest: CSRF -> routes] -> static).
+    ...(process.env.NODE_ENV === 'production'
+      ? [
+          ServeStaticModule.forRoot({
+            rootPath: resolve(__dirname, '../../web/dist'), // apps/api/dist -> <repo>/web/dist
+            exclude: ['/api/{*any}'],
+          }),
+        ]
+      : []),
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

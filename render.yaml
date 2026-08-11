@@ -1,0 +1,31 @@
+# Render Blueprint — PH-12 OPS-002
+# https://render.com/docs/blueprint-spec
+#
+# Deploy: connect GitHub repo → Render → "Blueprints" → select this file.
+# The API serves the Vite SPA through Nest ServeStaticModule (OPS-001).
+
+services:
+  - type: web
+    name: briefline-crm
+    env: node
+    region: frankfurt
+    plan: free
+    buildCommand: pnpm run render-build
+    startCommand: pnpm --filter @briefline/api start:deploy
+    healthCheckPath: /api/v1/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3000"
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: CSRF_SECRET
+        sync: false
+      - key: CORS_ORIGINS
+        value: https://briefline-crm.onrender.com

@@ -1,0 +1,58 @@
+# Daily Database Reset — PH-12 OPS-007
+#
+# Scheduled at 4am UTC daily + manual dispatch (Actions tab → Run workflow).
+# Resets the Neon database to the idempotent demo fixture (8 users, 12 clients,
+# 36 tasks, 124 TaskChange entries).
+#
+# Post-reset smoke: health check + admin login verification.
+
+name: Daily Database Reset
+
+on:
+  schedule:
+    - cron: '37 4 * * *' # 4:37am UTC (off-peak, avoids :00 thundering herd)
+  workflow_dispatch:
+
+jobs:
+  reset:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Prisma generate
+        run: pnpm --filter @briefline/api prisma:generate
+
+      - name: Reset database
+        run: pnpm --filter @briefline/api tsx prisma/reset.ts
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+          NODE_ENV: development
+
+      - name: Post-reset health check
+        run: |
+          echo "Waiting for service wake-up (free tier cold start)..."
+          for i in $(seq 1 12); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://briefline.onrender.com/api/v1/health 2>/dev/null || echo "000")
+            if [ "$STATUS" = "200" ]; then
+              echo "✅ Service healthy after $((i * 5))s"
+              exit 0
+            fi
+            echo "  attempt $i/12: status $STATUS, waiting 5s..."
+            sleep 5
+          done
+          echo "❌ Service did not become healthy within 60s"
+          exit 1

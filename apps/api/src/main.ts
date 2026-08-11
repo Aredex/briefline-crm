@@ -1,10 +1,14 @@
 // Bootstrap — API-003 (PH-04). Hardened NestJS entrypoint.
 //
-// Stack order (R-5): helmet -> CORS (credentials, allowlist) -> cookie-parser
-// -> compression -> trust proxy (rate-limit IPs behind a single hop) ->
-// global prefix + URI versioning -> strict validation pipe -> 100kb body
-// limit -> shutdown hooks. Middlewares are registered via AppModule.configure
-// (OriginValidation -> CSRF) so they run inside the Nest pipeline.
+// Stack order (R-5): helmet -> cache-control -> CORS (credentials, allowlist)
+// -> cookie-parser -> compression -> trust proxy (rate-limit IPs behind a
+// single hop) -> global prefix + URI versioning -> strict validation pipe ->
+// 100kb body limit -> shutdown hooks. Middlewares are registered via
+// AppModule.configure (OriginValidation -> CSRF) so they run inside the Nest
+// pipeline. In production (OPS-001) ServeStaticModule adds the SPA static
+// layer as the FINAL fallback after the Nest router — controllers win for
+// /api/*, static serves the Vite build + index.html deep-link fallback.
+// Ordering is: helmet -> cache-control -> [CSRF -> controllers] -> static.
 import helmet from 'helmet'
 import compression from 'compression'
 import cookieParser from 'cookie-parser'
