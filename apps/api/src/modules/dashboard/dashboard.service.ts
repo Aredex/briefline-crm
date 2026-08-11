@@ -80,6 +80,7 @@ export class DashboardService {
           include: {
             assignee: { select: { id: true, name: true } },
             client: { select: { id: true, companyName: true } },
+            labels: { select: { label: { select: { id: true, name: true, color: true } } } }, // LAB-002 (PC-04)
           },
           orderBy: MY_TASKS_SORT,
           skip: (query.page - 1) * query.limit,

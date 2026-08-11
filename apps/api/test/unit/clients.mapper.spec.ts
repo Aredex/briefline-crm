@@ -69,6 +69,7 @@ describe('toTaskSummary (related-task card, FR-CLI-005)', () => {
     dueDate: new Date('2026-08-11T00:00:00.000Z'),
     version: 2,
     updatedAt: new Date('2026-08-09T14:00:00.000Z'),
+    labels: [], // join rows; flattened to { id, name, color } by the mapper (LAB-002)
   }
 
   it('maps the compact card shape with refs and meta', () => {
@@ -92,5 +93,13 @@ describe('toTaskSummary (related-task card, FR-CLI-005)', () => {
 
   it('passes the dueDate through unchanged (Date)', () => {
     expect(toTaskSummary(task).dueDate).toEqual(new Date('2026-08-11T00:00:00.000Z'))
+  })
+
+  it('flattens the label join rows to { id, name, color } refs (LAB-002)', () => {
+    const summary = toTaskSummary({
+      ...task,
+      labels: [{ label: { id: 'label-1', name: 'bug', color: '#ef4444' } }],
+    })
+    expect(summary.labels).toEqual([{ id: 'label-1', name: 'bug', color: '#ef4444' }])
   })
 })

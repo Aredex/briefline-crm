@@ -167,6 +167,7 @@ model Task {
   archiver User?     @relation("TaskArchiver", fields: [archivedById], references: [id], onDelete: Restrict, onUpdate: Cascade)
   changes  TaskChange[]
   comments Comment[]
+  labels   TaskLabel[]
 
   @@index([status, priority, dueDate, updatedAt]) // board slice + DEC-035 sort (D-14)
   @@index([assigneeId])    // My Tasks (FR-DASH-002) + FK
@@ -174,6 +175,39 @@ model Task {
   @@index([clientId])      // client detail related tasks (FR-CLI-005) + FK
   @@index([archivedAt])    // admin archived view (FR-TASK-011, BR-016)
   @@index([archivedById])  // FK integrity (AP-07)
+}
+
+// Label — PC-04 (LAB-001). Normalized team-wide label catalogue (unique name,
+// LAB-001) plus the task assignment join. Catalogue CRUD is ADMIN-only; the
+// catalogue is read by every authenticated user; assignment to a task follows
+// the task edit policy (tasks.policy.canEditTask, LAB-002). Both FKs are
+// Cascade: task_labels rows are child rows of the task and the label and
+// vanish with either (same spirit as comments, PC-03).
+model Label {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @db.VarChar(50)
+  color     String   @default("#6b7280") @db.VarChar(7) // always #RRGGBB (regex-enforced at the DTO)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  tasks TaskLabel[]
+
+  @@unique([name]) // LAB-001: normalized unique catalogue (P2002 -> 409 LABEL_NAME_EXISTS)
+  @@map("labels")
+}
+
+// TaskLabel — PC-04 (LAB-002). Join table, no surrogate id: the composite PK
+// (taskId, labelId) makes a duplicate assignment impossible at the DB level
+// (the API upserts, so re-assigning is an idempotent no-op).
+model TaskLabel {
+  taskId  String @db.Uuid
+  labelId String @db.Uuid
+
+  task  Task  @relation(fields: [taskId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  label Label @relation(fields: [labelId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@id([taskId, labelId])
+  @@index([labelId]) // FK integrity (AP-07) — the taskId prefix of the PK covers task lookups
+  @@map("task_labels")
 }
 
 // Comment — PC-03 (COMM-001). Append-only discussion thread per task.

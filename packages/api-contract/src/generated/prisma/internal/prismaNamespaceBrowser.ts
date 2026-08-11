@@ -55,6 +55,8 @@ export const ModelName = {
   Client: 'Client',
   Contact: 'Contact',
   Task: 'Task',
+  Label: 'Label',
+  TaskLabel: 'TaskLabel',
   Comment: 'Comment',
   TaskChange: 'TaskChange'
 } as const
@@ -142,6 +144,24 @@ export const TaskScalarFieldEnum = {
 } as const
 
 export type TaskScalarFieldEnum = (typeof TaskScalarFieldEnum)[keyof typeof TaskScalarFieldEnum]
+
+
+export const LabelScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  color: 'color',
+  createdAt: 'createdAt'
+} as const
+
+export type LabelScalarFieldEnum = (typeof LabelScalarFieldEnum)[keyof typeof LabelScalarFieldEnum]
+
+
+export const TaskLabelScalarFieldEnum = {
+  taskId: 'taskId',
+  labelId: 'labelId'
+} as const
+
+export type TaskLabelScalarFieldEnum = (typeof TaskLabelScalarFieldEnum)[keyof typeof TaskLabelScalarFieldEnum]
 
 
 export const CommentScalarFieldEnum = {

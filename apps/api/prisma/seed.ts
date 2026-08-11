@@ -1,9 +1,10 @@
 // Deterministic demo seed — PH-03 DB-005 (data-model.md §8).
 //
 // Northstar Digital Studio demo data: 8 users, 12 clients, 3 contacts,
-// 36 tasks, 124 TaskChange events, 3 comments (PC-03), fixed formal-v4 UUIDs,
-// timestamps relative to seed execution time (overdue / due-today /
-// recently-completed states stay stable on every run).
+// 36 tasks, 124 TaskChange events, 3 comments (PC-03), 5 labels with 11
+// task-label links (PC-04), fixed formal-v4 UUIDs, timestamps relative to seed
+// execution time (overdue / due-today / recently-completed states stay stable
+// on every run).
 //
 // Idempotency: fixed IDs + deleteMany-by-id before createMany, all inside one
 // interactive $transaction — safe to run repeatedly (AP-43; PH-03 verification
@@ -74,6 +75,13 @@ export const SEED_IDS = {
     cm501: uuid('501'),
     cm502: uuid('502'),
     cm503: uuid('503'),
+  },
+  labels: {
+    lg601: uuid('601'),
+    lg602: uuid('602'),
+    lg603: uuid('603'),
+    lg604: uuid('604'),
+    lg605: uuid('605'),
   },
   tasks: {
     t201: uuid('201'),
@@ -191,6 +199,18 @@ interface CommentSeed {
   authorId: string
   content: string
   createdAt: Date
+}
+
+interface LabelSeed {
+  id: string
+  name: string
+  color: string
+  createdAt: Date
+}
+
+interface TaskLabelSeed {
+  taskId: string
+  labelId: string
 }
 
 interface TaskSeed {
@@ -399,6 +419,43 @@ function buildComments(): CommentSeed[] {
       content: 'Buttons milestone is done; the forms milestone is next on the list.',
       createdAt: hoursAgo(3),
     },
+  ]
+}
+
+// ---------------------------------------------------------------------------
+// Labels — 5 (PC-04, LAB-001/002) — normalized team-wide catalogue
+// ---------------------------------------------------------------------------
+// lg601..lg605, colors in #RRGGBB (LAB-001). Assignments below link labels to
+// a handful of live tasks so the board/detail views show chips on first load.
+
+function buildLabels(): LabelSeed[] {
+  const created = hoursAgo(30 * 24)
+  const lg = SEED_IDS.labels
+  const mk = (id: string, name: string, color: string): LabelSeed => ({ id, name, color, createdAt: created })
+  return [
+    mk(lg.lg601, 'bug', '#ef4444'),
+    mk(lg.lg602, 'design', '#8b5cf6'),
+    mk(lg.lg603, 'urgent-review', '#f59e0b'),
+    mk(lg.lg604, 'documentation', '#3b82f6'),
+    mk(lg.lg605, 'frontend', '#10b981'),
+  ]
+}
+
+function buildTaskLabels(): TaskLabelSeed[] {
+  const t = SEED_IDS.tasks
+  const lg = SEED_IDS.labels
+  const assign = (taskId: string, ...labelIds: string[]): TaskLabelSeed[] =>
+    labelIds.map((labelId) => ({ taskId, labelId }))
+  return [
+    ...assign(t.t201, lg.lg602), // logo exploration — design
+    ...assign(t.t207, lg.lg603), // landing copy — urgent review
+    ...assign(t.t213, lg.lg602, lg.lg605), // website redesign — design + frontend
+    ...assign(t.t217, lg.lg602, lg.lg605), // design system — design + frontend
+    ...assign(t.t219, lg.lg601), // SEO audit — bug
+    ...assign(t.t220, lg.lg603, lg.lg602), // rebrand rollout — urgent review + design
+    ...assign(t.t222, lg.lg601, lg.lg603), // API dashboard — bug + urgent review
+    ...assign(t.t225, lg.lg604), // print brochure — documentation
+    ...assign(t.t232, lg.lg604), // brand guidelines — documentation
   ]
 }
 
@@ -662,6 +719,8 @@ interface SeedStats {
   tasks: number
   changes: number
   comments: number
+  labels: number
+  taskLabels: number
 }
 
 /**
@@ -673,6 +732,8 @@ export async function runSeed(prisma: PrismaClient): Promise<SeedStats> {
   const clients = buildClients()
   const contacts = buildContacts()
   const comments = buildComments()
+  const labels = buildLabels()
+  const taskLabels = buildTaskLabels()
   const taskPlans = buildTaskPlans()
 
   const allTaskIds = taskPlans.map((p) => p.id)
@@ -680,6 +741,7 @@ export async function runSeed(prisma: PrismaClient): Promise<SeedStats> {
   const allUserIds = users.map((u) => u.id)
   const allContactIds = contacts.map((c) => c.id)
   const allCommentIds = comments.map((c) => c.id)
+  const allLabelIds = labels.map((l) => l.id)
   const allChangeIds = Array.from(
     { length: taskPlans.reduce((sum, p) => sum + p.changes.length + 1, 0) },
     (_, i) => uuid(String(301 + i)),
@@ -748,6 +810,8 @@ export async function runSeed(prisma: PrismaClient): Promise<SeedStats> {
   assertFixtureInvariants(taskPlans)
 
   await prisma.$transaction(async (tx) => {
+    await tx.taskLabel.deleteMany({ where: { taskId: { in: allTaskIds } } }) // children before parents
+    await tx.label.deleteMany({ where: { id: { in: allLabelIds } } })
     await tx.comment.deleteMany({ where: { id: { in: allCommentIds } } }) // children before parents
     await tx.taskChange.deleteMany({ where: { id: { in: allChangeIds } } })
     await tx.task.deleteMany({ where: { id: { in: allTaskIds } } })
@@ -761,6 +825,8 @@ export async function runSeed(prisma: PrismaClient): Promise<SeedStats> {
     await tx.task.createMany({ data: tasks })
     await tx.taskChange.createMany({ data: changes })
     await tx.comment.createMany({ data: comments })
+    await tx.label.createMany({ data: labels })
+    await tx.taskLabel.createMany({ data: taskLabels })
   })
 
   return {
@@ -770,6 +836,8 @@ export async function runSeed(prisma: PrismaClient): Promise<SeedStats> {
     tasks: tasks.length,
     changes: changes.length,
     comments: comments.length,
+    labels: labels.length,
+    taskLabels: taskLabels.length,
   }
 }
 
@@ -923,7 +991,7 @@ async function main(): Promise<void> {
     console.log(
       `Seed complete: ${stats.users} users, ${stats.clients} clients, ` +
         `${stats.contacts} contacts, ${stats.tasks} tasks, ${stats.changes} task changes, ` +
-        `${stats.comments} comments.`,
+        `${stats.comments} comments, ${stats.labels} labels, ${stats.taskLabels} task-label links.`,
     )
   } catch (err) {
     console.error('Seed failed:', err instanceof Error ? err.message : err)

@@ -80,6 +80,9 @@ const TASK_INCLUDE = {
   client: { select: { id: true, companyName: true } },
   creator: { select: { id: true, name: true } },
   archiver: { select: { id: true, name: true } },
+  // LAB-002 (PC-04): Task.labels is the join row (TaskLabel); the label itself
+  // sits one level deeper, flattened to { id, name, color } by the mapper.
+  labels: { select: { label: { select: { id: true, name: true, color: true } } } },
 } as const satisfies Prisma.TaskInclude
 
 /** JSON-serialized history value (D-7/D-9): '"uuid"' / '"date"' / 'null'. */

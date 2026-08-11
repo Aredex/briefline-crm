@@ -32,6 +32,7 @@ function card(overrides: Partial<TaskCardRow> = {}): TaskCardRow {
     dueDate: new Date('2026-08-11T00:00:00.000Z'),
     version: 3,
     updatedAt: new Date('2026-08-10T09:30:00.000Z'),
+    labels: [],
     ...overrides,
   } as unknown as TaskCardRow
 }
@@ -85,6 +86,25 @@ describe('toTaskSummary', () => {
     const summary = toTaskSummary(card({ assignee: null, client: null }))
     expect(summary.assignee).toBeNull()
     expect(summary.client).toBeNull()
+  })
+
+  it('flattens the label join rows to the { id, name, color } refs (LAB-002)', () => {
+    const summary = toTaskSummary(
+      card({
+        labels: [
+          { label: { id: 'label-1', name: 'bug', color: '#ef4444' } },
+          { label: { id: 'label-2', name: 'design', color: '#8b5cf6' } },
+        ],
+      }),
+    )
+    expect(summary.labels).toEqual([
+      { id: 'label-1', name: 'bug', color: '#ef4444' },
+      { id: 'label-2', name: 'design', color: '#8b5cf6' },
+    ])
+  })
+
+  it('exposes an empty labels array when the task has none', () => {
+    expect(toTaskSummary(card()).labels).toEqual([])
   })
 })
 

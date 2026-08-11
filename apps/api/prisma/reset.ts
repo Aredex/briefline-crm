@@ -32,7 +32,7 @@ async function main(): Promise<void> {
     // protection for anything the seed does not own (AP-58: tests never rely
     // on this — they run migrations + their own fixtures).
     await prisma.$executeRawUnsafe(
-      'TRUNCATE "TaskChange", "Task", "Client", "User" RESTART IDENTITY CASCADE',
+      'TRUNCATE "task_labels", "labels", "TaskChange", "Task", "Client", "User" RESTART IDENTITY CASCADE',
     )
     const stats = await runSeed(prisma)
     console.log(

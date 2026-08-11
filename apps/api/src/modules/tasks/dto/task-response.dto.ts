@@ -10,6 +10,7 @@ import type {
   TaskStatus,
 } from '../../../../../../packages/api-contract/src/generated/prisma/client'
 import type { TaskComment } from '../../comments/dto/comment-response.dto'
+import type { TaskLabelRef } from '../../labels/dto/label-response.dto'
 
 export interface UserRef {
   id: string
@@ -39,6 +40,8 @@ export interface TaskSummary {
   dueDate: string | null
   version: number
   updatedAt: Date
+  /** Assigned labels, alphabetical (LAB-002). */
+  labels: TaskLabelRef[]
 }
 
 /** Full task representation. */
@@ -58,6 +61,8 @@ export interface TaskResponse {
   archivedBy: UserRef | null
   createdAt: Date
   updatedAt: Date
+  /** Assigned labels, alphabetical (LAB-002). */
+  labels: TaskLabelRef[]
 }
 
 /** Append-only history entry; version = task version after this mutation (D-5). */

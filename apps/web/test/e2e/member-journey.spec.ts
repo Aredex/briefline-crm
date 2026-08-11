@@ -43,7 +43,9 @@ test.describe('FLOW-002/003 member journey', () => {
 
   test('filters the board and changes the status of an assigned task', async ({ page }) => {
     await page.goto('/tasks')
-    await expect(page.getByRole('heading', { name: 'Tasks' })).toBeVisible()
+    // exact: board column headings are "Pending N tasks" etc. — a substring
+    // match races the async board fetch (strict-mode flake on fast APIs).
+    await expect(page.getByRole('heading', { name: 'Tasks', exact: true })).toBeVisible()
 
     /* ---------- Status change on an assigned task (t207, PENDING). ---------- */
     const card = page.getByRole('article', { name: 'Landing page copy: Q3 campaign' })
@@ -71,7 +73,9 @@ test.describe('FLOW-002/003 member journey', () => {
 
   test('members never see the Users link and get 403 on direct navigation', async ({ page }) => {
     await page.goto('/dashboard')
-    await expect(page.getByRole('link', { name: 'Dashboard' })).toBeVisible()
+    // exact: the seed task "API dashboard: brand components" in Recent
+    // activity also matches a substring — races the async activity fetch.
+    await expect(page.getByRole('link', { name: 'Dashboard', exact: true })).toBeVisible()
     await expect(page.getByRole('link', { name: 'Users' })).toHaveCount(0)
 
     await page.goto('/users')

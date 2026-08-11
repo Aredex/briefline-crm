@@ -106,7 +106,7 @@ export async function startTestDb(): Promise<TestDb> {
 /** Full wipe between tests (FK order: children before parents). */
 export async function truncateAll(prisma: PrismaClient): Promise<void> {
   await prisma.$executeRawUnsafe(
-    'TRUNCATE "comments", "contacts", "TaskChange", "Task", "Client", "User" RESTART IDENTITY CASCADE',
+    'TRUNCATE "task_labels", "labels", "comments", "contacts", "TaskChange", "Task", "Client", "User" RESTART IDENTITY CASCADE',
   )
 }
 

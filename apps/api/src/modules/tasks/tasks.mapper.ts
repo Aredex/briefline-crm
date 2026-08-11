@@ -18,6 +18,12 @@ export interface ClientRefShape {
   companyName: string
 }
 
+export interface LabelRefShape {
+  id: string
+  name: string
+  color: string
+}
+
 /** @db.Date values round-trip as UTC-midnight Date; slice to 'YYYY-MM-DD' (ADR-003). */
 export function toDateOnly(date: Date): string {
   return date.toISOString().slice(0, 10)
@@ -28,12 +34,15 @@ export type TaskWithRefs = Task & {
   client: ClientRefShape | null
   creator: UserRefShape
   archiver: UserRefShape | null
+  /** Join rows (TaskLabel) — flattened to LabelRefShape by the mappers (LAB-002). */
+  labels: Array<{ label: LabelRefShape }>
 }
 
 /** Card row — only the refs the summary shape needs (board/list/my-tasks). */
 export type TaskCardRow = Task & {
   assignee: UserRefShape | null
   client: ClientRefShape | null
+  labels: Array<{ label: LabelRefShape }>
 }
 
 export function toTaskSummary(task: TaskCardRow): TaskSummary {
@@ -47,6 +56,7 @@ export function toTaskSummary(task: TaskCardRow): TaskSummary {
     dueDate: task.dueDate ? toDateOnly(task.dueDate) : null,
     version: task.version,
     updatedAt: task.updatedAt,
+    labels: task.labels.map((tl) => tl.label),
   }
 }
 
@@ -67,6 +77,7 @@ export function toTaskResponse(task: TaskWithRefs): TaskResponse {
     archivedBy: task.archiver,
     createdAt: task.createdAt,
     updatedAt: task.updatedAt,
+    labels: task.labels.map((tl) => tl.label),
   }
 }
 

@@ -113,6 +113,7 @@ export class ClientsService {
         include: {
           assignee: { select: { id: true, name: true } },
           client: { select: { id: true, companyName: true } },
+          labels: { select: { label: { select: { id: true, name: true, color: true } } } }, // LAB-002 (PC-04)
         },
         // Contractual sort (DEC-035): priority desc, due date asc nulls last, updatedAt desc.
         orderBy: [{ priority: 'desc' }, { dueDate: { sort: 'asc', nulls: 'last' } }, { updatedAt: 'desc' }],

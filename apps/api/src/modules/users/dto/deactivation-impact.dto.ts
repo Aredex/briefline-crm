@@ -18,6 +18,7 @@ export interface TaskSummary {
   dueDate: Date | null
   version: number
   updatedAt: Date
+  labels: { id: string; name: string; color: string }[]
 }
 
 export interface DeactivationImpact {

@@ -35,6 +35,7 @@ export function toTaskSummary(task: {
   dueDate: Date | null
   version: number
   updatedAt: Date
+  labels: Array<{ label: { id: string; name: string; color: string } }>
 }): TaskSummary {
   return {
     id: task.id,
@@ -46,5 +47,6 @@ export function toTaskSummary(task: {
     dueDate: task.dueDate,
     version: task.version,
     updatedAt: task.updatedAt,
+    labels: task.labels.map((tl) => tl.label),
   }
 }
