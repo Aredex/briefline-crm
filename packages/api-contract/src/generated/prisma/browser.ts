@@ -53,6 +53,11 @@ export type TaskLabel = Prisma.TaskLabelModel
  */
 export type Comment = Prisma.CommentModel
 /**
+ * Model ChecklistItem
+ * 
+ */
+export type ChecklistItem = Prisma.ChecklistItemModel
+/**
  * Model TaskChange
  * 
  */

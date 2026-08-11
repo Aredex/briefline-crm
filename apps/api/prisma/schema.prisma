@@ -168,6 +168,7 @@ model Task {
   changes  TaskChange[]
   comments Comment[]
   labels   TaskLabel[]
+  checklistItems ChecklistItem[]
 
   @@index([status, priority, dueDate, updatedAt]) // board slice + DEC-035 sort (D-14)
   @@index([assigneeId])    // My Tasks (FR-DASH-002) + FK
@@ -229,6 +230,27 @@ model Comment {
   @@index([taskId])    // per-task timeline (COMM-001) + taskId FK
   @@index([authorId])  // FK integrity (AP-07)
   @@map("comments")
+}
+
+// ChecklistItem — PC-05 (CHECK-001/002). Per-task checkbox list.
+// `sortOrder` drives display order (ascending, id tiebreak); `version` is the
+// optimistic lock for toggle/content updates (CAS + 409 STALE_VERSION, same
+// pattern as Task.version, ADR-004). taskId FK is Cascade: items are child
+// rows of the task and vanish with it (same spirit as comments, PC-03).
+model ChecklistItem {
+  id        String   @id @default(uuid()) @db.Uuid
+  taskId    String   @db.Uuid
+  content   String   @db.VarChar(500)
+  completed Boolean  @default(false)
+  sortOrder Int      @default(0)
+  version   Int      @default(1) // optimistic lock (ADR-004); CHECK version >= 1
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([taskId]) // per-task checklist (CHECK-001) + taskId FK
+  @@map("checklist_items")
 }
 
 // TaskChange — PRD §11; BR-017/018; FR-HIST-001..004.

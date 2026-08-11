@@ -2,9 +2,9 @@
 //
 // Northstar Digital Studio demo data: 8 users, 12 clients, 3 contacts,
 // 36 tasks, 124 TaskChange events, 3 comments (PC-03), 5 labels with 11
-// task-label links (PC-04), fixed formal-v4 UUIDs, timestamps relative to seed
-// execution time (overdue / due-today / recently-completed states stay stable
-// on every run).
+// task-label links (PC-04), 4 checklist items (PC-05), fixed formal-v4 UUIDs,
+// timestamps relative to seed execution time (overdue / due-today /
+// recently-completed states stay stable on every run).
 //
 // Idempotency: fixed IDs + deleteMany-by-id before createMany, all inside one
 // interactive $transaction — safe to run repeatedly (AP-43; PH-03 verification
@@ -35,7 +35,8 @@ export const DEMO_PASSWORD_HASH =
 
 // ---------------------------------------------------------------------------
 // Fixed UUIDs (data-model §8.6): 00000000-0000-4000-8000-0000000000NN
-// users …001-008, clients …101-112, tasks …201-236, changes …301+
+// users …001-008, clients …101-112, tasks …201-236, changes …301+,
+// contacts …401-403, comments …501-503, labels …601-605, checklist …701+
 // ---------------------------------------------------------------------------
 
 // 12-hex last segment (data-model §8.6): '01' -> …001, '301' -> …301.
@@ -82,6 +83,12 @@ export const SEED_IDS = {
     lg603: uuid('603'),
     lg604: uuid('604'),
     lg605: uuid('605'),
+  },
+  checklistItems: {
+    ck701: uuid('701'),
+    ck702: uuid('702'),
+    ck703: uuid('703'),
+    ck704: uuid('704'),
   },
   tasks: {
     t201: uuid('201'),
@@ -211,6 +218,16 @@ interface LabelSeed {
 interface TaskLabelSeed {
   taskId: string
   labelId: string
+}
+
+interface ChecklistItemSeed {
+  id: string
+  taskId: string
+  content: string
+  completed: boolean
+  sortOrder: number
+  createdAt: Date
+  updatedAt: Date
 }
 
 interface TaskSeed {
@@ -456,6 +473,41 @@ function buildTaskLabels(): TaskLabelSeed[] {
     ...assign(t.t222, lg.lg601, lg.lg603), // API dashboard — bug + urgent review
     ...assign(t.t225, lg.lg604), // print brochure — documentation
     ...assign(t.t232, lg.lg604), // brand guidelines — documentation
+  ]
+}
+
+// ---------------------------------------------------------------------------
+// Checklist items — 4 (PC-05, CHECK-001/002) — per-task checkbox lists
+// ---------------------------------------------------------------------------
+// ck701..ck703 are the landing-page copy task's launch checklist (t207 — the
+// due-today task, so the detail view shows a half-ticked list on first load);
+// ck704 is a single item on the website redesign (t213). sortOrder is
+// ascending; createdAt/updatedAt are recent so the list looks alive.
+
+function buildChecklistItems(): ChecklistItemSeed[] {
+  const created = hoursAgo(20)
+  const t = SEED_IDS.tasks
+  const ck = SEED_IDS.checklistItems
+  const mk = (
+    id: string,
+    taskId: string,
+    content: string,
+    completed: boolean,
+    sortOrder: number,
+  ): ChecklistItemSeed => ({
+    id,
+    taskId,
+    content,
+    completed,
+    sortOrder,
+    createdAt: created,
+    updatedAt: created,
+  })
+  return [
+    mk(ck.ck701, t.t207, 'Final headline variant locked', true, 0),
+    mk(ck.ck702, t.t207, 'Hero copy proofread by a second pair of eyes', true, 1),
+    mk(ck.ck703, t.t207, 'CTA button text aligned with the Q3 campaign', false, 2),
+    mk(ck.ck704, t.t213, 'Hero section above-the-fold approved', false, 0),
   ]
 }
 
@@ -721,6 +773,7 @@ interface SeedStats {
   comments: number
   labels: number
   taskLabels: number
+  checklistItems: number
 }
 
 /**
@@ -734,6 +787,7 @@ export async function runSeed(prisma: PrismaClient): Promise<SeedStats> {
   const comments = buildComments()
   const labels = buildLabels()
   const taskLabels = buildTaskLabels()
+  const checklistItems = buildChecklistItems()
   const taskPlans = buildTaskPlans()
 
   const allTaskIds = taskPlans.map((p) => p.id)
@@ -742,6 +796,7 @@ export async function runSeed(prisma: PrismaClient): Promise<SeedStats> {
   const allContactIds = contacts.map((c) => c.id)
   const allCommentIds = comments.map((c) => c.id)
   const allLabelIds = labels.map((l) => l.id)
+  const allChecklistItemIds = checklistItems.map((i) => i.id)
   const allChangeIds = Array.from(
     { length: taskPlans.reduce((sum, p) => sum + p.changes.length + 1, 0) },
     (_, i) => uuid(String(301 + i)),
@@ -813,6 +868,7 @@ export async function runSeed(prisma: PrismaClient): Promise<SeedStats> {
     await tx.taskLabel.deleteMany({ where: { taskId: { in: allTaskIds } } }) // children before parents
     await tx.label.deleteMany({ where: { id: { in: allLabelIds } } })
     await tx.comment.deleteMany({ where: { id: { in: allCommentIds } } }) // children before parents
+    await tx.checklistItem.deleteMany({ where: { id: { in: allChecklistItemIds } } }) // children before parents
     await tx.taskChange.deleteMany({ where: { id: { in: allChangeIds } } })
     await tx.task.deleteMany({ where: { id: { in: allTaskIds } } })
     await tx.contact.deleteMany({ where: { id: { in: allContactIds } } }) // children before parents
@@ -827,6 +883,7 @@ export async function runSeed(prisma: PrismaClient): Promise<SeedStats> {
     await tx.comment.createMany({ data: comments })
     await tx.label.createMany({ data: labels })
     await tx.taskLabel.createMany({ data: taskLabels })
+    await tx.checklistItem.createMany({ data: checklistItems })
   })
 
   return {
@@ -838,6 +895,7 @@ export async function runSeed(prisma: PrismaClient): Promise<SeedStats> {
     comments: comments.length,
     labels: labels.length,
     taskLabels: taskLabels.length,
+    checklistItems: checklistItems.length,
   }
 }
 
@@ -991,7 +1049,8 @@ async function main(): Promise<void> {
     console.log(
       `Seed complete: ${stats.users} users, ${stats.clients} clients, ` +
         `${stats.contacts} contacts, ${stats.tasks} tasks, ${stats.changes} task changes, ` +
-        `${stats.comments} comments, ${stats.labels} labels, ${stats.taskLabels} task-label links.`,
+        `${stats.comments} comments, ${stats.labels} labels, ${stats.taskLabels} task-label links, ` +
+        `${stats.checklistItems} checklist items.`,
     )
   } catch (err) {
     console.error('Seed failed:', err instanceof Error ? err.message : err)

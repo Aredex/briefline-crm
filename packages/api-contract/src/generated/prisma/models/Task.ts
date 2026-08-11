@@ -303,6 +303,7 @@ export type TaskWhereInput = {
   changes?: Prisma.TaskChangeListRelationFilter
   comments?: Prisma.CommentListRelationFilter
   labels?: Prisma.TaskLabelListRelationFilter
+  checklistItems?: Prisma.ChecklistItemListRelationFilter
 }
 
 export type TaskOrderByWithRelationInput = {
@@ -328,6 +329,7 @@ export type TaskOrderByWithRelationInput = {
   changes?: Prisma.TaskChangeOrderByRelationAggregateInput
   comments?: Prisma.CommentOrderByRelationAggregateInput
   labels?: Prisma.TaskLabelOrderByRelationAggregateInput
+  checklistItems?: Prisma.ChecklistItemOrderByRelationAggregateInput
 }
 
 export type TaskWhereUniqueInput = Prisma.AtLeast<{
@@ -356,6 +358,7 @@ export type TaskWhereUniqueInput = Prisma.AtLeast<{
   changes?: Prisma.TaskChangeListRelationFilter
   comments?: Prisma.CommentListRelationFilter
   labels?: Prisma.TaskLabelListRelationFilter
+  checklistItems?: Prisma.ChecklistItemListRelationFilter
 }, "id">
 
 export type TaskOrderByWithAggregationInput = {
@@ -421,6 +424,7 @@ export type TaskCreateInput = {
   changes?: Prisma.TaskChangeCreateNestedManyWithoutTaskInput
   comments?: Prisma.CommentCreateNestedManyWithoutTaskInput
   labels?: Prisma.TaskLabelCreateNestedManyWithoutTaskInput
+  checklistItems?: Prisma.ChecklistItemCreateNestedManyWithoutTaskInput
 }
 
 export type TaskUncheckedCreateInput = {
@@ -442,6 +446,7 @@ export type TaskUncheckedCreateInput = {
   changes?: Prisma.TaskChangeUncheckedCreateNestedManyWithoutTaskInput
   comments?: Prisma.CommentUncheckedCreateNestedManyWithoutTaskInput
   labels?: Prisma.TaskLabelUncheckedCreateNestedManyWithoutTaskInput
+  checklistItems?: Prisma.ChecklistItemUncheckedCreateNestedManyWithoutTaskInput
 }
 
 export type TaskUpdateInput = {
@@ -463,6 +468,7 @@ export type TaskUpdateInput = {
   changes?: Prisma.TaskChangeUpdateManyWithoutTaskNestedInput
   comments?: Prisma.CommentUpdateManyWithoutTaskNestedInput
   labels?: Prisma.TaskLabelUpdateManyWithoutTaskNestedInput
+  checklistItems?: Prisma.ChecklistItemUpdateManyWithoutTaskNestedInput
 }
 
 export type TaskUncheckedUpdateInput = {
@@ -484,6 +490,7 @@ export type TaskUncheckedUpdateInput = {
   changes?: Prisma.TaskChangeUncheckedUpdateManyWithoutTaskNestedInput
   comments?: Prisma.CommentUncheckedUpdateManyWithoutTaskNestedInput
   labels?: Prisma.TaskLabelUncheckedUpdateManyWithoutTaskNestedInput
+  checklistItems?: Prisma.ChecklistItemUncheckedUpdateManyWithoutTaskNestedInput
 }
 
 export type TaskCreateManyInput = {
@@ -825,6 +832,20 @@ export type TaskUpdateOneRequiredWithoutCommentsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.TaskUpdateToOneWithWhereWithoutCommentsInput, Prisma.TaskUpdateWithoutCommentsInput>, Prisma.TaskUncheckedUpdateWithoutCommentsInput>
 }
 
+export type TaskCreateNestedOneWithoutChecklistItemsInput = {
+  create?: Prisma.XOR<Prisma.TaskCreateWithoutChecklistItemsInput, Prisma.TaskUncheckedCreateWithoutChecklistItemsInput>
+  connectOrCreate?: Prisma.TaskCreateOrConnectWithoutChecklistItemsInput
+  connect?: Prisma.TaskWhereUniqueInput
+}
+
+export type TaskUpdateOneRequiredWithoutChecklistItemsNestedInput = {
+  create?: Prisma.XOR<Prisma.TaskCreateWithoutChecklistItemsInput, Prisma.TaskUncheckedCreateWithoutChecklistItemsInput>
+  connectOrCreate?: Prisma.TaskCreateOrConnectWithoutChecklistItemsInput
+  upsert?: Prisma.TaskUpsertWithoutChecklistItemsInput
+  connect?: Prisma.TaskWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.TaskUpdateToOneWithWhereWithoutChecklistItemsInput, Prisma.TaskUpdateWithoutChecklistItemsInput>, Prisma.TaskUncheckedUpdateWithoutChecklistItemsInput>
+}
+
 export type TaskCreateNestedOneWithoutChangesInput = {
   create?: Prisma.XOR<Prisma.TaskCreateWithoutChangesInput, Prisma.TaskUncheckedCreateWithoutChangesInput>
   connectOrCreate?: Prisma.TaskCreateOrConnectWithoutChangesInput
@@ -857,6 +878,7 @@ export type TaskCreateWithoutCreatorInput = {
   changes?: Prisma.TaskChangeCreateNestedManyWithoutTaskInput
   comments?: Prisma.CommentCreateNestedManyWithoutTaskInput
   labels?: Prisma.TaskLabelCreateNestedManyWithoutTaskInput
+  checklistItems?: Prisma.ChecklistItemCreateNestedManyWithoutTaskInput
 }
 
 export type TaskUncheckedCreateWithoutCreatorInput = {
@@ -877,6 +899,7 @@ export type TaskUncheckedCreateWithoutCreatorInput = {
   changes?: Prisma.TaskChangeUncheckedCreateNestedManyWithoutTaskInput
   comments?: Prisma.CommentUncheckedCreateNestedManyWithoutTaskInput
   labels?: Prisma.TaskLabelUncheckedCreateNestedManyWithoutTaskInput
+  checklistItems?: Prisma.ChecklistItemUncheckedCreateNestedManyWithoutTaskInput
 }
 
 export type TaskCreateOrConnectWithoutCreatorInput = {
@@ -907,6 +930,7 @@ export type TaskCreateWithoutAssigneeInput = {
   changes?: Prisma.TaskChangeCreateNestedManyWithoutTaskInput
   comments?: Prisma.CommentCreateNestedManyWithoutTaskInput
   labels?: Prisma.TaskLabelCreateNestedManyWithoutTaskInput
+  checklistItems?: Prisma.ChecklistItemCreateNestedManyWithoutTaskInput
 }
 
 export type TaskUncheckedCreateWithoutAssigneeInput = {
@@ -927,6 +951,7 @@ export type TaskUncheckedCreateWithoutAssigneeInput = {
   changes?: Prisma.TaskChangeUncheckedCreateNestedManyWithoutTaskInput
   comments?: Prisma.CommentUncheckedCreateNestedManyWithoutTaskInput
   labels?: Prisma.TaskLabelUncheckedCreateNestedManyWithoutTaskInput
+  checklistItems?: Prisma.ChecklistItemUncheckedCreateNestedManyWithoutTaskInput
 }
 
 export type TaskCreateOrConnectWithoutAssigneeInput = {
@@ -957,6 +982,7 @@ export type TaskCreateWithoutArchiverInput = {
   changes?: Prisma.TaskChangeCreateNestedManyWithoutTaskInput
   comments?: Prisma.CommentCreateNestedManyWithoutTaskInput
   labels?: Prisma.TaskLabelCreateNestedManyWithoutTaskInput
+  checklistItems?: Prisma.ChecklistItemCreateNestedManyWithoutTaskInput
 }
 
 export type TaskUncheckedCreateWithoutArchiverInput = {
@@ -977,6 +1003,7 @@ export type TaskUncheckedCreateWithoutArchiverInput = {
   changes?: Prisma.TaskChangeUncheckedCreateNestedManyWithoutTaskInput
   comments?: Prisma.CommentUncheckedCreateNestedManyWithoutTaskInput
   labels?: Prisma.TaskLabelUncheckedCreateNestedManyWithoutTaskInput
+  checklistItems?: Prisma.ChecklistItemUncheckedCreateNestedManyWithoutTaskInput
 }
 
 export type TaskCreateOrConnectWithoutArchiverInput = {
@@ -1076,6 +1103,7 @@ export type TaskCreateWithoutClientInput = {
   changes?: Prisma.TaskChangeCreateNestedManyWithoutTaskInput
   comments?: Prisma.CommentCreateNestedManyWithoutTaskInput
   labels?: Prisma.TaskLabelCreateNestedManyWithoutTaskInput
+  checklistItems?: Prisma.ChecklistItemCreateNestedManyWithoutTaskInput
 }
 
 export type TaskUncheckedCreateWithoutClientInput = {
@@ -1096,6 +1124,7 @@ export type TaskUncheckedCreateWithoutClientInput = {
   changes?: Prisma.TaskChangeUncheckedCreateNestedManyWithoutTaskInput
   comments?: Prisma.CommentUncheckedCreateNestedManyWithoutTaskInput
   labels?: Prisma.TaskLabelUncheckedCreateNestedManyWithoutTaskInput
+  checklistItems?: Prisma.ChecklistItemUncheckedCreateNestedManyWithoutTaskInput
 }
 
 export type TaskCreateOrConnectWithoutClientInput = {
@@ -1142,6 +1171,7 @@ export type TaskCreateWithoutLabelsInput = {
   archiver?: Prisma.UserCreateNestedOneWithoutArchivedTasksInput
   changes?: Prisma.TaskChangeCreateNestedManyWithoutTaskInput
   comments?: Prisma.CommentCreateNestedManyWithoutTaskInput
+  checklistItems?: Prisma.ChecklistItemCreateNestedManyWithoutTaskInput
 }
 
 export type TaskUncheckedCreateWithoutLabelsInput = {
@@ -1162,6 +1192,7 @@ export type TaskUncheckedCreateWithoutLabelsInput = {
   updatedAt?: Date | string
   changes?: Prisma.TaskChangeUncheckedCreateNestedManyWithoutTaskInput
   comments?: Prisma.CommentUncheckedCreateNestedManyWithoutTaskInput
+  checklistItems?: Prisma.ChecklistItemUncheckedCreateNestedManyWithoutTaskInput
 }
 
 export type TaskCreateOrConnectWithoutLabelsInput = {
@@ -1198,6 +1229,7 @@ export type TaskUpdateWithoutLabelsInput = {
   archiver?: Prisma.UserUpdateOneWithoutArchivedTasksNestedInput
   changes?: Prisma.TaskChangeUpdateManyWithoutTaskNestedInput
   comments?: Prisma.CommentUpdateManyWithoutTaskNestedInput
+  checklistItems?: Prisma.ChecklistItemUpdateManyWithoutTaskNestedInput
 }
 
 export type TaskUncheckedUpdateWithoutLabelsInput = {
@@ -1218,6 +1250,7 @@ export type TaskUncheckedUpdateWithoutLabelsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   changes?: Prisma.TaskChangeUncheckedUpdateManyWithoutTaskNestedInput
   comments?: Prisma.CommentUncheckedUpdateManyWithoutTaskNestedInput
+  checklistItems?: Prisma.ChecklistItemUncheckedUpdateManyWithoutTaskNestedInput
 }
 
 export type TaskCreateWithoutCommentsInput = {
@@ -1238,6 +1271,7 @@ export type TaskCreateWithoutCommentsInput = {
   archiver?: Prisma.UserCreateNestedOneWithoutArchivedTasksInput
   changes?: Prisma.TaskChangeCreateNestedManyWithoutTaskInput
   labels?: Prisma.TaskLabelCreateNestedManyWithoutTaskInput
+  checklistItems?: Prisma.ChecklistItemCreateNestedManyWithoutTaskInput
 }
 
 export type TaskUncheckedCreateWithoutCommentsInput = {
@@ -1258,6 +1292,7 @@ export type TaskUncheckedCreateWithoutCommentsInput = {
   updatedAt?: Date | string
   changes?: Prisma.TaskChangeUncheckedCreateNestedManyWithoutTaskInput
   labels?: Prisma.TaskLabelUncheckedCreateNestedManyWithoutTaskInput
+  checklistItems?: Prisma.ChecklistItemUncheckedCreateNestedManyWithoutTaskInput
 }
 
 export type TaskCreateOrConnectWithoutCommentsInput = {
@@ -1294,6 +1329,7 @@ export type TaskUpdateWithoutCommentsInput = {
   archiver?: Prisma.UserUpdateOneWithoutArchivedTasksNestedInput
   changes?: Prisma.TaskChangeUpdateManyWithoutTaskNestedInput
   labels?: Prisma.TaskLabelUpdateManyWithoutTaskNestedInput
+  checklistItems?: Prisma.ChecklistItemUpdateManyWithoutTaskNestedInput
 }
 
 export type TaskUncheckedUpdateWithoutCommentsInput = {
@@ -1313,6 +1349,107 @@ export type TaskUncheckedUpdateWithoutCommentsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   changes?: Prisma.TaskChangeUncheckedUpdateManyWithoutTaskNestedInput
+  labels?: Prisma.TaskLabelUncheckedUpdateManyWithoutTaskNestedInput
+  checklistItems?: Prisma.ChecklistItemUncheckedUpdateManyWithoutTaskNestedInput
+}
+
+export type TaskCreateWithoutChecklistItemsInput = {
+  id?: string
+  title: string
+  description?: string | null
+  status?: $Enums.TaskStatus
+  priority?: $Enums.TaskPriority
+  dueDate?: Date | string | null
+  blockedReason?: string | null
+  version?: number
+  archivedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  assignee?: Prisma.UserCreateNestedOneWithoutAssignedTasksInput
+  client?: Prisma.ClientCreateNestedOneWithoutTasksInput
+  creator: Prisma.UserCreateNestedOneWithoutCreatedTasksInput
+  archiver?: Prisma.UserCreateNestedOneWithoutArchivedTasksInput
+  changes?: Prisma.TaskChangeCreateNestedManyWithoutTaskInput
+  comments?: Prisma.CommentCreateNestedManyWithoutTaskInput
+  labels?: Prisma.TaskLabelCreateNestedManyWithoutTaskInput
+}
+
+export type TaskUncheckedCreateWithoutChecklistItemsInput = {
+  id?: string
+  title: string
+  description?: string | null
+  status?: $Enums.TaskStatus
+  priority?: $Enums.TaskPriority
+  assigneeId?: string | null
+  clientId?: string | null
+  dueDate?: Date | string | null
+  blockedReason?: string | null
+  creatorId: string
+  version?: number
+  archivedAt?: Date | string | null
+  archivedById?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  changes?: Prisma.TaskChangeUncheckedCreateNestedManyWithoutTaskInput
+  comments?: Prisma.CommentUncheckedCreateNestedManyWithoutTaskInput
+  labels?: Prisma.TaskLabelUncheckedCreateNestedManyWithoutTaskInput
+}
+
+export type TaskCreateOrConnectWithoutChecklistItemsInput = {
+  where: Prisma.TaskWhereUniqueInput
+  create: Prisma.XOR<Prisma.TaskCreateWithoutChecklistItemsInput, Prisma.TaskUncheckedCreateWithoutChecklistItemsInput>
+}
+
+export type TaskUpsertWithoutChecklistItemsInput = {
+  update: Prisma.XOR<Prisma.TaskUpdateWithoutChecklistItemsInput, Prisma.TaskUncheckedUpdateWithoutChecklistItemsInput>
+  create: Prisma.XOR<Prisma.TaskCreateWithoutChecklistItemsInput, Prisma.TaskUncheckedCreateWithoutChecklistItemsInput>
+  where?: Prisma.TaskWhereInput
+}
+
+export type TaskUpdateToOneWithWhereWithoutChecklistItemsInput = {
+  where?: Prisma.TaskWhereInput
+  data: Prisma.XOR<Prisma.TaskUpdateWithoutChecklistItemsInput, Prisma.TaskUncheckedUpdateWithoutChecklistItemsInput>
+}
+
+export type TaskUpdateWithoutChecklistItemsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumTaskStatusFieldUpdateOperationsInput | $Enums.TaskStatus
+  priority?: Prisma.EnumTaskPriorityFieldUpdateOperationsInput | $Enums.TaskPriority
+  dueDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  blockedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  version?: Prisma.IntFieldUpdateOperationsInput | number
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  assignee?: Prisma.UserUpdateOneWithoutAssignedTasksNestedInput
+  client?: Prisma.ClientUpdateOneWithoutTasksNestedInput
+  creator?: Prisma.UserUpdateOneRequiredWithoutCreatedTasksNestedInput
+  archiver?: Prisma.UserUpdateOneWithoutArchivedTasksNestedInput
+  changes?: Prisma.TaskChangeUpdateManyWithoutTaskNestedInput
+  comments?: Prisma.CommentUpdateManyWithoutTaskNestedInput
+  labels?: Prisma.TaskLabelUpdateManyWithoutTaskNestedInput
+}
+
+export type TaskUncheckedUpdateWithoutChecklistItemsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumTaskStatusFieldUpdateOperationsInput | $Enums.TaskStatus
+  priority?: Prisma.EnumTaskPriorityFieldUpdateOperationsInput | $Enums.TaskPriority
+  assigneeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  clientId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dueDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  blockedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  creatorId?: Prisma.StringFieldUpdateOperationsInput | string
+  version?: Prisma.IntFieldUpdateOperationsInput | number
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  archivedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  changes?: Prisma.TaskChangeUncheckedUpdateManyWithoutTaskNestedInput
+  comments?: Prisma.CommentUncheckedUpdateManyWithoutTaskNestedInput
   labels?: Prisma.TaskLabelUncheckedUpdateManyWithoutTaskNestedInput
 }
 
@@ -1334,6 +1471,7 @@ export type TaskCreateWithoutChangesInput = {
   archiver?: Prisma.UserCreateNestedOneWithoutArchivedTasksInput
   comments?: Prisma.CommentCreateNestedManyWithoutTaskInput
   labels?: Prisma.TaskLabelCreateNestedManyWithoutTaskInput
+  checklistItems?: Prisma.ChecklistItemCreateNestedManyWithoutTaskInput
 }
 
 export type TaskUncheckedCreateWithoutChangesInput = {
@@ -1354,6 +1492,7 @@ export type TaskUncheckedCreateWithoutChangesInput = {
   updatedAt?: Date | string
   comments?: Prisma.CommentUncheckedCreateNestedManyWithoutTaskInput
   labels?: Prisma.TaskLabelUncheckedCreateNestedManyWithoutTaskInput
+  checklistItems?: Prisma.ChecklistItemUncheckedCreateNestedManyWithoutTaskInput
 }
 
 export type TaskCreateOrConnectWithoutChangesInput = {
@@ -1390,6 +1529,7 @@ export type TaskUpdateWithoutChangesInput = {
   archiver?: Prisma.UserUpdateOneWithoutArchivedTasksNestedInput
   comments?: Prisma.CommentUpdateManyWithoutTaskNestedInput
   labels?: Prisma.TaskLabelUpdateManyWithoutTaskNestedInput
+  checklistItems?: Prisma.ChecklistItemUpdateManyWithoutTaskNestedInput
 }
 
 export type TaskUncheckedUpdateWithoutChangesInput = {
@@ -1410,6 +1550,7 @@ export type TaskUncheckedUpdateWithoutChangesInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   comments?: Prisma.CommentUncheckedUpdateManyWithoutTaskNestedInput
   labels?: Prisma.TaskLabelUncheckedUpdateManyWithoutTaskNestedInput
+  checklistItems?: Prisma.ChecklistItemUncheckedUpdateManyWithoutTaskNestedInput
 }
 
 export type TaskCreateManyCreatorInput = {
@@ -1481,6 +1622,7 @@ export type TaskUpdateWithoutCreatorInput = {
   changes?: Prisma.TaskChangeUpdateManyWithoutTaskNestedInput
   comments?: Prisma.CommentUpdateManyWithoutTaskNestedInput
   labels?: Prisma.TaskLabelUpdateManyWithoutTaskNestedInput
+  checklistItems?: Prisma.ChecklistItemUpdateManyWithoutTaskNestedInput
 }
 
 export type TaskUncheckedUpdateWithoutCreatorInput = {
@@ -1501,6 +1643,7 @@ export type TaskUncheckedUpdateWithoutCreatorInput = {
   changes?: Prisma.TaskChangeUncheckedUpdateManyWithoutTaskNestedInput
   comments?: Prisma.CommentUncheckedUpdateManyWithoutTaskNestedInput
   labels?: Prisma.TaskLabelUncheckedUpdateManyWithoutTaskNestedInput
+  checklistItems?: Prisma.ChecklistItemUncheckedUpdateManyWithoutTaskNestedInput
 }
 
 export type TaskUncheckedUpdateManyWithoutCreatorInput = {
@@ -1538,6 +1681,7 @@ export type TaskUpdateWithoutAssigneeInput = {
   changes?: Prisma.TaskChangeUpdateManyWithoutTaskNestedInput
   comments?: Prisma.CommentUpdateManyWithoutTaskNestedInput
   labels?: Prisma.TaskLabelUpdateManyWithoutTaskNestedInput
+  checklistItems?: Prisma.ChecklistItemUpdateManyWithoutTaskNestedInput
 }
 
 export type TaskUncheckedUpdateWithoutAssigneeInput = {
@@ -1558,6 +1702,7 @@ export type TaskUncheckedUpdateWithoutAssigneeInput = {
   changes?: Prisma.TaskChangeUncheckedUpdateManyWithoutTaskNestedInput
   comments?: Prisma.CommentUncheckedUpdateManyWithoutTaskNestedInput
   labels?: Prisma.TaskLabelUncheckedUpdateManyWithoutTaskNestedInput
+  checklistItems?: Prisma.ChecklistItemUncheckedUpdateManyWithoutTaskNestedInput
 }
 
 export type TaskUncheckedUpdateManyWithoutAssigneeInput = {
@@ -1595,6 +1740,7 @@ export type TaskUpdateWithoutArchiverInput = {
   changes?: Prisma.TaskChangeUpdateManyWithoutTaskNestedInput
   comments?: Prisma.CommentUpdateManyWithoutTaskNestedInput
   labels?: Prisma.TaskLabelUpdateManyWithoutTaskNestedInput
+  checklistItems?: Prisma.ChecklistItemUpdateManyWithoutTaskNestedInput
 }
 
 export type TaskUncheckedUpdateWithoutArchiverInput = {
@@ -1615,6 +1761,7 @@ export type TaskUncheckedUpdateWithoutArchiverInput = {
   changes?: Prisma.TaskChangeUncheckedUpdateManyWithoutTaskNestedInput
   comments?: Prisma.CommentUncheckedUpdateManyWithoutTaskNestedInput
   labels?: Prisma.TaskLabelUncheckedUpdateManyWithoutTaskNestedInput
+  checklistItems?: Prisma.ChecklistItemUncheckedUpdateManyWithoutTaskNestedInput
 }
 
 export type TaskUncheckedUpdateManyWithoutArchiverInput = {
@@ -1669,6 +1816,7 @@ export type TaskUpdateWithoutClientInput = {
   changes?: Prisma.TaskChangeUpdateManyWithoutTaskNestedInput
   comments?: Prisma.CommentUpdateManyWithoutTaskNestedInput
   labels?: Prisma.TaskLabelUpdateManyWithoutTaskNestedInput
+  checklistItems?: Prisma.ChecklistItemUpdateManyWithoutTaskNestedInput
 }
 
 export type TaskUncheckedUpdateWithoutClientInput = {
@@ -1689,6 +1837,7 @@ export type TaskUncheckedUpdateWithoutClientInput = {
   changes?: Prisma.TaskChangeUncheckedUpdateManyWithoutTaskNestedInput
   comments?: Prisma.CommentUncheckedUpdateManyWithoutTaskNestedInput
   labels?: Prisma.TaskLabelUncheckedUpdateManyWithoutTaskNestedInput
+  checklistItems?: Prisma.ChecklistItemUncheckedUpdateManyWithoutTaskNestedInput
 }
 
 export type TaskUncheckedUpdateManyWithoutClientInput = {
@@ -1717,12 +1866,14 @@ export type TaskCountOutputType = {
   changes: number
   comments: number
   labels: number
+  checklistItems: number
 }
 
 export type TaskCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   changes?: boolean | TaskCountOutputTypeCountChangesArgs
   comments?: boolean | TaskCountOutputTypeCountCommentsArgs
   labels?: boolean | TaskCountOutputTypeCountLabelsArgs
+  checklistItems?: boolean | TaskCountOutputTypeCountChecklistItemsArgs
 }
 
 /**
@@ -1756,6 +1907,13 @@ export type TaskCountOutputTypeCountLabelsArgs<ExtArgs extends runtime.Types.Ext
   where?: Prisma.TaskLabelWhereInput
 }
 
+/**
+ * TaskCountOutputType without action
+ */
+export type TaskCountOutputTypeCountChecklistItemsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ChecklistItemWhereInput
+}
+
 
 export type TaskSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1780,6 +1938,7 @@ export type TaskSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   changes?: boolean | Prisma.Task$changesArgs<ExtArgs>
   comments?: boolean | Prisma.Task$commentsArgs<ExtArgs>
   labels?: boolean | Prisma.Task$labelsArgs<ExtArgs>
+  checklistItems?: boolean | Prisma.Task$checklistItemsArgs<ExtArgs>
   _count?: boolean | Prisma.TaskCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["task"]>
 
@@ -1854,6 +2013,7 @@ export type TaskInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   changes?: boolean | Prisma.Task$changesArgs<ExtArgs>
   comments?: boolean | Prisma.Task$commentsArgs<ExtArgs>
   labels?: boolean | Prisma.Task$labelsArgs<ExtArgs>
+  checklistItems?: boolean | Prisma.Task$checklistItemsArgs<ExtArgs>
   _count?: boolean | Prisma.TaskCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type TaskIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1879,6 +2039,7 @@ export type $TaskPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     changes: Prisma.$TaskChangePayload<ExtArgs>[]
     comments: Prisma.$CommentPayload<ExtArgs>[]
     labels: Prisma.$TaskLabelPayload<ExtArgs>[]
+    checklistItems: Prisma.$ChecklistItemPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -2297,6 +2458,7 @@ export interface Prisma__TaskClient<T, Null = never, ExtArgs extends runtime.Typ
   changes<T extends Prisma.Task$changesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Task$changesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TaskChangePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   comments<T extends Prisma.Task$commentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Task$commentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CommentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   labels<T extends Prisma.Task$labelsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Task$labelsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TaskLabelPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  checklistItems<T extends Prisma.Task$checklistItemsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Task$checklistItemsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ChecklistItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2868,6 +3030,30 @@ export type Task$labelsArgs<ExtArgs extends runtime.Types.Extensions.InternalArg
   take?: number
   skip?: number
   distinct?: Prisma.TaskLabelScalarFieldEnum | Prisma.TaskLabelScalarFieldEnum[]
+}
+
+/**
+ * Task.checklistItems
+ */
+export type Task$checklistItemsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ChecklistItem
+   */
+  select?: Prisma.ChecklistItemSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ChecklistItem
+   */
+  omit?: Prisma.ChecklistItemOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ChecklistItemInclude<ExtArgs> | null
+  where?: Prisma.ChecklistItemWhereInput
+  orderBy?: Prisma.ChecklistItemOrderByWithRelationInput | Prisma.ChecklistItemOrderByWithRelationInput[]
+  cursor?: Prisma.ChecklistItemWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ChecklistItemScalarFieldEnum | Prisma.ChecklistItemScalarFieldEnum[]
 }
 
 /**

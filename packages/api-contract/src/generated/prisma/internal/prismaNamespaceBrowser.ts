@@ -58,6 +58,7 @@ export const ModelName = {
   Label: 'Label',
   TaskLabel: 'TaskLabel',
   Comment: 'Comment',
+  ChecklistItem: 'ChecklistItem',
   TaskChange: 'TaskChange'
 } as const
 
@@ -173,6 +174,20 @@ export const CommentScalarFieldEnum = {
 } as const
 
 export type CommentScalarFieldEnum = (typeof CommentScalarFieldEnum)[keyof typeof CommentScalarFieldEnum]
+
+
+export const ChecklistItemScalarFieldEnum = {
+  id: 'id',
+  taskId: 'taskId',
+  content: 'content',
+  completed: 'completed',
+  sortOrder: 'sortOrder',
+  version: 'version',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ChecklistItemScalarFieldEnum = (typeof ChecklistItemScalarFieldEnum)[keyof typeof ChecklistItemScalarFieldEnum]
 
 
 export const TaskChangeScalarFieldEnum = {
