@@ -131,7 +131,9 @@ function PublicFooter() {
           <div className="landing-footer__col">
             <h3 className="landing-footer__heading">Product</h3>
             <a href="/login">Live demo</a>
-            <a href="/api/docs">API documentation</a>
+            <a href="/api/docs" target="_blank" rel="noreferrer">
+              API documentation
+            </a>
           </div>
           <div className="landing-footer__col">
             <h3 className="landing-footer__heading">Project</h3>

@@ -4,7 +4,8 @@
   "private": true,
   "description": "OpenAPI v1 source of truth and generated TypeScript types — integration boundary (ADR-005)",
   "exports": {
-    ".": "./src/generated/api-types.ts"
+    ".": "./src/generated/api-types.ts",
+    "./openapi.yaml": "./openapi.yaml"
   },
   "scripts": {
     "generate": "openapi-typescript openapi.yaml -o src/generated/api-types.ts",

@@ -44,7 +44,13 @@ function AppAbout({ onNavigate }: { onNavigate?: () => void }) {
       <NavLink to="/" end className="app-about__link" onClick={onNavigate}>
         About this project
       </NavLink>
-      <a href="/api/docs" className="app-about__link" onClick={onNavigate}>
+      <a
+        href="/api/docs"
+        target="_blank"
+        rel="noreferrer"
+        className="app-about__link"
+        onClick={onNavigate}
+      >
         API docs
       </a>
       <a

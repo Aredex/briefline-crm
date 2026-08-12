@@ -82,6 +82,7 @@ Necesita comprender el producto sin documentación previa, registro ni datos pro
 | `/app/profile` | Autenticado | Perfil |
 | `/api/v1/*` | Según contrato | API REST |
 | `/api/docs` | Público de solo lectura | OpenAPI/Swagger del caso de estudio |
+| `/api/docs-json`, `/api/docs-yaml` | Público de solo lectura | Artefacto OpenAPI 3.1 crudo (mismo documento que `packages/api-contract/openapi.yaml`) |
 
 ### Reglas de navegación
 
