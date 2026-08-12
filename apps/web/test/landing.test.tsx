@@ -81,6 +81,45 @@ describe('Landing', () => {
     expect(screen.getByRole('contentinfo')).toBeInTheDocument()
   })
 
+  /*
+   * F3/UT-5 — the landing now calls useHashScrollOnLoad on mount. jsdom has
+   * neither `Element#scrollIntoView` nor `document.fonts`, so a missing guard
+   * in the hook would surface here as a crash on any deep-linked render
+   * rather than as a scroll bug. Also pins the composite `?tab=` hash to the
+   * tab it selects, now that ProductExplorer no longer owns the scroll.
+   */
+  it('mounts with a deep-link hash without throwing, and selects the deep-linked tab', async () => {
+    loginAs(null)
+
+    const errors: unknown[] = []
+    const onError = (event: ErrorEvent) => errors.push(event.error ?? event.message)
+    window.addEventListener('error', onError)
+
+    try {
+      renderApp({ initialPath: '/#explore-product?tab=accountability' })
+
+      await findByHeading('Explore the product')
+      expect(await findByHeading('Permissions and history')).toBeInTheDocument()
+
+      const tabs = screen.getAllByRole('tab')
+      expect(tabs.map((tab) => tab.getAttribute('aria-selected'))).toEqual([
+        'false',
+        'false',
+        'true',
+      ])
+
+      // Drain the frame the hook schedules its scroll in.
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+      })
+    } finally {
+      window.removeEventListener('error', onError)
+      window.history.replaceState(null, '', '/')
+    }
+
+    expect(errors).toEqual([])
+  })
+
   it('renders no placeholder links (F3/T3.5 gate: D1 hides the unpublished GitHub URL)', async () => {
     loginAs(null)
     renderApp({ initialPath: '/' })

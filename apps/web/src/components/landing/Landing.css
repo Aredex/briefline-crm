@@ -342,14 +342,21 @@
 /* Vertical rhythm is not uniform (audit §5.5, plan T1.2): visual/tab-driven
    sections get more air (wide), narrative/list sections stay compact. Default
    is "normal"; sections opt into a variant via a second class. */
+
 .landing-section {
   padding: var(--landing-section-gap-normal) var(--landing-gutter);
   background: var(--landing-paper);
   /* T5.4/A11Y-LAND-003: precise sticky-header offset for hash navigation,
      using the real header height token instead of the generic global
-     scroll-padding-top fallback (global.css). Extra --space-6 keeps a
-     little breathing room above the heading instead of touching the header. */
-  scroll-margin-top: calc(var(--landing-header-height) + var(--space-6));
+     scroll-padding-top fallback (global.css, neutralized above for
+     `.landing`). The breathing room above the heading already comes from
+     the section's own padding-top (--landing-section-gap-*); adding extra
+     scroll-margin-top on top of the header height does NOT add air — it
+     opens a window onto the tail end of the *previous* section, which is
+     still visible under the sticky header until the browser finishes
+     scrolling past it. Match the header height exactly so the section
+     lands flush under it. */
+  scroll-margin-top: var(--landing-header-height);
 }
 
 /* T5.4: zero-height anchor target for `#product` (ProductExplorer.tsx) — a
@@ -359,7 +366,31 @@
 .landing-anchor {
   display: block;
   height: 0;
-  scroll-margin-top: calc(var(--landing-header-height) + var(--space-6));
+  scroll-margin-top: var(--landing-header-height);
+}
+
+/* Neutralize the generic global.css `html { scroll-padding-top: 2rem }`
+   fallback while the landing is mounted. `scroll-padding-top` only takes
+   effect on the actual scroll container — the document (`html`), not the
+   `.landing` wrapper div, which doesn't scroll itself — so it can't be
+   scoped to `.landing` directly. It STACKS with each target's own
+   `scroll-margin-top` above (108px = 76px header + 32px fallback, measured
+   in-browser), reopening the sliver-of-previous-section gap that
+   `scroll-margin-top` alone already closes. `:has(.landing)` scopes the
+   override to routes that render the landing, so other routes with
+   internal scroll containers keep relying on that 2rem default untouched. */
+html:has(.landing) {
+  scroll-padding-top: 0;
+}
+
+/* Safety net for the skip link (`href="#main"` → `<main id="main">` in
+   LandingLayout.tsx): it relied on the global 2rem `scroll-padding-top`
+   fallback, neutralized above for `.landing` routes. Not currently
+   observable (the header is `position: absolute` on initial load, so
+   `<main>` starts at y=0), but without this the anchor has no scroll
+   offset if that layout assumption ever changes. */
+.landing main#main {
+  scroll-margin-top: var(--landing-header-height);
 }
 
 .landing-section--compact {

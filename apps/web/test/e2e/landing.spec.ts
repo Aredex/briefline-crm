@@ -13,6 +13,37 @@
 import { test, expect } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
 
+/*
+ * Reads what is painted immediately under the sticky header's bottom edge and
+ * reports whether it belongs to the given section. This is the pixel-level
+ * guard for the header-offset bug: any anchor offset larger than the header
+ * height leaves a gap through which the *previous* section shows, so a
+ * heading that is merely "below the header" is not enough — the section must
+ * own that first row of pixels. Returns the section id on success, and an
+ * explanatory string (what was painted there, and how far down the section
+ * actually starts) on failure, so a red poll says why.
+ */
+async function probeUnderHeader(
+  page: import('@playwright/test').Page,
+  sectionId: string,
+): Promise<string> {
+  return page.evaluate((id) => {
+    const header = document.querySelector('.landing-header')
+    if (!header) return 'no .landing-header in the document'
+    const headerBottom = header.getBoundingClientRect().bottom
+    const x = Math.round(window.innerWidth / 2)
+    const y = Math.round(headerBottom + 2)
+    const el = document.elementFromPoint(x, y)
+    if (!el) return `nothing painted at y=${y}`
+    if (el.closest(`#${id}`)) return id
+
+    const section = document.querySelector(`#${id}`)
+    const gap = section ? Math.round(section.getBoundingClientRect().top - headerBottom) : NaN
+    const painted = `${el.tagName.toLowerCase()}${el.className ? `.${String(el.className).split(' ')[0]}` : ''}`
+    return `${painted} at y=${y} (#${id} starts ${gap}px below the header)`
+  }, sectionId)
+}
+
 test.describe('Landing page', () => {
   test('loads with the hero H1 visible', async ({ page }) => {
     await page.goto('/')
@@ -36,6 +67,12 @@ test.describe('Landing page', () => {
     expect(headerBox).not.toBeNull()
     expect(headingBox).not.toBeNull()
     expect(headingBox!.y).toBeGreaterThanOrEqual(headerBox!.y + headerBox!.height - 1)
+
+    // Same pixel probe as the cold-load test below, on the warm path: after a
+    // nav click the target section must start flush under the header, with no
+    // sliver of the preceding section showing through. Polled because the nav
+    // anchor scrolls smoothly (global.css `scroll-behavior: smooth`).
+    await expect.poll(() => probeUnderHeader(page, 'engineering')).toBe('engineering')
   })
 
   test('"Case study" nav link lands on the case study section, not Engineering (T5.4 anchor fix)', async ({ page }) => {
@@ -54,6 +91,58 @@ test.describe('Landing page', () => {
     await nav.getByRole('link', { name: 'Product' }).click()
     await expect(page).toHaveURL(/#product$/)
     await expect(page.getByRole('heading', { name: 'Explore the product' })).toBeInViewport()
+  })
+
+  /*
+   * Cold-load deep links (plan F3/E2E-1..4). The browser's native
+   * scroll-to-fragment runs against an empty `#root`, so these only pass
+   * because useHashScrollOnLoad owns the scroll after React mounts. Every
+   * position assertion is retried (expect.poll / toBeInViewport): `goto`
+   * resolves on `load`, and the scroll happens a frame later.
+   */
+  test('cold load of /#product scrolls to the product explorer', async ({ page }) => {
+    await page.goto('/#product')
+
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(1000)
+    await expect(page.getByRole('heading', { name: 'Explore the product' })).toBeInViewport()
+  })
+
+  test('cold load of /#case-study scrolls to the case study section', async ({ page }) => {
+    // A second, further anchor: proves the fix is not specific to #product.
+    await page.goto('/#case-study')
+
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(1000)
+    await expect(page.getByRole('heading', { name: 'About this case study' })).toBeInViewport()
+  })
+
+  test('cold load of /#problem lands flush under the sticky header, with no sliver of the hero', async ({ page }) => {
+    await page.goto('/#problem')
+
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0)
+    await expect(page.getByRole('heading', { name: 'When client work lives everywhere' })).toBeInViewport()
+
+    // The regression guard for the header-offset bug: the pixels right below
+    // the header must belong to #problem, not to the hero above it.
+    await expect.poll(() => probeUnderHeader(page, 'problem')).toBe('problem')
+  })
+
+  test('cold load of /#explore-product?tab=accountability selects the tab and scrolls', async ({ page }) => {
+    // The composite hash never matches an element id, so nothing scrolls here
+    // unless the hook strips the query — the case the deleted ProductExplorer
+    // effect used to patch on its own.
+    await page.goto('/#explore-product?tab=accountability')
+
+    const tablist = page.getByRole('tablist', { name: 'Product previews' })
+    await expect(tablist.getByRole('tab', { name: 'Keep accountability' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+    await expect(tablist.getByRole('tab', { name: 'Plan work' })).toHaveAttribute(
+      'aria-selected',
+      'false',
+    )
+    await expect(page.getByRole('heading', { name: 'Permissions and history' })).toBeInViewport()
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(1000)
   })
 
   test('product explorer: switching tabs changes the active panel and updates the URL hash', async ({ page }) => {

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
+import { useRef, useState, type KeyboardEvent } from 'react'
 import { Link } from 'react-router'
 import { LandingLightbox } from '../LandingLightbox'
 
@@ -130,15 +130,7 @@ function MediaPicture({ media }: { media: TabDef['media'] }) {
 export function ProductExplorer() {
   const [activeTab, setActiveTab] = useState<string>(() => readTabFromHash() ?? TABS[0]!.key)
   const [lightboxTab, setLightboxTab] = useState<TabDef | null>(null)
-  const sectionRef = useRef<HTMLElement>(null)
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({})
-
-  // A deep link that lands on this section's hash on first paint should
-  // scroll it into view — the browser can't do this on its own because the
-  // fragment also carries the `?tab=` query, so it never matches an element id.
-  useEffect(() => {
-    if (readTabFromHash()) sectionRef.current?.scrollIntoView({ block: 'start' })
-  }, [])
 
   function selectTab(key: string, moveFocus = false) {
     setActiveTab(key)
@@ -163,7 +155,6 @@ export function ProductExplorer() {
 
   return (
     <section
-      ref={sectionRef}
       id={EXPLORER_ANCHOR}
       className="landing-section landing-section--alt"
       aria-labelledby="preview-title"

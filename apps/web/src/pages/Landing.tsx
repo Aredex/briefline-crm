@@ -5,6 +5,7 @@
  */
 import { LandingLayout } from '../components/landing/LandingLayout'
 import '../components/landing/Landing.css'
+import { useHashScrollOnLoad } from '../components/landing/useHashScrollOnLoad'
 import { Hero } from '../components/landing/sections/Hero'
 import { ProblemSolution } from '../components/landing/sections/ProblemSolution'
 import { Workflow } from '../components/landing/sections/Workflow'
@@ -16,6 +17,8 @@ import { CaseStudy } from '../components/landing/sections/CaseStudy'
 import { FinalCta } from '../components/landing/sections/FinalCta'
 
 export function Landing() {
+  useHashScrollOnLoad()
+
   return (
     <LandingLayout>
       {/* Sentinel for sticky header */}
