@@ -192,7 +192,7 @@
 
 .landing-hero {
   background: var(--landing-canvas);
-  min-height: 78vh;
+  min-height: 58vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -325,11 +325,11 @@
   .landing-hero__grid {
     /* Image column widened relative to text (audit: +35-55% capture size) */
     grid-template-columns: 0.85fr 1.3fr;
-    padding-top: calc(var(--landing-header-height) + var(--space-9));
-    padding-bottom: var(--space-8);
+    padding-top: calc(var(--landing-header-height) + var(--space-8));
+    padding-bottom: var(--space-6);
   }
   .landing-hero {
-    min-height: 88vh;
+    min-height: 66vh;
   }
   .landing-hero__image {
     /* Let the capture bleed slightly past the container edge for controlled tension */
