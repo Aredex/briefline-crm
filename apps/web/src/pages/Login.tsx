@@ -37,8 +37,8 @@ type LoginError =
 const DEMO_ACCOUNTS = import.meta.env.PROD
   ? []
   : [
-      { label: 'Administrator', email: 'admin@northstar.digital', password: 'Briefline2026!' },
-      { label: 'Member', email: 'member@northstar.digital', password: 'Briefline2026!' },
+      { label: 'Admin (Alex Rivera)', email: 'admin@briefline.demo', password: 'briefline-demo-2026' },
+      { label: 'Member (Marco Díaz)', email: 'member@briefline.demo', password: 'briefline-demo-2026' },
     ]
 
 export function Login() {
