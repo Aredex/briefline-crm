@@ -11,6 +11,9 @@ import { useQuery } from '@tanstack/react-query'
 import { api, ApiError } from '../api/client'
 import type {
   BoardResponse,
+  ChecklistItemResponse,
+  CommentResponse,
+  LabelResponse,
   Paginated,
   TaskChange,
   TaskResponse,
@@ -127,5 +130,32 @@ export function useActiveClientsQuery() {
   return useQuery({
     queryKey: ['clients', 'active'],
     queryFn: () => api.get<Paginated<import('../api/types').ClientResponse>>('/clients', { params: { limit: 50 } }),
+  })
+}
+
+/** Comment thread (COMM-001) — newest first is the contractual server sort. */
+export function useTaskCommentsQuery(taskId: string) {
+  return useQuery({
+    queryKey: ['tasks', 'comments', taskId],
+    queryFn: () =>
+      api.get<Paginated<CommentResponse>>(`/tasks/${taskId}/comments`, { params: { page: 1, limit: 20 } }),
+    enabled: Boolean(taskId),
+  })
+}
+
+/** Full checklist (CHECK-001) — sortOrder ascending is the contractual order. */
+export function useTaskChecklistQuery(taskId: string) {
+  return useQuery({
+    queryKey: ['tasks', 'checklist', taskId],
+    queryFn: () => api.get<ChecklistItemResponse[]>(`/tasks/${taskId}/checklist`),
+    enabled: Boolean(taskId),
+  })
+}
+
+/** Team-wide label catalogue (LAB-001) — drives the "Add label" picker. */
+export function useLabelsQuery() {
+  return useQuery({
+    queryKey: ['labels'],
+    queryFn: () => api.get<LabelResponse[]>('/labels'),
   })
 }

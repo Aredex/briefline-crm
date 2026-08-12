@@ -75,9 +75,10 @@ describe('Login', () => {
     renderApp()
 
     await screen.findByRole('heading', { name: 'Sign in' }, { timeout: 3000 })
-    await user.click(screen.getByRole('button', { name: /administrator/i }))
+    await user.click(screen.getByRole('button', { name: /Admin.*Alex/i }))
 
-    expect(screen.getByLabelText(/Email\ address/i)).toHaveValue(ADMIN_EMAIL)
+    const emailValue = screen.getByLabelText(/Email\ address/i)
+    expect(emailValue).toHaveValue('admin@briefline.demo')
     expect(screen.getByRole('button', { name: 'Sign in' })).toHaveFocus()
   })
 })

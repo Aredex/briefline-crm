@@ -17,6 +17,10 @@ import { api } from '../api/client'
 import type {
   BoardResponse,
   ChangeTaskStatusInput,
+  ChecklistItemResponse,
+  ChecklistItemUpdateInput,
+  CommentResponse,
+  LabelResponse,
   TaskCreateInput,
   TaskPriority,
   TaskResponse,
@@ -308,6 +312,86 @@ export function useReconcileTask() {
     void queryClient.invalidateQueries({ queryKey: ['tasks', 'board'] })
     void queryClient.invalidateQueries({ queryKey: ['tasks', 'detail', taskId] })
   }
+}
+
+/* ---------- Comments / labels / checklist (PC-03/04/05 — non-optimistic) ---------- */
+/* These follow useCreateTask: no optimistic cache writes, invalidate on success.
+ * The detail/board keys are invalidated on label changes because summaries
+ * embed labels (LAB-002); the board cards do not render them yet, but the
+ * cache should stay faithful to the server. */
+
+export function useAddComment() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ taskId, content }: { taskId: string; content: string }) =>
+      api.post<CommentResponse>(`/tasks/${taskId}/comments`, { content }),
+    onSuccess: (_data, variables) => {
+      void queryClient.invalidateQueries({ queryKey: ['tasks', 'comments', variables.taskId] })
+    },
+  })
+}
+
+function invalidateTaskLabels(queryClient: ReturnType<typeof useQueryClient>, taskId: string) {
+  void queryClient.invalidateQueries({ queryKey: ['tasks', 'detail', taskId] })
+  void queryClient.invalidateQueries({ queryKey: ['tasks', 'board'] })
+}
+
+export function useAssignLabel() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ taskId, labelId }: { taskId: string; labelId: string }) =>
+      api.post<LabelResponse>(`/tasks/${taskId}/labels/${labelId}`, {}),
+    onSuccess: (_data, variables) => invalidateTaskLabels(queryClient, variables.taskId),
+  })
+}
+
+export function useRemoveLabel() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ taskId, labelId }: { taskId: string; labelId: string }) =>
+      api.delete<LabelResponse>(`/tasks/${taskId}/labels/${labelId}`),
+    onSuccess: (_data, variables) => invalidateTaskLabels(queryClient, variables.taskId),
+  })
+}
+
+export function useAddChecklistItem() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ taskId, content }: { taskId: string; content: string }) =>
+      api.post<ChecklistItemResponse>(`/tasks/${taskId}/checklist`, { content }),
+    onSuccess: (_data, variables) => {
+      void queryClient.invalidateQueries({ queryKey: ['tasks', 'checklist', variables.taskId] })
+    },
+  })
+}
+
+export function useUpdateChecklistItem() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      taskId,
+      itemId,
+      patch,
+    }: {
+      taskId: string
+      itemId: string
+      patch: ChecklistItemUpdateInput
+    }) => api.patch<ChecklistItemResponse>(`/tasks/${taskId}/checklist/${itemId}`, patch),
+    onSuccess: (_data, variables) => {
+      void queryClient.invalidateQueries({ queryKey: ['tasks', 'checklist', variables.taskId] })
+    },
+  })
+}
+
+export function useDeleteChecklistItem() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ taskId, itemId }: { taskId: string; itemId: string }) =>
+      api.delete<ChecklistItemResponse>(`/tasks/${taskId}/checklist/${itemId}`),
+    onSuccess: (_data, variables) => {
+      void queryClient.invalidateQueries({ queryKey: ['tasks', 'checklist', variables.taskId] })
+    },
+  })
 }
 
 export type { TaskStatus }

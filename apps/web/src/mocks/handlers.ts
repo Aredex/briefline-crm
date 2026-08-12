@@ -23,8 +23,11 @@ import type {
 import {
   ALL_CLIENTS,
   ALL_CONTACTS,
+  ALL_LABELS,
   ALL_TASKS,
   ALL_USERS,
+  CHECKLIST_BY_TASK,
+  COMMENTS_BY_TASK,
   DEMO_PASSWORD,
   findDemoUser,
   KPIS,
@@ -216,6 +219,18 @@ function staleVersion(task: TaskResponse) {
       { currentVersion: task.version, currentState: currentStateOf(task) },
     )
   }
+
+  /** Shared BOLA-safe task resolution for comments/labels/checklist (BR-016). */
+  function findVisibleTask(taskId: string): { task: TaskResponse; user: UserResponse } | null {
+    const user = currentUser()
+    if (!user) return null
+    const task = ALL_TASKS.find((item) => item.id === taskId)
+    if (!task || (task.archivedAt && user.role !== 'ADMIN')) return null
+    return { task, user }
+  }
+
+  const TASK_NOT_VISIBLE = () =>
+    problem(404, 'TASK_NOT_FOUND', 'Task not found', 'The requested task does not exist or is not visible to you.')
 
 export const handlers = [
   http.get(`${API_PREFIX}/auth/csrf`, () => json({ csrfToken: MOCK_CSRF_TOKEN })),
@@ -437,6 +452,7 @@ export const handlers = [
       assignee: assignee ? { id: assignee.id, name: assignee.name } : null,
       client: client ? { id: client.id, companyName: client.companyName } : null,
       dueDate: body.dueDate || null,
+      labels: [],
       version: 1,
       blockedReason: status === 'BLOCKED' ? body.blockedReason!.trim() : null,
       creator: { id: user.id, name: user.name },
@@ -576,6 +592,207 @@ export const handlers = [
     task.version += 1
     task.updatedAt = task.archivedAt
     return json(task)
+  }),
+
+  /* ---------- Comments (PC-03, COMM-001) ---------- */
+
+  http.get(`${API_PREFIX}/tasks/:taskId/comments`, ({ request, params }) => {
+    const visible = findVisibleTask(String(params.taskId))
+    if (!visible) return TASK_NOT_VISIBLE()
+    // COMM-001: the order is contractual — newest first.
+    const thread = [...(COMMENTS_BY_TASK[visible.task.id] ?? [])].sort((a, b) =>
+      b.createdAt.localeCompare(a.createdAt),
+    )
+    const { page, limit } = parsePage(new URL(request.url), 25)
+    return json(paginate(thread, page, limit))
+  }),
+
+  http.post(`${API_PREFIX}/tasks/:taskId/comments`, async ({ params, request }) => {
+    const visible = findVisibleTask(String(params.taskId))
+    if (!visible) return TASK_NOT_VISIBLE()
+    // COMM-001: creation is open to any authenticated user (no edit policy).
+    const body = (await request.json()) as { content?: string }
+    const content = body.content?.trim() ?? ''
+    if (!content || content.length > 2000) {
+      return problem(400, 'VALIDATION_ERROR', 'Validation failed', 'The request payload is invalid.', {
+        errors: [{ field: 'content', message: 'Comment must be 1 to 2000 characters.', code: 'INVALID_LENGTH' }],
+      })
+    }
+    const comment = {
+      id: crypto.randomUUID(),
+      content,
+      author: { id: visible.user.id, name: visible.user.name },
+      createdAt: new Date().toISOString(),
+    }
+    const thread = COMMENTS_BY_TASK[visible.task.id] ?? []
+    thread.unshift(comment)
+    COMMENTS_BY_TASK[visible.task.id] = thread
+    return json(comment, { status: 201 })
+  }),
+
+  /* ---------- Labels (PC-04, LAB-001/002) ---------- */
+
+  http.get(`${API_PREFIX}/labels`, () => {
+    if (!currentUser()) return unauthorized()
+    return json(ALL_LABELS)
+  }),
+
+  http.post(`${API_PREFIX}/tasks/:taskId/labels/:labelId`, ({ params }) => {
+    const visible = findVisibleTask(String(params.taskId))
+    if (!visible) return TASK_NOT_VISIBLE()
+    if (visible.task.archivedAt) {
+      return problem(409, 'TASK_ARCHIVED', 'Task archived', 'This task is archived and can no longer be modified.')
+    }
+    if (!canEditTask(visible.user, visible.task)) {
+      return problem(403, 'FORBIDDEN', 'Forbidden', 'You do not have permission to modify this task.')
+    }
+    const label = ALL_LABELS.find((item) => item.id === params.labelId)
+    if (!label) return problem(404, 'NOT_FOUND', 'Label not found', 'The requested label does not exist.')
+    if (!visible.task.labels.some((item) => item.id === label.id)) {
+      visible.task.labels.push({ id: label.id, name: label.name, color: label.color })
+    }
+    return json({ id: label.id, name: label.name, color: label.color })
+  }),
+
+  http.delete(`${API_PREFIX}/tasks/:taskId/labels/:labelId`, ({ params }) => {
+    const visible = findVisibleTask(String(params.taskId))
+    if (!visible) return TASK_NOT_VISIBLE()
+    if (visible.task.archivedAt) {
+      return problem(409, 'TASK_ARCHIVED', 'Task archived', 'This task is archived and can no longer be modified.')
+    }
+    if (!canEditTask(visible.user, visible.task)) {
+      return problem(403, 'FORBIDDEN', 'Forbidden', 'You do not have permission to modify this task.')
+    }
+    const label = ALL_LABELS.find((item) => item.id === params.labelId)
+    if (!label) return problem(404, 'NOT_FOUND', 'Label not found', 'The requested label does not exist.')
+    visible.task.labels = visible.task.labels.filter((item) => item.id !== label.id)
+    return json({ id: label.id, name: label.name, color: label.color })
+  }),
+
+  /* ---------- Checklist (PC-05, CHECK-001/002) ---------- */
+  // NOTE: the static `reorder` route MUST be registered before `:itemId`
+  // (msw matches in registration order, mirroring Express).
+
+  http.get(`${API_PREFIX}/tasks/:taskId/checklist`, ({ params }) => {
+    const visible = findVisibleTask(String(params.taskId))
+    if (!visible) return TASK_NOT_VISIBLE()
+    const items = [...(CHECKLIST_BY_TASK[visible.task.id] ?? [])].sort(
+      (a, b) => a.sortOrder - b.sortOrder,
+    )
+    return json(items)
+  }),
+
+  http.post(`${API_PREFIX}/tasks/:taskId/checklist`, async ({ params, request }) => {
+    const visible = findVisibleTask(String(params.taskId))
+    if (!visible) return TASK_NOT_VISIBLE()
+    if (visible.task.archivedAt) {
+      return problem(409, 'TASK_ARCHIVED', 'Task archived', 'This task is archived and can no longer be modified.')
+    }
+    if (!canEditTask(visible.user, visible.task)) {
+      return problem(403, 'FORBIDDEN', 'Forbidden', 'You do not have permission to modify this task.')
+    }
+    const body = (await request.json()) as { content?: string }
+    const content = body.content?.trim() ?? ''
+    if (!content || content.length > 500) {
+      return problem(400, 'VALIDATION_ERROR', 'Validation failed', 'The request payload is invalid.', {
+        errors: [{ field: 'content', message: 'Checklist item must be 1 to 500 characters.', code: 'INVALID_LENGTH' }],
+      })
+    }
+    const thread = CHECKLIST_BY_TASK[visible.task.id] ?? []
+    const item = {
+      id: crypto.randomUUID(),
+      content,
+      completed: false,
+      sortOrder: thread.length,
+      version: 1,
+    }
+    thread.push(item)
+    CHECKLIST_BY_TASK[visible.task.id] = thread
+    return json(item, { status: 201 })
+  }),
+
+  http.patch(`${API_PREFIX}/tasks/:taskId/checklist/reorder`, async ({ params, request }) => {
+    const visible = findVisibleTask(String(params.taskId))
+    if (!visible) return TASK_NOT_VISIBLE()
+    if (visible.task.archivedAt) {
+      return problem(409, 'TASK_ARCHIVED', 'Task archived', 'This task is archived and can no longer be modified.')
+    }
+    if (!canEditTask(visible.user, visible.task)) {
+      return problem(403, 'FORBIDDEN', 'Forbidden', 'You do not have permission to modify this task.')
+    }
+    const body = (await request.json()) as { items?: { id: string; sortOrder: number }[] }
+    if (!body.items || body.items.length === 0) {
+      return problem(400, 'VALIDATION_ERROR', 'Validation failed', 'The request payload is invalid.', {
+        errors: [{ field: 'items', message: 'At least one item is required.', code: 'REQUIRED' }],
+      })
+    }
+    const thread = CHECKLIST_BY_TASK[visible.task.id] ?? []
+    for (const entry of body.items) {
+      const item = thread.find((candidate) => candidate.id === entry.id)
+      if (item) item.sortOrder = entry.sortOrder
+    }
+    return json([...thread].sort((a, b) => a.sortOrder - b.sortOrder))
+  }),
+
+  http.patch(`${API_PREFIX}/tasks/:taskId/checklist/:itemId`, async ({ params, request }) => {
+    const visible = findVisibleTask(String(params.taskId))
+    if (!visible) return TASK_NOT_VISIBLE()
+    if (visible.task.archivedAt) {
+      return problem(409, 'TASK_ARCHIVED', 'Task archived', 'This task is archived and can no longer be modified.')
+    }
+    if (!canEditTask(visible.user, visible.task)) {
+      return problem(403, 'FORBIDDEN', 'Forbidden', 'You do not have permission to modify this task.')
+    }
+    const body = (await request.json()) as {
+      completed?: boolean
+      content?: string
+      expectedVersion?: number
+    }
+    const thread = CHECKLIST_BY_TASK[visible.task.id] ?? []
+    const item = thread.find((candidate) => candidate.id === params.itemId)
+    if (!item) {
+      return problem(404, 'NOT_FOUND', 'Checklist item not found', 'The requested checklist item does not exist.')
+    }
+    // CHECK-002: the CAS lock must match; stale → 409 with the current version.
+    if (body.expectedVersion !== item.version) {
+      return problem(
+        409,
+        'STALE_VERSION',
+        'Stale version',
+        'This item was modified by someone else. Refresh to see the current state.',
+        { currentVersion: item.version },
+      )
+    }
+    if (body.completed !== undefined) item.completed = body.completed
+    if (body.content !== undefined) {
+      const content = body.content.trim()
+      if (!content || content.length > 500) {
+        return problem(400, 'VALIDATION_ERROR', 'Validation failed', 'The request payload is invalid.', {
+          errors: [{ field: 'content', message: 'Checklist item must be 1 to 500 characters.', code: 'INVALID_LENGTH' }],
+        })
+      }
+      item.content = content
+    }
+    item.version += 1
+    return json(item)
+  }),
+
+  http.delete(`${API_PREFIX}/tasks/:taskId/checklist/:itemId`, ({ params }) => {
+    const visible = findVisibleTask(String(params.taskId))
+    if (!visible) return TASK_NOT_VISIBLE()
+    if (visible.task.archivedAt) {
+      return problem(409, 'TASK_ARCHIVED', 'Task archived', 'This task is archived and can no longer be modified.')
+    }
+    if (!canEditTask(visible.user, visible.task)) {
+      return problem(403, 'FORBIDDEN', 'Forbidden', 'You do not have permission to modify this task.')
+    }
+    const thread = CHECKLIST_BY_TASK[visible.task.id] ?? []
+    const index = thread.findIndex((candidate) => candidate.id === params.itemId)
+    if (index === -1) {
+      return problem(404, 'NOT_FOUND', 'Checklist item not found', 'The requested checklist item does not exist.')
+    }
+    const [removed] = thread.splice(index, 1)
+    return json(removed)
   }),
 
   /* ---------- Clients ---------- */
@@ -1152,6 +1369,10 @@ export function mockResetData() {
   ALL_TASKS.splice(0, ALL_TASKS.length, ...structuredClone(INITIAL_TASKS))
   ALL_USERS.splice(0, ALL_USERS.length, ...structuredClone(INITIAL_USERS))
   ALL_CONTACTS.splice(0, ALL_CONTACTS.length, ...structuredClone(INITIAL_CONTACTS))
+  Object.keys(COMMENTS_BY_TASK).forEach((key) => delete COMMENTS_BY_TASK[key])
+  Object.assign(COMMENTS_BY_TASK, structuredClone(INITIAL_COMMENTS))
+  Object.keys(CHECKLIST_BY_TASK).forEach((key) => delete CHECKLIST_BY_TASK[key])
+  Object.assign(CHECKLIST_BY_TASK, structuredClone(INITIAL_CHECKLIST))
 }
 
 /** Module-load snapshots of the fixtures (mockResetData restores from these). */
@@ -1159,3 +1380,5 @@ const INITIAL_CLIENTS = structuredClone(ALL_CLIENTS)
 const INITIAL_TASKS = structuredClone(ALL_TASKS)
 const INITIAL_USERS = structuredClone(ALL_USERS)
 const INITIAL_CONTACTS = structuredClone(ALL_CONTACTS)
+const INITIAL_COMMENTS = structuredClone(COMMENTS_BY_TASK)
+const INITIAL_CHECKLIST = structuredClone(CHECKLIST_BY_TASK)

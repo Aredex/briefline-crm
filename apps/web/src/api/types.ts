@@ -164,6 +164,13 @@ export interface ContactUpdateInput {
 
 /* ---------- Tasks ---------- */
 
+/** Compact label ref embedded in TaskSummary/TaskResponse (LAB-002). */
+export interface TaskLabel {
+  id: string
+  name: string
+  color: string
+}
+
 export interface TaskSummary {
   id: string
   title: string
@@ -172,6 +179,8 @@ export interface TaskSummary {
   assignee: UserRef | null
   client: ClientRef | null
   dueDate: string | null
+  /** Assigned labels, server-side resolved from the TaskLabel join row (LAB-002). */
+  labels: TaskLabel[]
   version: number
   updatedAt: string
 }
@@ -231,6 +240,58 @@ export interface TaskChange {
   newValue: string | null
   actor: UserRef
   createdAt: string
+}
+
+/* ---------- Comments (COMM-001) ---------- */
+
+/** Full comment representation (thread list, COMM-001). */
+export interface CommentResponse {
+  id: string
+  content: string
+  author: UserRef
+  createdAt: string
+}
+
+/** POST /tasks/:taskId/comments body — only content is accepted (COMM-001). */
+export interface CommentCreateInput {
+  content: string
+}
+
+/* ---------- Labels (LAB-001/002) ---------- */
+
+/** Full label representation (catalogue, LAB-001). */
+export interface LabelResponse {
+  id: string
+  name: string
+  color: string
+}
+
+/* ---------- Checklist (CHECK-001/002) ---------- */
+
+export interface ChecklistItemResponse {
+  id: string
+  content: string
+  completed: boolean
+  sortOrder: number
+  /** Optimistic lock echoed back on toggle/content updates (CHECK-002). */
+  version: number
+}
+
+/** POST /tasks/:taskId/checklist body — only content is accepted (CHECK-001). */
+export interface ChecklistItemCreateInput {
+  content: string
+}
+
+/** PATCH /tasks/:taskId/checklist/:itemId body (CHECK-002). */
+export interface ChecklistItemUpdateInput {
+  completed?: boolean
+  content?: string
+  expectedVersion: number
+}
+
+/** PATCH /tasks/:taskId/checklist/reorder body — full ordering, applied atomically. */
+export interface ChecklistReorderInput {
+  items: { id: string; sortOrder: number }[]
 }
 
 /* ---------- Dashboard ---------- */

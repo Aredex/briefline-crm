@@ -1,0 +1,124 @@
+/*
+ * Task checklist (PC-05) — progress line, checkbox rows (native checkbox,
+ * content strike-through when done) and the inline composer row.
+ */
+
+.task-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.task-checklist__progress {
+  margin: 0;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-gray-500);
+}
+
+.task-checklist__notice {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-error-700);
+}
+
+.task-checklist__items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.task-checklist__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-gray-100);
+}
+
+.task-checklist__item:first-child {
+  padding-top: 0;
+}
+
+.task-checklist__item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.task-checklist__label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.task-checklist__label:has(input:disabled) {
+  cursor: default;
+}
+
+.task-checklist__label input[type='checkbox'] {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-primary-600);
+}
+
+.task-checklist__content {
+  min-width: 0;
+  font-size: var(--text-sm);
+  color: var(--color-gray-800);
+  overflow-wrap: anywhere;
+}
+
+.task-checklist__content--done {
+  color: var(--color-gray-500);
+  text-decoration: line-through;
+}
+
+.task-checklist__remove {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-gray-400);
+  cursor: pointer;
+}
+
+.task-checklist__remove:hover:not(:disabled) {
+  color: var(--color-danger-600);
+  background: var(--color-gray-100);
+}
+
+.task-checklist__remove:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.task-checklist__add {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-gray-200);
+}
+
+.task-checklist__add .field {
+  flex: 1;
+  min-width: 0;
+}
+
+.task-checklist__loading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}

@@ -7,9 +7,12 @@
  */
 import type {
   BoardResponse,
+  ChecklistItemResponse,
   ClientResponse,
+  CommentResponse,
   ContactResponse,
   Kpis,
+  LabelResponse,
   RecentActivityItem,
   TaskChange,
   TaskResponse,
@@ -183,6 +186,10 @@ export const TASK_OPEN_REDESIGN: TaskResponse = {
   assignee: { id: ADMIN_USER.id, name: ADMIN_USER.name },
   client: { id: BLUEBIRD_CLIENT.id, companyName: BLUEBIRD_CLIENT.companyName },
   dueDate: '2026-08-21',
+  labels: [
+    { id: '16161616-1616-4161-8161-161616161603', name: 'design', color: '#8b5cf6' },
+    { id: '16161616-1616-4161-8161-161616161605', name: 'frontend', color: '#10b981' },
+  ],
   version: 3,
   blockedReason: null,
   creator: { id: ADMIN_USER.id, name: ADMIN_USER.name },
@@ -202,6 +209,7 @@ export const TASK_SITE_REDESIGN: TaskResponse = {
   assignee: null,
   client: { id: VELA_CLIENT.id, companyName: VELA_CLIENT.companyName },
   dueDate: '2026-09-05',
+  labels: [],
   version: 1,
   blockedReason: null,
   creator: { id: MEMBER_USER.id, name: MEMBER_USER.name },
@@ -220,6 +228,7 @@ export const TASK_OVERDUE: TaskResponse = {
   assignee: { id: MEMBER_USER.id, name: MEMBER_USER.name },
   client: { id: BLUEBIRD_CLIENT.id, companyName: BLUEBIRD_CLIENT.companyName },
   dueDate: '2026-08-05',
+  labels: [],
   version: 2,
   blockedReason: null,
   creator: { id: ADMIN_USER.id, name: ADMIN_USER.name },
@@ -238,6 +247,7 @@ export const TASK_BLOCKED: TaskResponse = {
   assignee: { id: MEMBER_USER.id, name: MEMBER_USER.name },
   client: { id: VELA_CLIENT.id, companyName: VELA_CLIENT.companyName },
   dueDate: '2026-08-31',
+  labels: [],
   version: 2,
   blockedReason: 'Waiting for client feedback on the mockups.',
   creator: { id: MEMBER_USER.id, name: MEMBER_USER.name },
@@ -256,6 +266,7 @@ export const TASK_NO_DUE: TaskResponse = {
   assignee: { id: ADMIN_USER.id, name: ADMIN_USER.name },
   client: null,
   dueDate: null,
+  labels: [],
   version: 1,
   blockedReason: null,
   creator: { id: ADMIN_USER.id, name: ADMIN_USER.name },
@@ -274,6 +285,7 @@ export const TASK_COMPLETED: TaskResponse = {
   assignee: { id: ADMIN_USER.id, name: ADMIN_USER.name },
   client: { id: VELA_CLIENT.id, companyName: VELA_CLIENT.companyName },
   dueDate: '2026-08-01',
+  labels: [],
   version: 5,
   blockedReason: null,
   creator: { id: ADMIN_USER.id, name: ADMIN_USER.name },
@@ -292,6 +304,7 @@ export const TASK_ARCHIVED: TaskResponse = {
   assignee: { id: ADMIN_USER.id, name: ADMIN_USER.name },
   client: null,
   dueDate: '2026-06-30',
+  labels: [],
   version: 2,
   blockedReason: null,
   creator: { id: ADMIN_USER.id, name: ADMIN_USER.name },
@@ -346,6 +359,56 @@ export const TASK_HISTORY: TaskChange[] = [
     createdAt: '2026-07-15T10:00:00.000Z',
   },
 ]
+
+/* ---------- Labels (PC-04, LAB-001) ---------- */
+
+/** Team-wide catalogue (mock mirror of the seed colors). */
+export const ALL_LABELS: LabelResponse[] = [
+  { id: '16161616-1616-4161-8161-161616161601', name: 'bug', color: '#ef4444' },
+  { id: '16161616-1616-4161-8161-161616161603', name: 'design', color: '#8b5cf6' },
+  { id: '16161616-1616-4161-8161-161616161602', name: 'urgent-review', color: '#f59e0b' },
+  { id: '16161616-1616-4161-8161-161616161604', name: 'documentation', color: '#3b82f6' },
+  { id: '16161616-1616-4161-8161-161616161605', name: 'frontend', color: '#10b981' },
+]
+
+/* ---------- Comments (PC-03, COMM-001) ---------- */
+
+/** Mutable per-task threads; the create handler appends to the newest slot. */
+export const COMMENTS_BY_TASK: Record<string, CommentResponse[]> = {
+  [TASK_OPEN_REDESIGN.id]: [
+    {
+      id: '17171717-1717-4171-8171-171717171701',
+      content:
+        'The wizard looks much cleaner now. I would still shorten the "verify email" step copy.',
+      author: { id: MARIA_USER.id, name: MARIA_USER.name },
+      createdAt: '2026-08-11T09:24:00.000Z',
+    },
+    {
+      id: '17171717-1717-4171-8171-171717171702',
+      content: 'Agreed — dropping step 2 to a two-field form should help the drop-off metric.',
+      author: { id: ADMIN_USER.id, name: ADMIN_USER.name },
+      createdAt: '2026-08-11T10:05:00.000Z',
+    },
+    {
+      id: '17171717-1717-4171-8171-171717171703',
+      content: 'Shipped the shorter copy to staging. Please review before the Friday release.',
+      author: { id: MARIA_USER.id, name: MARIA_USER.name },
+      createdAt: '2026-08-12T08:40:00.000Z',
+    },
+  ],
+}
+
+/* ---------- Checklist (PC-05, CHECK-001/002) ---------- */
+
+/** Mutable per-task items; the handlers append/toggle/remove in place. */
+export const CHECKLIST_BY_TASK: Record<string, ChecklistItemResponse[]> = {
+  [TASK_OPEN_REDESIGN.id]: [
+    { id: '18181818-1818-4181-8181-181818181801', content: 'Audit current wizard steps', completed: true, sortOrder: 0, version: 1 },
+    { id: '18181818-1818-4181-8181-181818181802', content: 'Write new copy for step 2', completed: true, sortOrder: 1, version: 1 },
+    { id: '18181818-1818-4181-8181-181818181803', content: 'Implement progress indicators', completed: false, sortOrder: 2, version: 1 },
+    { id: '18181818-1818-4181-8181-181818181804', content: 'QA on mobile breakpoints', completed: false, sortOrder: 3, version: 1 },
+  ],
+}
 
 /* ---------- Board & dashboard ---------- */
 

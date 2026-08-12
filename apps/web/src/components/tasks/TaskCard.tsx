@@ -10,9 +10,9 @@
  * backlog task without an assignee cannot be a plain transition (BR-009): the
  * destination opens the edit panel focused on Assignee instead.
  *
- * The drag handle (IconGripVertical) is rendered always so the layout is
- * stable; dnd-kit listeners are attached only when the parent enables DnD
- * (progressive enhancement — TASK-FE-010/011).
+ * The whole card is the drag surface; dnd-kit listeners are attached only
+ * when the parent enables DnD (progressive enhancement — TASK-FE-010/011),
+ * and the pointer distance constraint keeps links/menus/buttons clickable.
  */
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { useDraggable } from '@dnd-kit/core'
@@ -20,7 +20,7 @@ import { Link } from 'react-router'
 import type { TaskStatus, TaskSummary } from '../../api/types'
 import { PriorityBadge, StatusBadge, STATUS_LABELS } from '../ui/Badge'
 import { Button } from '../ui/Button'
-import { IconClock, IconEdit, IconGripVertical, IconUser } from '../ui/icons'
+import { IconClock, IconEdit, IconUser } from '../ui/icons'
 import { dueLabel } from '../../lib/format'
 import './TaskCard.css'
 
@@ -204,13 +204,12 @@ export function TaskCard({
   dndEnabled = false,
 }: TaskCardProps) {
   // Draggable wiring is inert unless the parent enables DnD (progressive
-  // enhancement). Listeners land ONLY on the handle — never on the card —
-  // so links, menus and buttons inside keep working.
+  // enhancement). Listeners land on the whole card; the PointerSensor
+  // distance constraint (8px) keeps links, menus and buttons inside clickable.
   const { attributes, listeners, setNodeRef, isDragging, transform } = useDraggable({
     id: task.id,
     disabled: !dndEnabled,
   })
-  const dragInstructionId = `drag-instruction-${task.id}`
   const dragStyle = transform
     ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` }
     : undefined
@@ -221,22 +220,10 @@ export function TaskCard({
       style={dragStyle}
       className={`task-card${isDragging ? ' task-card--dragging' : ''}`}
       aria-label={task.title}
+      {...attributes}
+      {...listeners}
+      aria-roledescription="draggable"
     >
-      {/* Drag handle — focusable; keyboard: Space starts the move (TASK-FE-011),
-          Escape cancels (dnd-kit KeyboardSensor). */}
-      <button
-        type="button"
-        className="task-card__handle"
-        {...attributes}
-        {...listeners}
-        aria-label={`Move ${task.title}`}
-        aria-describedby={dndEnabled && !isDragging ? dragInstructionId : undefined}
-      >
-        <IconGripVertical />
-      </button>
-      <span id={dragInstructionId} className="sr-only">
-        Press Space to start moving
-      </span>
       <div className="task-card__body">
         <div className="task-card__badges">
           <PriorityBadge priority={task.priority} />

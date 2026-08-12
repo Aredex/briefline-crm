@@ -34,8 +34,11 @@ import { ErrorState } from '../components/ui/ErrorState'
 import { Skeleton } from '../components/ui/Skeleton'
 import { IconArrowLeft, IconArchive } from '../components/ui/icons'
 import { MoveToMenu } from '../components/tasks/TaskCard'
+import { TaskChecklist } from '../components/tasks/TaskChecklist'
+import { TaskComments } from '../components/tasks/TaskComments'
 import { TaskForm, type TaskFormValues } from '../components/tasks/TaskForm'
 import { TaskHistory } from '../components/tasks/TaskHistory'
+import { TaskLabels } from '../components/tasks/TaskLabels'
 import { Board } from './Board'
 
 export function TaskDetail() {
@@ -325,6 +328,21 @@ export function TaskDetail() {
                 <section className="task-detail__section" aria-label="History">
                   <h4 className="task-detail__section-title">History</h4>
                   <TaskHistory taskId={task.id} />
+                </section>
+
+                <section className="task-detail__section" aria-label="Checklist">
+                  <h4 className="task-detail__section-title">Checklist</h4>
+                  <TaskChecklist taskId={task.id} canEdit={canEdit && !isReadOnly} />
+                </section>
+
+                <section className="task-detail__section" aria-label="Labels">
+                  <h4 className="task-detail__section-title">Labels</h4>
+                  <TaskLabels taskId={task.id} canEdit={canEdit && !isReadOnly} labels={task.labels} />
+                </section>
+
+                <section className="task-detail__section" aria-label="Comments">
+                  <h4 className="task-detail__section-title">Comments</h4>
+                  <TaskComments taskId={task.id} canEdit={canEdit && !isReadOnly} />
                 </section>
               </>
             )}
