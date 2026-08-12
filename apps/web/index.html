@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/icon.svg" />
+    <!-- Landing display webfont only (D2/T1.8): the variable file covers every
+         display/heading weight, so a single preload is enough. IBM Plex Mono is
+         small text (eyebrow/data/labels) and is not preloaded to avoid delaying
+         the hero H1 paint. Both are self-hosted, so this never touches Google Fonts. -->
+    <link rel="preload" href="/fonts/archivo-variable-latin-wght.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
     <title>Briefline CRM</title>
   </head>
   <body>

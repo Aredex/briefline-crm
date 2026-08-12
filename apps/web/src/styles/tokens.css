@@ -5,7 +5,9 @@
  */
 
 :root {
-  /* Typography — system stack, no webfonts (fast, no FOUT) */
+  /* Typography — system stack, no webfonts (fast, no FOUT).
+   * Scope: the authenticated app only. The public landing self-hosts webfonts —
+   * see "Landing — typography" below (decision D2, .claude/plans/landing-audit-plan.md). */
   --font-family:
     -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --text-xs: 0.75rem; /* 12px */
@@ -111,4 +113,86 @@
 
   /* Touch */
   --touch-target: 44px;
+
+  /* ============================================================
+   * Landing — editorial palette (audit §5.3, plan A3).
+   * Namespaced `--landing-*`. Do NOT use in the authenticated app
+   * and do NOT touch `--color-primary-*`: the app's blue stays the
+   * functional/technical accent (see --landing-blue-functional
+   * below), reserved so product screenshots keep contrast against
+   * the landing's ink/canvas/signal identity.
+   * ============================================================ */
+  --landing-ink: #17201b;
+  --landing-canvas: #f5f7f3;
+  --landing-paper: #ffffff;
+  --landing-signal: #3d6b57;
+  --landing-amber: #c9822d;
+  --landing-blue-functional: var(--color-primary-600); /* technical links only */
+  --landing-line: #d8ded9;
+  --landing-muted: #66736c; /* verified 4.6:1 on --landing-canvas, 4.96:1 on --landing-paper (WCAG AA, plan T1.5) */
+  /* --landing-amber (#c9822d) is 3.1:1 on white — decorative/accent use only
+   * (chips, borders, icons), never as small body text on a light surface. */
+
+  /* Landing — container and vertical rhythm (audit §5.5, plan T1.2).
+   * Section gap is NOT uniform: compact/normal/wide let sections breathe
+   * according to their content weight instead of stacking identical padding. */
+  --landing-container: 1240px;
+  --landing-gutter: clamp(1.25rem, 1rem + 1.2vw, 3.5rem); /* 20px mobile → 56px desktop */
+  --landing-section-gap-compact: clamp(4.5rem, 4rem + 2vw, 7rem); /* 72px → 112px */
+  --landing-section-gap-normal: clamp(5rem, 4.4rem + 2.7vw, 8.5rem); /* 80px → 136px */
+  --landing-section-gap-wide: clamp(6rem, 5rem + 4vw, 9.5rem); /* 96px → 152px */
+
+  /* Landing — header (plan T1.6). Separate from the app's --header-height:
+   * the landing header is taller and the app shell must not inherit it. */
+  --landing-header-height: 76px;
+
+  /* Landing — typography (audit §5.4, plan A4/T1.8).
+   * Display + heading roles use "Archivo Variable" (self-hosted, wght axis).
+   * Eyebrow/data/labels use "IBM Plex Mono" (self-hosted, weight 500).
+   * Body stays on the system stack: at ~50 KiB the display+mono pair already
+   * spends most of the ~45–60 KiB budget from D2, and system-stack body text
+   * reads cleanly against the editorial serif-adjacent display face without
+   * adding a third webfont. Revisit only if legibility feedback says otherwise. */
+  --landing-font-display: 'Archivo Variable', var(--font-family);
+  --landing-font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  --landing-text-display: clamp(2.75rem, 2.15rem + 2.6vw, 4.5rem); /* 44px → 72px, H1 */
+  --landing-text-h2: clamp(1.875rem, 1.6rem + 1.2vw, 2.75rem); /* 30px → 44px */
+  --landing-text-h3: clamp(1.25rem, 1.15rem + 0.4vw, 1.625rem); /* 20px → 26px */
+  --landing-text-lead: clamp(1.0625rem, 1rem + 0.28vw, 1.3125rem); /* 17px → 21px */
+  --landing-text-body: clamp(1rem, 0.96rem + 0.18vw, 1.125rem); /* 16px → 18px */
+  --landing-text-small: 0.9375rem; /* 15px — floor for any non-eyebrow copy (T1.4) */
+  --landing-text-eyebrow: 0.8125rem; /* 13px, IBM Plex Mono, tracked */
+}
+
+/* ============================================================
+ * Landing — self-hosted webfonts (decision D2, plan T1.8).
+ * Real woff2 binaries, sourced via `@fontsource-variable/archivo` and
+ * `@fontsource/ibm-plex-mono` (devDependencies, used only to obtain the
+ * subset files below — nothing is imported from JS, so nothing is bundled).
+ * Files live in apps/web/public/fonts/. `local()` fallbacks keep the page
+ * intact even if a file fails to load or is missing before a deploy.
+ * Archivo Variable ships the full wght axis (400–900) in a single ~35 KiB
+ * file — cheaper than shipping separate 600/700/800 static weights.
+ * IBM Plex Mono ships weight 500 only (~15 KiB): eyebrow/data/labels don't
+ * need a bold cut. Total ≈ 50 KiB, inside the 45–60 KiB budget from D2.
+ * ============================================================ */
+@font-face {
+  font-family: 'Archivo Variable';
+  src:
+    local('Archivo'),
+    url('/fonts/archivo-variable-latin-wght.woff2') format('woff2-variations'),
+    url('/fonts/archivo-variable-latin-wght.woff2') format('woff2');
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'IBM Plex Mono';
+  src:
+    local('IBM Plex Mono'),
+    url('/fonts/ibm-plex-mono-latin-500.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
 }
