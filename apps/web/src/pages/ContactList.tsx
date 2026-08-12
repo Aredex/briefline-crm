@@ -11,7 +11,9 @@ import { useQuery } from '@tanstack/react-query'
 import { api } from '../api/client'
 import type { ClientResponse, ContactResponse, Paginated } from '../api/types'
 import { useAuth } from '../providers/AuthProvider'
+import { formatRelativeDate } from '../lib/format'
 import { Button } from '../components/ui/Button'
+import { Drawer } from '../components/ui/Drawer'
 import { EmptyState } from '../components/ui/EmptyState'
 import { ErrorState } from '../components/ui/ErrorState'
 import { Input } from '../components/ui/Input'
@@ -38,6 +40,14 @@ export function ContactList() {
   const [clientId, setClientId] = useState('')
   const [isPrimary, setIsPrimary] = useState<'' | 'true' | 'false'>('')
   const [page, setPage] = useState(1)
+  const [selectedContactId, setSelectedContactId] = useState<string | null>(null)
+
+  const contactDetailQuery = useQuery({
+    queryKey: ['contacts', selectedContactId],
+    queryFn: () => api.get<ContactResponse>(`/contacts/${selectedContactId!}`),
+    enabled: selectedContactId !== null,
+  })
+  const contactDetail = contactDetailQuery.data
 
   // Debounce the search input (300ms) and reset pagination on any filter change.
   useEffect(() => {
@@ -208,7 +218,10 @@ export function ContactList() {
               </thead>
               <tbody>
                 {listQuery.data.data.map((contact) => (
-                  <tr key={contact.id}>
+                  <tr key={contact.id} className="data-table__row--clickable" onClick={(e) => {
+                    if ((e.target as HTMLElement).closest('button, a')) return
+                    setSelectedContactId(contact.id)
+                  }}>
                     <td>{renderContactName(contact)}</td>
                     <td>{contact.email ?? '—'}</td>
                     <td>{contact.phone ?? '—'}</td>
@@ -271,6 +284,58 @@ export function ContactList() {
           )}
         </>
       )}
+
+      {/* Contact detail drawer */}
+      <Drawer
+        open={selectedContactId !== null}
+        onClose={() => setSelectedContactId(null)}
+        title={contactDetail ? `${contactDetail.firstName} ${contactDetail.lastName}` : 'Contact details'}
+        width={480}
+      >
+        {contactDetailQuery.isPending && (
+          <div className="skeleton-row"><Skeleton /><Skeleton /><Skeleton /></div>
+        )}
+        {contactDetail && (
+          <div className="detail-grid">
+            <div className="detail-meta">
+              <div className="detail-meta__item">
+                <span className="detail-meta__label">Name</span>
+                <span className="detail-meta__value">{contactDetail.firstName} {contactDetail.lastName}</span>
+              </div>
+              <div className="detail-meta__item">
+                <span className="detail-meta__label">Role</span>
+                <span className="detail-meta__value">{contactDetail.role ?? '—'}</span>
+              </div>
+              {contactDetail.email && (
+                <div className="detail-meta__item">
+                  <span className="detail-meta__label">Email</span>
+                  <span className="detail-meta__value">
+                    <a href={`mailto:${contactDetail.email}`}>{contactDetail.email}</a>
+                  </span>
+                </div>
+              )}
+              {contactDetail.phone && (
+                <div className="detail-meta__item">
+                  <span className="detail-meta__label">Phone</span>
+                  <span className="detail-meta__value">{contactDetail.phone}</span>
+                </div>
+              )}
+              <div className="detail-meta__item">
+                <span className="detail-meta__label">Client</span>
+                <span className="detail-meta__value">{contactDetail.client.companyName}</span>
+              </div>
+              <div className="detail-meta__item">
+                <span className="detail-meta__label">Primary</span>
+                <span className="detail-meta__value">{contactDetail.isPrimary ? 'Yes' : 'No'}</span>
+              </div>
+              <div className="detail-meta__item">
+                <span className="detail-meta__label">Created</span>
+                <span className="detail-meta__value">{formatRelativeDate(contactDetail.createdAt)}</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </Drawer>
     </>
   )
 }

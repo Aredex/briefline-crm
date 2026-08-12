@@ -24,10 +24,12 @@ async function fillLogin(user: ReturnType<typeof userEvent.setup>, email: string
 }
 
 describe('Login', () => {
+  // Signed out at /dashboard (a protected route) → redirect to /login?next=…;
+  // / itself now serves the public Landing page.
   it('signs in with valid credentials and lands on the dashboard', async () => {
     const user = userEvent.setup()
     loginAs(null)
-    renderApp()
+    renderApp({ initialPath: '/dashboard' })
 
     await fillLogin(user, ADMIN_EMAIL, DEMO_PASSWORD)
     expect(await findByHeading('Dashboard')).toBeInTheDocument()
@@ -36,7 +38,7 @@ describe('Login', () => {
   it('shows the generic invalid-credentials error for a wrong password', async () => {
     const user = userEvent.setup()
     loginAs(null)
-    renderApp()
+    renderApp({ initialPath: '/dashboard' })
 
     await fillLogin(user, ADMIN_EMAIL, 'wrong-password')
     // NOTE: the app mounts an app-wide role="alert" live region, so query by
@@ -48,7 +50,7 @@ describe('Login', () => {
   it('keeps inactive accounts indistinguishable from bad credentials (401 generic)', async () => {
     const user = userEvent.setup()
     loginAs(null)
-    renderApp()
+    renderApp({ initialPath: '/dashboard' })
 
     // noemi@northstar.digital exists in the mock data but is INACTIVE
     // (FR-AUTH-002/003: same generic response, never reveals account state).
@@ -61,7 +63,7 @@ describe('Login', () => {
   it('shows a rate-limit alert with a countdown and disables the submit button', async () => {
     const user = userEvent.setup()
     loginAs(null)
-    renderApp()
+    renderApp({ initialPath: '/dashboard' })
 
     await fillLogin(user, 'ratelimit@northstar.digital', 'whatever')
 
@@ -72,7 +74,7 @@ describe('Login', () => {
   it('fills a demo account and moves focus to the Sign in button', async () => {
     const user = userEvent.setup()
     loginAs(null)
-    renderApp()
+    renderApp({ initialPath: '/dashboard' })
 
     await screen.findByRole('heading', { name: 'Sign in' }, { timeout: 3000 })
     await user.click(screen.getByRole('button', { name: /Admin.*Alex/i }))

@@ -1,14 +1,20 @@
 /*
- * Skeleton — loading placeholder with pulse animation. Animation is disabled
- * under prefers-reduced-motion (global.css).
+ * Skeleton — loading placeholder with shimmer animation. Animation is disabled
+ * under prefers-reduced-motion (global.css). Migrated to Tailwind CSS.
  */
 import type { HTMLAttributes } from 'react'
+import { cn } from '../../lib/utils'
 
 export interface SkeletonProps extends HTMLAttributes<HTMLDivElement> {
-  /** Defaults: full width, 1em height. Override via className. */
   as?: 'div' | 'span'
 }
 
 export function Skeleton({ as: Tag = 'div', className, ...rest }: SkeletonProps) {
-  return <Tag className={`skeleton ${className ?? ''}`} aria-hidden="true" {...rest} />
+  return (
+    <Tag
+      className={cn('h-4 w-full rounded-sm bg-[var(--color-gray-200)] animate-[skeleton-shimmer_1.8s_ease-in-out_infinite]', className)}
+      aria-hidden="true"
+      {...rest}
+    />
+  )
 }

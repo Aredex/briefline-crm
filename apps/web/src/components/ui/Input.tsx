@@ -1,20 +1,17 @@
 /*
  * Input — always-visible label (never placeholder-only, AP-12), inline error
  * with role="alert", aria-invalid + aria-describedby wiring. Optional leading
- * icon (decorative, aria-hidden).
+ * icon (decorative, aria-hidden). Migrated to Tailwind CSS.
  */
 import { forwardRef, useId, type InputHTMLAttributes, type ReactNode } from 'react'
+import { cn } from '../../lib/utils'
 
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
-  /** Visible label. Optional when the field is wrapped by FormField (which
-   *  provides its own label), required for standalone usage (AP-12). */
   label?: string
   error?: string
   helpText?: string
-  /** Hide the label visually while keeping it in the a11y tree. */
   hideLabel?: boolean
   inputClassName?: string
-  /** Decorative leading icon (search, lock…). */
   leftIcon?: ReactNode
 }
 
@@ -31,28 +28,33 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
     .join(' ') || undefined
 
   return (
-    <div className={`field ${className ?? ''}`}>
+    <div className={cn('flex flex-col gap-1.5', className)}>
       {label && (
-        <label htmlFor={inputId} className={hideLabel ? 'sr-only' : 'field__label'}>
+        <label htmlFor={inputId} className={cn('text-sm font-medium text-[var(--color-gray-700)]', hideLabel && 'sr-only')}>
           {label}
           {required && (
-            <span className="field__required" aria-hidden="true">
-              {' '}
-              *
-            </span>
+            <span className="text-[var(--color-error-700)] ml-0.5" aria-hidden="true">*</span>
           )}
         </label>
       )}
-      <div className={`input__wrap${leftIcon ? ' input__wrap--icon' : ''}`}>
+      <div className="relative">
         {leftIcon && (
-          <span className="input__icon" aria-hidden="true">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-gray-400)]" aria-hidden="true">
             {leftIcon}
           </span>
         )}
         <input
           ref={ref}
           id={inputId}
-          className={`input ${error ? 'input--error' : ''} ${inputClassName ?? ''}`}
+          className={cn(
+            'w-full h-[44px] px-3 rounded-md border border-[var(--color-gray-200)] bg-white text-sm text-[var(--color-gray-900)]',
+            'placeholder:text-[var(--color-gray-400)]',
+            'focus:outline-none focus:border-[var(--color-primary-600)] focus:ring-1 focus:ring-[var(--color-primary-600)]',
+            'transition-colors duration-[var(--duration-fast)]',
+            leftIcon && 'pl-10',
+            error && 'border-[var(--color-error-border)] focus:border-[var(--color-error-700)] focus:ring-[var(--color-error-700)]',
+            inputClassName,
+          )}
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy}
           required={required}
@@ -60,11 +62,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
         />
       </div>
       {error ? (
-        <p id={errorId} className="field__error" role="alert">
+        <p id={errorId} className="text-xs text-[var(--color-error-700)]" role="alert">
           {error}
         </p>
       ) : helpText ? (
-        <p id={helpId} className="field__help">
+        <p id={helpId} className="text-xs text-[var(--color-gray-400)]">
           {helpText}
         </p>
       ) : null}

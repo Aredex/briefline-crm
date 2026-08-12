@@ -18,6 +18,7 @@ import { formatRelativeDate } from '../lib/format'
 import { Alert } from '../components/ui/Alert'
 import { Button } from '../components/ui/Button'
 import { Dialog } from '../components/ui/Dialog'
+import { Drawer } from '../components/ui/Drawer'
 import { EmptyState } from '../components/ui/EmptyState'
 import { ErrorState } from '../components/ui/ErrorState'
 import { Input } from '../components/ui/Input'
@@ -26,7 +27,7 @@ import { Skeleton } from '../components/ui/Skeleton'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
 import { Form } from '../components/forms/Form'
 import { FormField } from '../components/forms/FormField'
-import { IconPlus, IconSearch } from '../components/ui/icons'
+import { IconEdit, IconPlus, IconSearch } from '../components/ui/icons'
 import { RoleBadge, UserStatusBadge } from '../components/users/UserBadges'
 import { DeactivationDialog } from '../components/users/DeactivationDialog'
 
@@ -67,6 +68,7 @@ export function Users() {
   const [pendingDemotion, setPendingDemotion] = useState<UserResponse | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [bannerError, setBannerError] = useState<BannerError | null>(null)
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search.trim()), 300)
@@ -121,6 +123,8 @@ export function Users() {
   }, [editTarget, usersQuery.data])
 
   const meta = usersQuery.data?.meta
+  const users = usersQuery.data?.data ?? []
+  const selectedUser = selectedUserId ? users.find((u) => u.id === selectedUserId) ?? null : null
   const total = meta?.total ?? 0
   const metaPage = meta?.page ?? 1
   const metaLimit = meta?.limit ?? 1
@@ -129,8 +133,8 @@ export function Users() {
 
   const renderActions = (target: UserResponse) => (
     <div className="data-table__actions">
-      <Button size="sm" variant="secondary" onClick={() => setEditTarget(target)}>
-        Edit
+      <Button size="sm" variant="secondary" onClick={() => setEditTarget(target)} aria-label={`Edit ${target.name}`}>
+        <IconEdit />
       </Button>
       {target.status === 'ACTIVE' ? (
         <Button size="sm" variant="ghost" onClick={() => setDeactivateTarget(target)}>
@@ -241,7 +245,10 @@ export function Users() {
               </thead>
               <tbody>
                 {usersQuery.data.data.map((target) => (
-                  <tr key={target.id}>
+                  <tr key={target.id} className="data-table__row--clickable" onClick={(e) => {
+                    if ((e.target as HTMLElement).closest('button, a')) return
+                    setSelectedUserId(target.id)
+                  }}>
                     <td>
                       <div className="cell-user">
                         <span className="avatar-mini" aria-hidden="true">
@@ -376,6 +383,51 @@ export function Users() {
           void invalidateUsers()
         }}
       />
+
+      {/* User detail drawer — slides from right */}
+      <Drawer
+        open={selectedUserId !== null}
+        onClose={() => setSelectedUserId(null)}
+        title={selectedUser?.name ?? 'User details'}
+        width={480}
+      >
+        {selectedUser && (
+          <div className="detail-grid">
+            <div className="detail-meta">
+              <div className="detail-meta__item">
+                <span className="detail-meta__label">Name</span>
+                <span className="detail-meta__value">{selectedUser.name}</span>
+              </div>
+              <div className="detail-meta__item">
+                <span className="detail-meta__label">Email</span>
+                <span className="detail-meta__value">{selectedUser.email}</span>
+              </div>
+              <div className="detail-meta__item">
+                <span className="detail-meta__label">Role</span>
+                <span className="detail-meta__value"><RoleBadge role={selectedUser.role} /></span>
+              </div>
+              <div className="detail-meta__item">
+                <span className="detail-meta__label">Status</span>
+                <span className="detail-meta__value"><UserStatusBadge status={selectedUser.status} /></span>
+              </div>
+              {selectedUser.lastLoginAt && (
+                <div className="detail-meta__item">
+                  <span className="detail-meta__label">Last login</span>
+                  <span className="detail-meta__value">{formatRelativeDate(selectedUser.lastLoginAt)}</span>
+                </div>
+              )}
+              <div className="detail-meta__item">
+                <span className="detail-meta__label">Created</span>
+                <span className="detail-meta__value">{formatRelativeDate(selectedUser.createdAt)}</span>
+              </div>
+              <div className="detail-meta__item">
+                <span className="detail-meta__label">Updated</span>
+                <span className="detail-meta__value">{formatRelativeDate(selectedUser.updatedAt)}</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </Drawer>
     </>
   )
 }

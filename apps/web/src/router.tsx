@@ -14,6 +14,7 @@ import type { UserResponse } from './api/types'
 import { getSession, setSession } from './lib/auth-session'
 import { AppShell } from './components/layout/AppShell'
 import { ErrorState } from './components/ui/ErrorState'
+import { Landing } from './pages/Landing'
 import { ArchivedTasks } from './pages/ArchivedTasks'
 import { Board } from './pages/Board'
 import { TaskList } from './pages/TaskList'
@@ -103,11 +104,11 @@ export function createAppRouter() {
     {
       errorElement: <RouteError />,
       children: [
+        { index: true, element: <Landing /> },
         {
           element: <AppShell />,
           loader: requireAuth,
           children: [
-            { index: true, loader: () => redirect('/dashboard') },
             { path: 'dashboard', element: <Dashboard /> },
             { path: 'tasks', element: <Board /> },
             // PC-02: static route before tasks/:taskId (router ranks it anyway).

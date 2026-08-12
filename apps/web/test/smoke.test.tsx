@@ -1,7 +1,8 @@
 /*
  * FE-010 smoke — the full App mounts without crashing, boots the session, and
- * renders the login screen for an unauthenticated user; the sign-in flow lands
- * on the dashboard.
+ * renders the login screen for an unauthenticated user hitting a protected
+ * route (signed out /dashboard redirects to /login); the sign-in flow lands on
+ * the dashboard.
  */
 import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest'
 import userEvent from '@testing-library/user-event'
@@ -19,7 +20,9 @@ afterAll(() => server.close())
 describe('App smoke', () => {
   it('renders without crashing and shows the login screen when signed out', async () => {
     loginAs(null)
-    renderApp()
+    // / is the public Landing; the login screen is reached via a protected
+    // route (signed out /dashboard redirects to /login?next=%2Fdashboard).
+    renderApp({ initialPath: '/dashboard' })
 
     expect(await screen.findByRole('heading', { name: 'Sign in' }, { timeout: 3000 })).toBeInTheDocument()
     expect(screen.getByLabelText(/Email\ address/i)).toBeInTheDocument()
@@ -37,7 +40,7 @@ describe('App smoke', () => {
   it('signs in with demo credentials and reaches the dashboard', async () => {
     const user = userEvent.setup()
     loginAs(null)
-    renderApp()
+    renderApp({ initialPath: '/dashboard' })
 
     await screen.findByRole('heading', { name: 'Sign in' }, { timeout: 3000 })
     await user.type(screen.getByLabelText(/Email\ address/i), ADMIN_EMAIL)
@@ -50,7 +53,7 @@ describe('App smoke', () => {
   it('shows a generic error for invalid credentials', async () => {
     const user = userEvent.setup()
     loginAs(null)
-    renderApp()
+    renderApp({ initialPath: '/dashboard' })
 
     await screen.findByRole('heading', { name: 'Sign in' }, { timeout: 3000 })
     await user.type(screen.getByLabelText(/Email\ address/i), 'nobody@northstar.digital')
@@ -67,7 +70,7 @@ describe('App smoke', () => {
   it('shows a rate-limit alert with a countdown', async () => {
     const user = userEvent.setup()
     loginAs(null)
-    renderApp()
+    renderApp({ initialPath: '/dashboard' })
 
     await screen.findByRole('heading', { name: 'Sign in' }, { timeout: 3000 })
     await user.type(screen.getByLabelText(/Email\ address/i), 'ratelimit@northstar.digital')

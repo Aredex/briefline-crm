@@ -1,0 +1,68 @@
+/* Tailwind CSS v4 — maps Briefline design tokens to utility classes */
+@import "tailwindcss";
+
+@theme {
+  /* Typography */
+  --font-family-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+  /* Brand */
+  --color-white: #ffffff;
+  --color-surface: #f9fafb;
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+  --color-focus-ring: #2563eb;
+
+  /* Neutrals */
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+
+  /* Semantic */
+  --color-success-50: #f0fdf4;
+  --color-success-700: #15803d;
+  --color-success-border: #bbf7d0;
+  --color-warning-50: #fffbeb;
+  --color-warning-700: #b45309;
+  --color-warning-border: #fde68a;
+  --color-error-50: #fef2f2;
+  --color-error-700: #b91c1c;
+  --color-error-border: #fecaca;
+  --color-danger-600: #dc2626;
+  --color-info-50: #eff6ff;
+  --color-info-700: #1d4ed8;
+  --color-info-border: #bfdbfe;
+  --color-high-50: #fff7ed;
+  --color-high-700: #c2410c;
+  --color-high-border: #fed7aa;
+
+  /* Radii */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.06);
+  --shadow-md: 0 2px 8px rgba(17, 24, 39, 0.08);
+  --shadow-lg: 0 8px 24px rgba(17, 24, 39, 0.12);
+
+  /* Motion */
+  --duration-instant: 80ms;
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --duration-base: 200ms;
+  --duration-slow: 300ms;
+  --duration-deliberate: 500ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-decelerate: cubic-bezier(0, 0, 0, 1);
+  --ease-accelerate: cubic-bezier(0.3, 0, 1, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}

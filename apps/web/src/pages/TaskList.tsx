@@ -8,7 +8,7 @@
  * itself (headers, states, row navigation) is encapsulated in TaskTable.
  */
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '../api/client'
 import type { Paginated, TaskPriority, TaskStatus, TaskSummary, UserResponse } from '../api/types'
@@ -26,6 +26,7 @@ import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { Select } from '../components/ui/Select'
 import { IconSearch } from '../components/ui/icons'
+import { TaskDetailModal } from '../components/tasks/TaskDetailModal'
 import { TaskTable } from '../components/tasks/TaskTable'
 
 const PAGE_SIZE = 10
@@ -41,8 +42,8 @@ const PRIORITY_OPTIONS = (Object.keys(PRIORITY_LABELS) as TaskPriority[]).map((p
 }))
 
 export function TaskList() {
-  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
   const state = taskListFromSearchParams(searchParams)
 
   // Local search input; the debounced value is pushed into the URL (300ms).
@@ -228,7 +229,7 @@ export function TaskList() {
         sort={state.sort}
         order={state.order}
         onSort={handleSort}
-        onRowClick={(task) => navigate(`/tasks/${task.id}`)}
+        onRowClick={(task) => setSelectedTaskId(task.id)}
       />
 
       {tableStatus === 'ready' && total > PAGE_SIZE && (
@@ -254,6 +255,13 @@ export function TaskList() {
           </div>
         </nav>
       )}
+
+      {/* Task detail drawer — slides from right over the list */}
+      <TaskDetailModal
+        taskId={selectedTaskId}
+        open={selectedTaskId !== null}
+        onClose={() => setSelectedTaskId(null)}
+      />
     </>
   )
 }

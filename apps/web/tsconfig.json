@@ -4,6 +4,10 @@
     "jsx": "react-jsx",
     "lib": ["ES2024", "DOM", "DOM.Iterable"],
     "types": ["node", "vitest/globals"],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
     // Vite apps are ESM with bundler resolution (import.meta.env, extensionless
     // relative imports); NodeNext from the base config only fits node packages.
     "module": "ESNext",

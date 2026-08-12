@@ -32,7 +32,7 @@ import { Drawer } from '../components/ui/Drawer'
 import { EmptyState } from '../components/ui/EmptyState'
 import { ErrorState } from '../components/ui/ErrorState'
 import { Skeleton } from '../components/ui/Skeleton'
-import { IconArrowLeft, IconArchive } from '../components/ui/icons'
+import { IconArrowLeft, IconArchive, IconEdit } from '../components/ui/icons'
 import { MoveToMenu } from '../components/tasks/TaskCard'
 import { TaskChecklist } from '../components/tasks/TaskChecklist'
 import { TaskComments } from '../components/tasks/TaskComments'
@@ -308,8 +308,8 @@ export function TaskDetail() {
                       }}
                     />
                     {canEdit && (
-                      <Button variant="secondary" size="sm" onClick={() => setEditing(true)}>
-                        Edit
+                      <Button variant="secondary" size="sm" onClick={() => setEditing(true)} aria-label="Edit task">
+                        <IconEdit />
                       </Button>
                     )}
                     {user?.role === 'ADMIN' && (

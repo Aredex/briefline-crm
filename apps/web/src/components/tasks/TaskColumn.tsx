@@ -1,25 +1,23 @@
 /*
  * TaskColumn (TASK-FE-001/004) — one active status group: named heading with
- * count and the cards inside. Same DOM renders the desktop grid and the mobile
- * stacked list (grouped by status, no page-level horizontal scroll); CSS media
- * queries flip the layout. Column headers stay visible when the group is empty
- * so the board always communicates all four active statuses.
+ * count and the simplified cards inside. Same DOM renders the desktop grid and
+ * the mobile stacked list (grouped by status, no page-level horizontal scroll);
+ * CSS media queries flip the layout. Column headers stay visible when the group
+ * is empty so the board always communicates all four active statuses.
  */
 import { useDroppable } from '@dnd-kit/core'
-import type { TaskStatus, TaskSummary } from '../../api/types'
+import type { TaskSummary } from '../../api/types'
 import { STATUS_LABELS } from '../ui/Badge'
 import { TaskCard } from './TaskCard'
 
 export type ActiveStatus = Exclude<TaskStatus, 'BACKLOG'>
+import type { TaskStatus } from '../../api/types'
 
 export interface TaskColumnProps {
   status: ActiveStatus
   tasks: TaskSummary[]
-  canEditTask: (task: TaskSummary) => boolean
-  isMovingTask: (taskId: string) => boolean
-  onMove: (task: TaskSummary, status: TaskStatus, blockedReason?: string) => void
-  onEdit: (task: TaskSummary) => void
-  onRequireAssignee: (task: TaskSummary) => void
+  /** Called when a card is clicked — opens the detail modal. */
+  onTaskClick?: (task: TaskSummary) => void
   /** Progressive enhancement: register the column as a DnD drop target. */
   dndEnabled?: boolean
 }
@@ -27,11 +25,7 @@ export interface TaskColumnProps {
 export function TaskColumn({
   status,
   tasks,
-  canEditTask,
-  isMovingTask,
-  onMove,
-  onEdit,
-  onRequireAssignee,
+  onTaskClick,
   dndEnabled = false,
 }: TaskColumnProps) {
   // Only the four active columns are drop targets — the backlog is NOT
@@ -58,12 +52,8 @@ export function TaskColumn({
             <TaskCard
               key={task.id}
               task={task}
-              canEdit={canEditTask(task)}
-              isMoving={isMovingTask(task.id)}
               dndEnabled={dndEnabled}
-              onMove={(nextStatus, blockedReason) => onMove(task, nextStatus, blockedReason)}
-              onEdit={() => onEdit(task)}
-              onRequireAssignee={() => onRequireAssignee(task)}
+              onClick={onTaskClick ? () => onTaskClick(task) : undefined}
             />
           ))
         )}

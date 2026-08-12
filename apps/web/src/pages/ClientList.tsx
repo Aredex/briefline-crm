@@ -12,6 +12,7 @@ import type {
   ClientResponse,
   ClientStatus,
   ClientUpdateInput,
+  ClientWithTasksResponse,
   Paginated,
 } from '../api/types'
 import { useAuth } from '../providers/AuthProvider'
@@ -26,7 +27,7 @@ import { Input } from '../components/ui/Input'
 import { Select } from '../components/ui/Select'
 import { Skeleton } from '../components/ui/Skeleton'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
-import { IconPlus, IconSearch } from '../components/ui/icons'
+import { IconEdit, IconPlus, IconSearch } from '../components/ui/icons'
 import { ClientForm, type ClientFormProps } from '../components/clients/ClientForm'
 import { ClientStatusBadge } from '../components/clients/ClientStatusBadge'
 
@@ -53,6 +54,15 @@ export function ClientList() {
   const [deactivateTarget, setDeactivateTarget] = useState<ClientResponse | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [bannerError, setBannerError] = useState<BannerError | null>(null)
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null)
+
+  // Detail query for the slide-from-right drawer
+  const clientDetailQuery = useQuery({
+    queryKey: ['clients', selectedClientId],
+    queryFn: () => api.get<ClientWithTasksResponse>(`/clients/${selectedClientId!}`),
+    enabled: selectedClientId !== null,
+  })
+  const clientDetail = clientDetailQuery.data
 
   // Debounce the search input (300ms) and reset pagination on any filter change.
   useEffect(() => {
@@ -159,8 +169,8 @@ export function ClientList() {
     if (!isAdmin || client.status === 'ARCHIVED') return null
     return (
       <div className="data-table__actions">
-        <Button size="sm" variant="secondary" onClick={() => setEditTarget(client)}>
-          Edit
+        <Button size="sm" variant="secondary" onClick={() => setEditTarget(client)} aria-label={`Edit ${client.companyName}`}>
+          <IconEdit />
         </Button>
         {client.status === 'ACTIVE' && (
           <Button size="sm" variant="ghost" onClick={() => setDeactivateTarget(client)}>
@@ -298,7 +308,10 @@ export function ClientList() {
               </thead>
               <tbody>
                 {listQuery.data.data.map((client) => (
-                  <tr key={client.id}>
+                  <tr key={client.id} className="data-table__row--clickable" onClick={(e) => {
+                    if ((e.target as HTMLElement).closest('button, a')) return
+                    setSelectedClientId(client.id)
+                  }}>
                     <td>{renderClientName(client)}</td>
                     <td>
                       <div className="data-table__primary">{client.contactName}</div>
@@ -416,6 +429,62 @@ export function ClientList() {
           if (deactivateTarget) void deactivateMutation.mutate(deactivateTarget.id)
         }}
       />
+
+      {/* Client detail drawer — slides from right */}
+      <Drawer
+        open={selectedClientId !== null}
+        onClose={() => setSelectedClientId(null)}
+        title={clientDetail?.client.companyName ?? 'Client details'}
+        width={560}
+      >
+        {clientDetailQuery.isPending && (
+          <div className="skeleton-row"><Skeleton /><Skeleton /><Skeleton /></div>
+        )}
+        {clientDetail && (
+          <div className="detail-grid">
+            <div className="detail-meta">
+              <div className="detail-meta__item">
+                <span className="detail-meta__label">Company</span>
+                <span className="detail-meta__value">{clientDetail.client.companyName}</span>
+              </div>
+              <div className="detail-meta__item">
+                <span className="detail-meta__label">Industry</span>
+                <span className="detail-meta__value">{clientDetail.client.industry ?? '—'}</span>
+              </div>
+              <div className="detail-meta__item">
+                <span className="detail-meta__label">Primary contact</span>
+                <span className="detail-meta__value">{clientDetail.client.contactName}</span>
+              </div>
+              <div className="detail-meta__item">
+                <span className="detail-meta__label">Email</span>
+                <span className="detail-meta__value">
+                  <a href={`mailto:${clientDetail.client.contactEmail}`}>{clientDetail.client.contactEmail}</a>
+                </span>
+              </div>
+              {clientDetail.client.phone && (
+                <div className="detail-meta__item">
+                  <span className="detail-meta__label">Phone</span>
+                  <span className="detail-meta__value">{clientDetail.client.phone}</span>
+                </div>
+              )}
+              {clientDetail.client.notes && (
+                <div className="detail-meta__item detail-meta__item--full">
+                  <span className="detail-meta__label">Notes</span>
+                  <span className="detail-meta__value">{clientDetail.client.notes}</span>
+                </div>
+              )}
+              <div className="detail-meta__item">
+                <span className="detail-meta__label">Status</span>
+                <span className="detail-meta__value">{clientDetail.client.status}</span>
+              </div>
+              <div className="detail-meta__item">
+                <span className="detail-meta__label">Created</span>
+                <span className="detail-meta__value">{formatRelativeDate(clientDetail.client.createdAt)}</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </Drawer>
     </>
   )
 }

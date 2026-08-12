@@ -45,7 +45,7 @@ describe('Client list', () => {
     expect(screen.getByText('Showing 1–3 of 3 clients')).toBeInTheDocument()
 
     // Admin sees Edit/Archive/Deactivate per row.
-    expect(within(table).getAllByRole('button', { name: 'Edit' })).toHaveLength(3)
+    expect(within(table).getAllByRole('button', { name: /Edit/ })).toHaveLength(3)
     expect(within(table).getAllByRole('button', { name: 'Archive' })).toHaveLength(3)
     expect(within(table).getAllByRole('button', { name: 'Deactivate' })).toHaveLength(2)
   })
@@ -58,7 +58,7 @@ describe('Client list', () => {
     expect(within(table).getByText('Bluebird Coffee Co.')).toBeInTheDocument()
     expect(screen.getByText('Showing 1–3 of 3 clients')).toBeInTheDocument()
 
-    expect(within(table).queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument()
+    expect(within(table).queryByRole('button', { name: /Edit/ })).not.toBeInTheDocument()
     expect(within(table).queryByRole('button', { name: 'Archive' })).not.toBeInTheDocument()
     // Members never receive the Archived filter option.
     expect(screen.queryByRole('option', { name: 'Archived' })).not.toBeInTheDocument()
@@ -142,7 +142,7 @@ describe('Client edit (admin)', () => {
       .getAllByRole('row')
       .find((row) => within(row).queryByText('Bluebird Coffee Co.'))
     expect(bluebirdRow).toBeTruthy()
-    await user.click(within(bluebirdRow as HTMLElement).getByRole('button', { name: 'Edit' }))
+    await user.click(within(bluebirdRow as HTMLElement).getByRole('button', { name: /Edit/ }))
 
     const drawer = screen.getByRole('complementary', { name: 'Edit Bluebird Coffee Co.' })
     const phone = within(drawer).getByLabelText(/Phone/i)
@@ -217,7 +217,7 @@ describe('Client detail', () => {
     renderApp({ initialPath: `/clients/${BLUEBIRD_ID}` })
 
     expect(await findByHeading('Bluebird Coffee Co.')).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Edit/ })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Archive' })).not.toBeInTheDocument()
     expect(screen.getByText('Sofia Lindqvist')).toBeInTheDocument()
     expect(screen.getByText('Redesign onboarding flow')).toBeInTheDocument()
@@ -230,7 +230,7 @@ describe('Client detail', () => {
     expect(screen.getByText('This client is archived and read-only.')).toBeInTheDocument()
     expect(screen.getByText("It can't be linked to new tasks.")).toBeInTheDocument()
     // No edit actions on an archived client.
-    expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Edit/ })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Archive' })).not.toBeInTheDocument()
   })
 })

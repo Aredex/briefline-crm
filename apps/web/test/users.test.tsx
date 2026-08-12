@@ -58,7 +58,7 @@ describe('User management', () => {
     expect(within(table).getByText('Noemi Torres')).toBeInTheDocument()
     expect(screen.getByText('Showing 1–4 of 4 users')).toBeInTheDocument()
 
-    expect(within(table).getAllByRole('button', { name: 'Edit' })).toHaveLength(4)
+    expect(within(table).getAllByRole('button', { name: /Edit/ })).toHaveLength(4)
     // Only the INACTIVE user gets Activate.
     expect(within(table).getAllByRole('button', { name: 'Activate' })).toHaveLength(1)
     expect(within(table).getAllByRole('button', { name: 'Deactivate' })).toHaveLength(3)
@@ -82,7 +82,7 @@ describe('User management', () => {
 
     // The edit dialog also disables the role select for the last admin.
     await user.click(within(dialog).getByRole('button', { name: 'Cancel' }))
-    await user.click(within(rowOf(table, 'Alicia Martin')).getByRole('button', { name: 'Edit' }))
+    await user.click(within(rowOf(table, 'Alicia Martin')).getByRole('button', { name: /Edit/ }))
 
     const editDialog = screen.getByRole('dialog', { name: 'Edit Alicia Martin' })
     expect(within(editDialog).getByText('Last active administrator')).toBeInTheDocument()
@@ -166,7 +166,7 @@ describe('User management', () => {
 
     // Now demote them: the save is parked behind a confirmation dialog.
     const table = screen.getByRole('table', { name: 'Users' })
-    await user.click(within(rowOf(table, 'Ravi Patel')).getByRole('button', { name: 'Edit' }))
+    await user.click(within(rowOf(table, 'Ravi Patel')).getByRole('button', { name: /Edit/ }))
     dialog = screen.getByRole('dialog', { name: 'Edit Ravi Patel' })
     await user.selectOptions(within(dialog).getByLabelText(/Role/i), 'MEMBER')
     await user.click(within(dialog).getByRole('button', { name: 'Save changes' }))

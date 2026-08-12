@@ -1,6 +1,6 @@
 /*
  * FE-010 router — route table renders the right page per auth state and role.
- * Covers: / redirect, protected routes, admin gating (/users, /tasks/archived),
+ * Covers: / public landing, protected routes, admin gating (/users, /tasks/archived),
  * dynamic params, 403/404, and the ?next= flow.
  */
 import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest'
@@ -22,11 +22,12 @@ afterEach(() => {
 afterAll(() => server.close())
 
 describe('Router', () => {
-  it('redirects / to /dashboard for an authenticated admin', async () => {
+  it('serves the public landing page at / even for an authenticated admin', async () => {
     loginAs(ADMIN_EMAIL)
     renderApp({ initialPath: '/' })
 
-    expect(await findByHeading('Dashboard')).toBeInTheDocument()
+    // / is the public Landing, no longer a redirect to /dashboard.
+    expect(await findByHeading('Client work, clearly owned.')).toBeInTheDocument()
   })
 
   it('renders each protected page for an admin', async () => {

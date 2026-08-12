@@ -39,6 +39,7 @@ import { ErrorState } from '../components/ui/ErrorState'
 import { Skeleton } from '../components/ui/Skeleton'
 import { IconPlus } from '../components/ui/icons'
 import { TaskBoard } from '../components/tasks/TaskBoard'
+import { TaskDetailModal } from '../components/tasks/TaskDetailModal'
 import { TaskFilters } from '../components/tasks/TaskFilters'
 import { TaskForm, type TaskFormValues } from '../components/tasks/TaskForm'
 
@@ -54,6 +55,7 @@ export function Board() {
   const [staleTaskId, setStaleTaskId] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [bannerError, setBannerError] = useState<BannerError | null>(null)
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
 
   const boardQuery = useBoardQuery(filters)
   const activeUsersQuery = useActiveUsersQuery()
@@ -82,6 +84,11 @@ export function Board() {
   const handleMove = (task: TaskSummary, status: TaskStatus, blockedReason?: string) => {
     setBannerError(null)
     setStaleTaskId(null)
+    // Members can only move tasks assigned to them; admins can move any.
+    if (user?.role !== 'ADMIN' && task.assignee?.id !== user?.id) {
+      setNotice('You can only move tasks assigned to you.')
+      return
+    }
     if (status === 'BLOCKED' && !blockedReason) {
       setBlockMove(task)
       return
@@ -264,8 +271,16 @@ export function Board() {
             setEditTargetId(task.id)
           }}
           onRequireAssignee={handleRequireAssignee}
+          onTaskClick={(task) => setSelectedTaskId(task.id)}
         />
       )}
+
+      {/* Task detail modal — opens on card click */}
+      <TaskDetailModal
+        taskId={selectedTaskId}
+        open={selectedTaskId !== null}
+        onClose={() => setSelectedTaskId(null)}
+      />
 
       {/* Create — true modal (wireframe §2.3). */}
       <Dialog open={createOpen} onClose={() => setCreateOpen(false)} title="New task">

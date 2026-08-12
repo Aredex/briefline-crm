@@ -46,7 +46,9 @@ describe('Contact list', () => {
     expect(within(table).getAllByText('Bluebird Coffee Co.')).toHaveLength(2)
     // Sofia (Bluebird) and Daniel (Vela) are primary — Jonas is not (the
     // "Primary" column header is excluded via the badge selector).
-    expect(within(table).getAllByText('Primary', { selector: '.badge' })).toHaveLength(2)
+    // 2 contacts are primary (Sofia, Daniel) — query tbody to exclude header
+    const tbody = table.querySelector('tbody')!
+    expect(within(tbody as HTMLElement).getAllByText('Primary')).toHaveLength(2)
     expect(screen.getByText('Showing 1–3 of 3 contacts')).toBeInTheDocument()
 
     expect(screen.getByRole('button', { name: 'New contact' })).toBeInTheDocument()
@@ -179,7 +181,7 @@ describe('Contact detail', () => {
     renderApp({ initialPath: `/contacts/${JONAS_ID}` })
 
     expect(await findByHeading('Jonas Berg')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Edit contact' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Delete' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Set as Primary' })).toBeInTheDocument()
     // Jonas is not primary — no badge anywhere yet.
@@ -202,7 +204,7 @@ describe('Contact detail', () => {
     expect(screen.getByRole('link', { name: 'Bluebird Coffee Co.' })).toBeInTheDocument()
     // Role renders in the header subtitle and the details card.
     expect(screen.getAllByText('Head of Operations').length).toBeGreaterThan(0)
-    expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Edit contact' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Set as Primary' })).not.toBeInTheDocument()
   })

@@ -93,25 +93,27 @@ describe('TaskList (PC-02)', () => {
     await waitFor(() => expect(screen.getByText('Showing 1–2 of 2 tasks')).toBeInTheDocument(), { timeout: 3000 })
   })
 
-  it('navigates to the task detail on row click and on the title link', async () => {
+  it('opens the task detail drawer on row click and navigates on title link', async () => {
     const user = userEvent.setup()
     await openTaskList(user)
 
     const table = screen.getByRole('table', { name: 'Tasks' })
-    // Row click (outside the link) navigates via the clickable row.
+    // Row click (outside a link/button) opens the detail drawer
     const row = within(table).getByText('Redesign onboarding flow').closest('tr')
     expect(row).not.toBeNull()
     await user.click(within(row as HTMLElement).getByText('In progress'))
+    // Drawer slides in — check that it appears
+    const drawer = await screen.findByRole('complementary', { name: /Redesign onboarding flow/ })
+    expect(drawer).toBeInTheDocument()
+
+    // Close the drawer
+    await user.click(within(drawer).getByRole('button', { name: /Close/ }))
     await waitFor(() => {
-      expect(window.location.pathname).toMatch(/^\/tasks\/[0-9a-f-]{36}$/)
+      expect(screen.queryByRole('complementary')).not.toBeInTheDocument()
     })
 
-    // Back to the list: the title link navigates on its own.
-    await user.click(screen.getByRole('link', { name: 'Task List' }))
-    await findByHeading('Task List')
-    await user.click(screen.getByRole('link', { name: 'Site-wide redesign' }))
-    await waitFor(() => {
-      expect(window.location.pathname).toMatch(/^\/tasks\/[0-9a-f-]{36}$/)
-    })
+    // Title link still navigates directly (Cmd+click / new tab)
+    const link = screen.getByRole('link', { name: 'Site-wide redesign' })
+    expect(link).toHaveAttribute('href', expect.stringMatching(/^\/tasks\/[0-9a-f-]{36}$/))
   })
 })

@@ -3,8 +3,12 @@
  * be aria-modal: the page behind stays accessible (and scrollable) while the
  * drawer is open. Focus moves into the panel on open and returns to the
  * trigger on close; Esc and scrim click close it.
+ *
+ * Entry animation: slides in from the right (or left). Exit animation: slides
+ * back out before unmount — the component uses an internal "closing" phase so
+ * the exit transition can play before the DOM is removed.
  */
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { IconX } from './icons'
 
 export interface DrawerProps {
@@ -20,9 +24,27 @@ export interface DrawerProps {
 export function Drawer({ open, onClose, title, side = 'right', width = 420, children, footer }: DrawerProps) {
   const panelRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<Element | null>(null)
+  const [closing, setClosing] = useState(false)
+  const [visible, setVisible] = useState(false)
+
+  // Track open → visible (entry) and open → closing → !visible (exit).
+  useEffect(() => {
+    if (open) {
+      setVisible(true)
+      setClosing(false)
+    } else if (visible) {
+      // Start exit animation, then unmount.
+      setClosing(true)
+      const timeout = setTimeout(() => {
+        setVisible(false)
+        setClosing(false)
+      }, 180) // matches --duration-fast + small buffer
+      return () => clearTimeout(timeout)
+    }
+  }, [open, visible])
 
   useEffect(() => {
-    if (!open) return
+    if (!visible || closing) return
     // Remember what had focus so we can restore it on close (AP-10).
     triggerRef.current = document.activeElement
     panelRef.current?.focus()
@@ -32,17 +54,19 @@ export function Drawer({ open, onClose, title, side = 'right', width = 420, chil
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [open, onClose])
+  }, [visible, closing, onClose])
 
   useEffect(() => {
-    if (open) return
+    if (visible) return
     if (triggerRef.current instanceof HTMLElement) triggerRef.current.focus()
-  }, [open])
+  }, [visible])
 
-  if (!open) return null
+  if (!visible) return null
+
+  const sideClass = side === 'left' ? 'drawer--left' : 'drawer--right'
 
   return (
-    <div className={`drawer ${side === 'left' ? 'drawer--left' : 'drawer--right'}`}>
+    <div className={`drawer ${sideClass}${closing ? ' drawer--closing' : ''}`}>
       <div className="drawer__scrim" onClick={onClose} aria-hidden="true" />
       <div
         ref={panelRef}

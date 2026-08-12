@@ -1,26 +1,46 @@
 /*
  * Badge — neutral/success/warning/error/info variants plus semantic maps for
  * task priority and status. Status is NEVER communicated by color alone
- * (AC-08): every badge ships with its text label.
+ * (AC-08): every badge ships with its text label. Migrated to Tailwind CSS.
  */
+import { cva, type VariantProps } from 'class-variance-authority'
 import type { HTMLAttributes } from 'react'
+import { cn } from '../../lib/utils'
 import type { TaskPriority, TaskStatus } from '../../api/types'
 
-export type BadgeVariant = 'neutral' | 'success' | 'warning' | 'error' | 'info'
+const badgeVariants = cva(
+  'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border',
+  {
+    variants: {
+      variant: {
+        neutral: 'bg-[var(--color-gray-100)] text-[var(--color-gray-700)] border-[var(--color-gray-200)]',
+        success: 'bg-[var(--color-success-50)] text-[var(--color-success-700)] border-[var(--color-success-border)]',
+        warning: 'bg-[var(--color-warning-50)] text-[var(--color-warning-700)] border-[var(--color-warning-border)]',
+        error: 'bg-[var(--color-error-50)] text-[var(--color-error-700)] border-[var(--color-error-border)]',
+        info: 'bg-[var(--color-info-50)] text-[var(--color-info-700)] border-[var(--color-info-border)]',
+      },
+    },
+    defaultVariants: {
+      variant: 'neutral',
+    },
+  },
+)
+
+export type BadgeVariant = VariantProps<typeof badgeVariants>['variant']
 
 export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   variant?: BadgeVariant
 }
 
-export function Badge({ variant = 'neutral', className, children, ...rest }: BadgeProps) {
+export function Badge({ variant, className, children, ...rest }: BadgeProps) {
   return (
-    <span className={`badge badge--${variant} ${className ?? ''}`} {...rest}>
+    <span className={cn(badgeVariants({ variant }), className)} {...rest}>
       {children}
     </span>
   )
 }
 
-/* ---------- Semantic maps (labels come from the wireframes) ---------- */
+/* ---------- Semantic maps ---------- */
 
 export const PRIORITY_LABELS: Record<TaskPriority, string> = {
   LOW: 'Low',

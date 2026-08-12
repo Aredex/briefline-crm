@@ -25,7 +25,7 @@ import { Drawer } from '../components/ui/Drawer'
 import { ErrorState } from '../components/ui/ErrorState'
 import { Skeleton } from '../components/ui/Skeleton'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
-import { IconArrowLeft } from '../components/ui/icons'
+import { IconArrowLeft, IconEdit } from '../components/ui/icons'
 import { PriorityBadge, StatusBadge } from '../components/ui/Badge'
 import { ClientForm, type ClientFormProps } from '../components/clients/ClientForm'
 import { ClientStatusBadge } from '../components/clients/ClientStatusBadge'
@@ -177,8 +177,8 @@ export function ClientDetail() {
         </div>
         {isAdmin && !archived && (
           <div className="page-header__actions">
-            <Button variant="secondary" onClick={() => setEditOpen(true)}>
-              Edit
+            <Button variant="secondary" onClick={() => setEditOpen(true)} aria-label="Edit client">
+              <IconEdit />
             </Button>
             {client.status === 'ACTIVE' && (
               <Button variant="ghost" onClick={() => setDeactivateOpen(true)}>

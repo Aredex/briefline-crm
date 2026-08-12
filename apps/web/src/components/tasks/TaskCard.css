@@ -1,15 +1,16 @@
 /*
- * Task card (TASK-FE-002) — compact card with badges, meta and the permanent
- * "Move to…" action. The whole card is the drag surface (grab cursor); 44px
- * interactive targets (--touch-target), focus visible.
+ * Task card (TASK-FE-002) — simple two-row layout: full-width title on top,
+ * priority + assignee at the bottom. The whole card is the drag surface
+ * (grab cursor) and click target for opening the detail modal.
+ * 44px interactive targets (--touch-target), focus visible.
  */
 
 .task-card {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
-  padding: var(--space-2) var(--space-3);
+  gap: var(--space-2);
+  padding: var(--space-3);
   background: var(--color-white);
   border: 1px solid var(--color-gray-200);
   border-radius: var(--radius-md);
@@ -23,78 +24,44 @@
 
 .task-card:hover {
   box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.task-card:active {
+  transform: translateY(0);
+}
+
+.task-card:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
 }
 
 .task-card--dragging {
   cursor: grabbing;
-  opacity: 0.7;
+  opacity: 0.4;
   box-shadow: var(--shadow-lg);
   z-index: 10;
 }
 
-.task-card__body {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  min-width: 0;
+/* DragOverlay — floating copy that follows the cursor */
+.task-card--overlay {
+  cursor: grabbing;
+  box-shadow: var(--shadow-lg);
+  transform: rotate(2deg) scale(1.03);
+  min-width: 240px;
 }
 
-.task-card__badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-1);
-  margin-bottom: 0;
-}
+/* ---------- Title ---------- */
 
 .task-card__title {
   margin: 0;
   font-size: var(--text-sm);
   font-weight: 600;
   line-height: var(--leading-tight);
-}
-
-.task-card__title a {
   color: var(--color-gray-900);
-  text-decoration: none;
-  border-radius: var(--radius-sm);
 }
 
-.task-card__title a:hover {
-  text-decoration: underline;
-  color: var(--color-primary-700);
-}
-
-.task-card__title a:focus-visible {
-  outline: 2px solid var(--color-focus-ring);
-  outline-offset: 2px;
-}
-
-.task-card__meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: var(--text-xs);
-  color: var(--color-gray-500);
-}
-
-.task-card__client {
-  color: var(--color-gray-600);
-}
-
-.task-card__assignee,
-.task-card__due {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  white-space: nowrap;
-}
-
-/* Overdue is NEVER color-only (AC-08): red text + clock icon + the word. */
-.task-card__due--overdue {
-  color: var(--color-danger-600);
-  font-weight: 600;
-}
+/* ---------- Footer: priority + assignee ---------- */
 
 .task-card__footer {
   display: flex;
@@ -102,7 +69,16 @@
   gap: var(--space-2);
 }
 
-/* ---------- "Move to…" menu (TASK-FE-008) ---------- */
+.task-card__assignee {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-xs);
+  color: var(--color-gray-500);
+  white-space: nowrap;
+}
+
+/* ---------- "Move to…" menu (used by backlog rows and detail modal) ---------- */
 
 .move-menu {
   position: relative;

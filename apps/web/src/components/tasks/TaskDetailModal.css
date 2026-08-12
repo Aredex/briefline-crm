@@ -1,0 +1,152 @@
+/*
+ * TaskDetailModal — Figma-style task detail inside a centered Dialog.
+ * Clean typography, generous spacing, clear visual hierarchy.
+ */
+
+.tdm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* ---------- Header ---------- */
+
+.tdm__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.tdm__badges {
+  display: flex;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+}
+
+.tdm__header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+/* ---------- Description ---------- */
+
+.tdm__description {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+  color: var(--color-gray-600);
+  white-space: pre-wrap;
+}
+
+/* ---------- Metadata grid ---------- */
+
+.tdm__meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-gray-100);
+}
+
+.tdm__meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tdm__meta-item--full {
+  grid-column: 1 / -1;
+}
+
+.tdm__meta-label {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-gray-400);
+}
+
+.tdm__meta-value {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-gray-800);
+}
+
+.tdm__meta-value--overdue {
+  color: var(--color-danger-600);
+  font-weight: 600;
+}
+
+/* ---------- Alert actions ---------- */
+
+.tdm__alert-actions {
+  display: inline-flex;
+  margin-left: var(--space-2);
+}
+
+/* ---------- Sections (collapsible) ---------- */
+
+.tdm__sections {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.tdm__section {
+  border: 1px solid var(--color-gray-100);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.tdm__section[open] {
+  border-color: var(--color-gray-200);
+}
+
+.tdm__section-title {
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-gray-700);
+  background: var(--color-white);
+  cursor: pointer;
+  user-select: none;
+  list-style: none; /* hide default triangle in some browsers */
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.tdm__section-title::before {
+  content: '';
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background: currentColor;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M6 4l4 4-4 4' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  transition: transform var(--duration-fast) var(--ease-standard);
+  opacity: 0.5;
+}
+
+.tdm__section[open] > .tdm__section-title::before {
+  transform: rotate(90deg);
+}
+
+.tdm__section-title:hover {
+  background: var(--color-surface);
+}
+
+.tdm__section > :not(.tdm__section-title) {
+  padding: 0 var(--space-4) var(--space-4);
+}
+
+.tdm__section-title::-webkit-details-marker {
+  display: none;
+}

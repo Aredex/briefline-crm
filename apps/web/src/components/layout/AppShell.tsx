@@ -9,7 +9,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../../providers/AuthProvider'
 import { Button } from '../ui/Button'
 import { Dialog } from '../ui/Dialog'
-import { IconChevronDown, IconLogOut, IconMenu, IconUser } from '../ui/icons'
+import { IconChevronDown, IconLogOut, IconMenu, IconShield, IconUser } from '../ui/icons'
 
 export interface NavItem {
   to: string
@@ -28,6 +28,38 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/users', label: 'Users', adminOnly: true },
   { to: '/profile', label: 'Profile' },
 ]
+
+/** Landing-page spec: secondary "About this project" block at the end of the nav. */
+const GITHUB_REPO_URL = 'https://github.com/username/briefline-crm'
+const APP_VERSION = 'v1.0.0'
+
+/**
+ * Secondary nav footer block: landing page, API docs, GitHub, and the app
+ * version. Rendered at the end of the desktop nav and at the bottom of the
+ * mobile drawer — visually separated from the main items via a divider.
+ */
+function AppAbout({ onNavigate }: { onNavigate?: () => void }) {
+  return (
+    <div className="app-about">
+      <NavLink to="/" end className="app-about__link" onClick={onNavigate}>
+        About this project
+      </NavLink>
+      <a href="/api/docs" className="app-about__link" onClick={onNavigate}>
+        API docs
+      </a>
+      <a
+        href={GITHUB_REPO_URL}
+        target="_blank"
+        rel="noreferrer"
+        className="app-about__link"
+        onClick={onNavigate}
+      >
+        GitHub
+      </a>
+      <span className="app-about__version">{APP_VERSION}</span>
+    </div>
+  )
+}
 
 interface AppShellProps {
   /** When provided (403/404 pages), render it inside <main> instead of <Outlet/>. */
@@ -111,11 +143,15 @@ export function AppShell({ children }: AppShellProps) {
       <header className="app-shell__header">
         <div className="app-shell__header-inner">
           <NavLink to="/dashboard" className="app-shell__brand">
+            <span className="app-shell__logo" aria-hidden="true">
+              <IconShield />
+            </span>
             Briefline
           </NavLink>
 
           <nav className="app-shell__nav" aria-label="Main">
             {navLinks()}
+            <AppAbout />
           </nav>
 
           <div className="app-shell__actions">
@@ -175,6 +211,8 @@ export function AppShell({ children }: AppShellProps) {
           <button type="button" className="app-nav__link app-nav__link--button" onClick={handleLogout}>
             <IconLogOut /> Sign out
           </button>
+          <hr className="app-shell__divider" />
+          <AppAbout onNavigate={() => setMobileNavOpen(false)} />
         </nav>
       </Dialog>
     </div>

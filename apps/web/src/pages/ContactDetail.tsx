@@ -18,7 +18,7 @@ import { Card } from '../components/ui/Card'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
 import { ErrorState } from '../components/ui/ErrorState'
 import { Skeleton } from '../components/ui/Skeleton'
-import { IconArrowLeft } from '../components/ui/icons'
+import { IconArrowLeft, IconEdit } from '../components/ui/icons'
 import { PrimaryBadge } from '../components/contacts/PrimaryBadge'
 
 export function ContactDetail() {
@@ -117,8 +117,8 @@ export function ContactDetail() {
         </div>
         {isAdmin && (
           <div className="page-header__actions">
-            <Button variant="secondary" onClick={() => navigate(`/contacts/${contact.id}/edit`)}>
-              Edit
+            <Button variant="secondary" onClick={() => navigate(`/contacts/${contact.id}/edit`)} aria-label="Edit contact">
+              <IconEdit />
             </Button>
             {!contact.isPrimary && (
               <Button

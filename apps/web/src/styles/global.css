@@ -16,6 +16,13 @@
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  scrollbar-gutter: stable;
+  /* Smooth anchor scrolling (landing page). Reduced-motion users get
+     `auto` via the media query below. */
+  scroll-behavior: smooth;
+  /* Offset for the landing's 56px sticky header so anchored sections
+     are not hidden underneath it. */
+  scroll-padding-top: 5rem;
 }
 
 body {
@@ -76,23 +83,28 @@ a:hover {
   outline: none;
 }
 
-/* Skip link — hidden until focused */
+/* Skip link — hidden until focused, centered at top */
 .skip-link {
-  position: absolute;
-  left: var(--space-3);
-  top: calc(var(--space-3) * -1);
+  position: fixed;
+  left: 50%;
+  top: -48px;
   z-index: 100;
-  padding: var(--space-2) var(--space-3);
-  background: var(--color-primary-600);
+  transform: translateX(-50%);
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-gray-900);
   color: var(--color-white);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-full);
   font-size: var(--text-sm);
+  font-weight: 500;
+  box-shadow: var(--shadow-lg);
   transition: top var(--duration-fast) var(--ease-standard);
 }
 
 .skip-link:focus-visible {
   top: var(--space-3);
   text-decoration: none;
+  outline: 2px solid var(--color-primary-600);
+  outline-offset: 2px;
 }
 
 /* Screen-reader-only utilities */

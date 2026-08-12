@@ -1,27 +1,20 @@
 /*
- * TaskCard (TASK-FE-002) — priority + status badges (text AND color, AC-08),
- * client / assignee / due date (overdue: red + clock icon + the word
- * "Overdue"), title deep-link to /tasks/:taskId, permanent "Move to…" menu
- * (the contractual keyboard-first alternative to drag-and-drop, FR-TASK-005),
- * and an Edit action gated by BR-013/014 (admin, creator, or assignee).
+ * TaskCard (TASK-FE-002) — simplified board card. Full-width title, footer
+ * with priority badge and assignee at the bottom. The whole card is the drag
+ * surface (dnd-kit, progressive enhancement). Clicking opens the task detail
+ * modal; the PointerSensor distance constraint (8px) keeps drag and click
+ * independent.
  *
- * "Move to…" (TASK-FE-008): current status shown disabled ("Current: …");
- * Enter/Space opens, arrows navigate, Esc closes and focus returns. Moving a
- * backlog task without an assignee cannot be a plain transition (BR-009): the
- * destination opens the edit panel focused on Assignee instead.
- *
- * The whole card is the drag surface; dnd-kit listeners are attached only
- * when the parent enables DnD (progressive enhancement — TASK-FE-010/011),
- * and the pointer distance constraint keeps links/menus/buttons clickable.
+ * Status badges and the "Move to…" menu are intentionally absent — the column
+ * already communicates status, and status changes happen inside the detail
+ * modal or via drag-and-drop.
  */
-import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { useDraggable } from '@dnd-kit/core'
-import { Link } from 'react-router'
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import type { TaskStatus, TaskSummary } from '../../api/types'
-import { PriorityBadge, StatusBadge, STATUS_LABELS } from '../ui/Badge'
+import { PriorityBadge, STATUS_LABELS } from '../ui/Badge'
 import { Button } from '../ui/Button'
-import { IconClock, IconEdit, IconUser } from '../ui/icons'
-import { dueLabel } from '../../lib/format'
+import { IconUser } from '../ui/icons'
 import './TaskCard.css'
 
 const ACTIVE_STATUSES: Exclude<TaskStatus, 'BACKLOG'>[] = [
@@ -33,47 +26,59 @@ const ACTIVE_STATUSES: Exclude<TaskStatus, 'BACKLOG'>[] = [
 
 export interface TaskCardProps {
   task: TaskSummary
-  /** BR-013/014 — admin, creator, or assignee may edit. */
-  canEdit: boolean
-  /** A status mutation for this task is pending (disables the menu). */
-  isMoving: boolean
-  onMove: (status: TaskStatus, blockedReason?: string) => void
-  onEdit: () => void
-  /** Backlog task without assignee — open edit focused on Assignee (BR-009). */
-  onRequireAssignee: () => void
-  /**
-   * Progressive enhancement (TASK-FE-010/011): when the parent board mounts a
-   * DndContext, the drag handle becomes a real draggable. Off by default — the
-   * "Move to…" menu remains the contractually required way to change status.
-   */
+  /** Progressive enhancement: when the parent mounts a DndContext. */
   dndEnabled?: boolean
+  /** Open the full detail modal for this task. */
+  onClick?: () => void
 }
 
-function dueMeta(task: TaskSummary) {
-  const label = dueLabel(task.dueDate)
-  if (label.kind === 'none') return null
-  if (label.kind === 'overdue') {
-    return (
-      <span className="task-card__due task-card__due--overdue">
-        <IconClock /> <span>Overdue</span>
-      </span>
-    )
+export function TaskCard({ task, dndEnabled = false, onClick }: TaskCardProps) {
+  const { attributes, listeners, setNodeRef, isDragging, transform } = useDraggable({
+    id: task.id,
+    disabled: !dndEnabled,
+  })
+  const dragStyle = transform
+    ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` }
+    : undefined
+
+  const handleClick = () => {
+    // Only fire when dnd-kit hasn't started a drag (distance < 8px).
+    if (!isDragging) onClick?.()
   }
-  if (label.kind === 'today') {
-    return (
-      <span className="task-card__due">
-        <IconClock /> <span>Due today</span>
-      </span>
-    )
+
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      onClick?.()
+    }
   }
+
   return (
-    <span className="task-card__due">
-      <IconClock /> <span>{label.label}</span>
-    </span>
+    <article
+      ref={setNodeRef}
+      style={dragStyle}
+      className={`task-card${isDragging ? ' task-card--dragging' : ''}`}
+      aria-label={task.title}
+      {...attributes}
+      {...listeners}
+      aria-roledescription="draggable"
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+    >
+      <h3 className="task-card__title">{task.title}</h3>
+      <div className="task-card__footer">
+        <PriorityBadge priority={task.priority} />
+        {task.assignee && (
+          <span className="task-card__assignee">
+            <IconUser /> <span>{task.assignee.name}</span>
+          </span>
+        )}
+      </div>
+    </article>
   )
 }
 
-/* ---------- "Move to…" menu ---------- */
+/* ---------- "Move to…" menu — shared with backlog rows and detail modal ---------- */
 
 export interface MoveToMenuProps {
   task: TaskSummary
@@ -91,7 +96,6 @@ export function MoveToMenu({ task, disabled, onMove, onRequireAssignee }: MoveTo
 
   const requiresAssignee = task.status === 'BACKLOG' && task.assignee === null
 
-  // Esc closes and restores focus; outside click closes.
   useEffect(() => {
     if (!open) return
     const onPointerDown = (event: MouseEvent) => {
@@ -189,67 +193,5 @@ export function MoveToMenu({ task, disabled, onMove, onRequireAssignee }: MoveTo
         </div>
       )}
     </div>
-  )
-}
-
-/* ---------- Card ---------- */
-
-export function TaskCard({
-  task,
-  canEdit,
-  isMoving,
-  onMove,
-  onEdit,
-  onRequireAssignee,
-  dndEnabled = false,
-}: TaskCardProps) {
-  // Draggable wiring is inert unless the parent enables DnD (progressive
-  // enhancement). Listeners land on the whole card; the PointerSensor
-  // distance constraint (8px) keeps links, menus and buttons inside clickable.
-  const { attributes, listeners, setNodeRef, isDragging, transform } = useDraggable({
-    id: task.id,
-    disabled: !dndEnabled,
-  })
-  const dragStyle = transform
-    ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` }
-    : undefined
-
-  return (
-    <article
-      ref={setNodeRef}
-      style={dragStyle}
-      className={`task-card${isDragging ? ' task-card--dragging' : ''}`}
-      aria-label={task.title}
-      {...attributes}
-      {...listeners}
-      aria-roledescription="draggable"
-    >
-      <div className="task-card__body">
-        <div className="task-card__badges">
-          <PriorityBadge priority={task.priority} />
-          <StatusBadge status={task.status} />
-        </div>
-        <h3 className="task-card__title">
-          <Link to={`/tasks/${task.id}`}>{task.title}</Link>
-        </h3>
-        <div className="task-card__meta">
-          {task.client && <span className="task-card__client">{task.client.companyName}</span>}
-          {task.assignee && (
-            <span className="task-card__assignee">
-              <IconUser /> <span>{task.assignee.name}</span>
-            </span>
-          )}
-          {dueMeta(task)}
-        </div>
-      </div>
-      <footer className="task-card__footer">
-        <MoveToMenu task={task} disabled={isMoving} onMove={onMove} onRequireAssignee={onRequireAssignee} />
-        {canEdit && (
-          <Button variant="ghost" size="sm" onClick={onEdit} aria-label={`Edit ${task.title}`}>
-            <IconEdit /> Edit
-          </Button>
-        )}
-      </footer>
-    </article>
   )
 }
