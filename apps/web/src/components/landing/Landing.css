@@ -192,7 +192,7 @@
 
 .landing-hero {
   background: var(--landing-canvas);
-  min-height: 58vh;
+  min-height: 42vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -202,7 +202,7 @@
   width: 100%;
   max-width: var(--landing-container);
   margin: 0 auto;
-  padding: calc(var(--landing-header-height) + var(--space-6)) var(--landing-gutter) var(--space-6);
+  padding: calc(var(--landing-header-height) + var(--space-3)) var(--landing-gutter) var(--space-4);
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--space-8);
@@ -325,11 +325,11 @@
   .landing-hero__grid {
     /* Image column widened relative to text (audit: +35-55% capture size) */
     grid-template-columns: 0.85fr 1.3fr;
-    padding-top: calc(var(--landing-header-height) + var(--space-8));
-    padding-bottom: var(--space-6);
+    padding-top: calc(var(--landing-header-height) + var(--space-4));
+    padding-bottom: var(--space-4);
   }
   .landing-hero {
-    min-height: 66vh;
+    min-height: 48vh;
   }
   .landing-hero__image {
     /* Let the capture bleed slightly past the container edge for controlled tension */
