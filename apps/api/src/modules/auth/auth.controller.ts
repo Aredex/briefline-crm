@@ -18,7 +18,9 @@ import type { AuthUser } from './auth.types'
 import { AuthService } from './auth.service'
 import { LoginDto } from './dto/login.dto'
 
-const LOGIN_THROTTLE = { auth: { limit: 5, ttl: seconds(60), blockDuration: seconds(300) } }
+const LOGIN_THROTTLE = process.env.NODE_ENV === 'production'
+  ? { auth: { limit: 5, ttl: seconds(60), blockDuration: seconds(300) } }
+  : { auth: { limit: 50, ttl: seconds(60), blockDuration: seconds(5) } }
 
 @Controller('auth')
 export class AuthController {
