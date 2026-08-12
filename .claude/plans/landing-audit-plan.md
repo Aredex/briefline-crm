@@ -335,3 +335,36 @@ autenticarse salvo cuando el caso lo exija.
 
 La diferencia son F0, F6 y T5.3: refactor estructural, documentación y code splitting. La auditoría
 no los contempla porque no miró el código.
+
+---
+
+## 7. Línea base de bundle (T0.5)
+
+**Comando:** `pnpm --filter @briefline/web build` (Vite 8 + rolldown, `tsc -b && vite build`).
+
+**Nota previa:** el build de producción fallaba en la línea base commiteada (`016bddb`) por un error
+de `lightningcss` — `@media (min-width: var(--breakpoint-lg))` en
+`apps/web/src/components/dashboard/Dashboard.css:97` usa una custom property dentro de la condición
+de un `@media`, algo inválido por spec de CSS (las variables no se resuelven ahí). Corregido con el
+valor literal (`1024px`, igual a `--breakpoint-lg` en `tokens.css:110`) para poder medir. Es un fix de
+una línea, sin relación con el refactor de T0.3; se deja en el working tree junto al resto de F0.
+
+**Resultado del build (commit `b056223`, tras el fix de arriba):**
+
+| Archivo | Tamaño | Gzip |
+|---|---|---|
+| `dist/assets/index-nJ6SJvDl.js` | 648.51 kB | 188.26 kB |
+| `dist/assets/index-DOXNh_IW.css` | 77.24 kB | 12.92 kB |
+| `dist/index.html` | 0.51 kB | 0.31 kB |
+
+**Un único chunk JS de 648.51 kB (188.26 kB gzip).** Sin code splitting: confirma H2 — `router.tsx`
+importa estáticamente las 18 páginas de la app autenticada (dashboard, tasks, clients, users, board,
+etc.), así que `/` (la landing pública) carga hoy el mismo bundle que un usuario autenticado que abre
+`/tasks` o `/dashboard`. Vite además avisa explícitamente: *"Some chunks are larger than 500 kB after
+minification"*.
+
+**Contra qué se compara en F5/T5.3:** el criterio de la auditoría (§19) pide ≤100 KiB de JS específico
+de landing. Esta línea base (648.51 kB / 188.26 kB gzip para todo, sin separar landing de app) es el
+número de referencia; T5.3 debe introducir `lazy()` + `Suspense` en las rutas autenticadas de
+`router.tsx` y volver a medir con el mismo comando, reportando el tamaño del chunk que carga `/` en
+solitario frente a este total.
