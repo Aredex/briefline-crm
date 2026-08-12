@@ -21,7 +21,24 @@ export function Hero() {
           </p>
         </div>
         <div className="landing-hero__image">
-          <img src="/hero-board.png" alt="Briefline task board showing backlog, pending, in progress, blocked, and completed columns with tasks, priorities, and assignees visible" width={640} height={420} />
+          <picture>
+            <source
+              type="image/avif"
+              srcSet="/media/board-overview.avif 1x, /media/board-overview@2x.avif 2x"
+            />
+            <source
+              type="image/webp"
+              srcSet="/media/board-overview.webp 1x, /media/board-overview@2x.webp 2x"
+            />
+            <img
+              src="/media/board-overview.webp"
+              alt="Briefline task board showing backlog, pending, in progress, blocked, and completed columns with tasks, priorities, and assignees visible"
+              width={1146}
+              height={815}
+              loading="eager"
+              fetchPriority="high"
+            />
+          </picture>
         </div>
       </div>
       <p className="landing-hero__proof">
