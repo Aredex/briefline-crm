@@ -24,7 +24,10 @@
  *
  * Scenarios captured (audit §7 hero, §10 product explorer, §19 budget):
  *   - board-overview   Task board, several columns + cards (hero, "Coordinate delivery")
- *   - task-history      Task detail with change history ("Keep accountability", `Audited`)
+ *   - task-history      The History section alone (not the whole task-detail
+ *                       page — that included the empty Checklist/Comments
+ *                       states below it), on a task with a real status
+ *                       change ("Keep accountability", `Audited`)
  *   - client-detail      Client detail + related tasks ("Plan work", "01 CLIENT")
  *   - backlog-view       Unassigned backlog table ("02 BACKLOG")
  *   - focus-state        Visible focus ring on an interactive element (Quality a11y evidence)
@@ -138,11 +141,14 @@ async function main() {
     await page.getByRole('link', { name: 'Clients', exact: true }).focus()
     await capture('focus-state', '.app-shell__header')
 
-    // ---- task-history: task detail page with change history ----
-    // Follow a real task link out of the backlog table into /tasks/:taskId.
-    const taskLink = page.locator('.task-backlog__table a[href^="/tasks/"]').first()
-    await taskLink.click()
-    await page.waitForURL(/\/tasks\/[^/]+$/)
+    // ---- task-history: JUST the History section, not the whole task-detail
+    // page (that included the empty Checklist/Comments states below it — a
+    // ~1570px-tall crop no visitor read past). Navigate straight to a seeded
+    // task with a real status transition ("Product launch: asset kit", t221,
+    // fixed id per seed.ts's uuid('221') — the seed is idempotent, so this id
+    // is stable) so the crop shows a status change, not just title/due-date
+    // edits, matching the "Audited" stage's own illustrative caption.
+    await page.goto(`${WEB_URL}/tasks/00000000-0000-4000-8000-000000000221`)
     await page.waitForSelector('section[aria-label="History"]')
     // Give the history query a moment to resolve past its loading skeleton
     // (TaskHistory.tsx renders ol.task-history on success, EmptyState on none).
@@ -150,7 +156,7 @@ async function main() {
       'section[aria-label="History"] ol.task-history, section[aria-label="History"] .empty-state',
       { timeout: 15_000 },
     )
-    await capture('task-history', '.task-detail')
+    await capture('task-history', 'section[aria-label="History"]')
 
     // ---- client-detail: client with related tasks ----
     await page.goto(`${WEB_URL}/clients`)

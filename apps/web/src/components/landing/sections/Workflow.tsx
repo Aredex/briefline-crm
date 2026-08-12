@@ -89,8 +89,8 @@ const STAGES: Stage[] = [
     media: {
       base: 'task-history',
       width: 520,
-      height: 1574,
-      alt: 'Task history timeline with old and new values, timestamped and attributed',
+      height: 266,
+      alt: 'Task history entries showing a status change from In progress to Blocked, with old and new values, timestamped and attributed',
     },
   },
 ]
