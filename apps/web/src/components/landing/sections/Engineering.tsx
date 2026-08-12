@@ -63,17 +63,32 @@ export function Engineering() {
 
         <div className="landing-eng-diagram">
           <p className="sr-only">
-            The React application talks to the NestJS API through an OpenAPI contract. The API
-            persists everything to PostgreSQL.
+            The React application talks to the NestJS API through an OpenAPI contract, drawn as a
+            double line because a contract binds both sides. Both sides branch down into a shared
+            PostgreSQL database.
           </p>
           <div className="landing-eng-diagram__top" aria-hidden="true">
             <span className="landing-eng-diagram__node">React application</span>
             <span className="landing-eng-diagram__edge">
               <span className="landing-eng-diagram__edge-label">OpenAPI contract</span>
-              <span className="landing-eng-diagram__edge-line" />
+              {/* T4.1 — "double trazo" variation: a contract binds both sides,
+                  so the edge between them is drawn as two parallel strokes
+                  instead of the single hairline used for internal edges. */}
+              <span className="landing-eng-diagram__edge-line landing-eng-diagram__edge-line--double" />
             </span>
             <span className="landing-eng-diagram__node">NestJS API</span>
           </div>
+          {/* T4.1 — "bifurcación" variation: one inline SVG showing both
+              branches (frontend, backend) converging into PostgreSQL. */}
+          <svg
+            className="landing-eng-diagram__fork"
+            viewBox="0 0 200 48"
+            preserveAspectRatio="none"
+            aria-hidden="true"
+          >
+            <path d="M 25 0 V 24 Q 25 34 45 34 H 155 Q 175 34 175 24 V 0" />
+            <circle cx="100" cy="34" r="3" />
+          </svg>
           <div className="landing-eng-diagram__stems" aria-hidden="true">
             <span className="landing-eng-diagram__stem-label">Query cache · Forms + a11y</span>
             <span className="landing-eng-diagram__stem-label">Auth + policies · Transactions</span>

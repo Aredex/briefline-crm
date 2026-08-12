@@ -6,6 +6,15 @@
  * the system stack (--font-family) — see tokens.css comment for why.
  */
 
+/* T4.3 — focus uses --landing-signal within the landing, not the app's blue
+   focus ring: the audit reserves blue for technical links and the inside of
+   product screenshots (§5.3 palette table: "signal: CTA principal, nodos,
+   foco y estado positivo"). Overrides global.css's app-wide :focus-visible
+   only inside .landing. */
+.landing :focus-visible {
+  outline-color: var(--landing-signal);
+}
+
 /* ---------- Public header ---------- */
 
 .landing-header {
@@ -499,57 +508,241 @@
   font-weight: 600;
 }
 
-/* ---------- Workflow brief line ---------- */
+/* ---------- Workflow: the brief line (F4/T4.1, T4.2) ----------
+ * Firma visual central de la landing (audit §5.2, §9). Cinco etapas
+ * numeradas y alternadas alrededor de una única línea continua (the brief
+ * line = progreso). Cada etapa lleva un nodo (= decisión/estado). Blocked
+ * (dentro de "Active work") es una bifurcación temporal que sale de la
+ * línea y vuelve — nunca un destino. La última etapa (Audited) cierra con
+ * un punto final relleno = trabajo auditado. */
 
 .landing-workflow {
+  list-style: none;
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-9);
   position: relative;
-  padding-left: var(--space-8);
+  padding-left: var(--space-9);
+  margin: 0;
 }
 
+/* The line itself: a single continuous stroke, left-aligned on mobile,
+   centered on desktop where steps alternate sides. */
 .landing-workflow::before {
   content: '';
   position: absolute;
-  left: 19px;
-  top: 12px;
-  bottom: 12px;
+  left: 23px;
+  top: 6px;
+  bottom: 6px;
   width: 2px;
   background: var(--landing-signal);
   border-radius: 1px;
 }
 
-.landing-workflow__step {
-  position: relative;
-  padding: var(--space-4) var(--space-5);
-  background: var(--landing-paper);
-  border: 1px solid var(--landing-line);
-  border-radius: var(--radius-lg);
+@media (min-width: 860px) {
+  .landing-workflow {
+    padding-left: 0;
+  }
+
+  .landing-workflow::before {
+    left: 50%;
+    transform: translateX(-1px);
+  }
 }
 
-.landing-workflow__step::before {
-  content: '';
+.landing-workflow__step {
+  position: relative;
+}
+
+@media (min-width: 860px) {
+  .landing-workflow__step {
+    display: flex;
+    align-items: center;
+    gap: var(--space-8);
+  }
+
+  .landing-workflow__step:nth-of-type(even) {
+    flex-direction: row-reverse;
+  }
+
+  .landing-workflow__step:nth-of-type(odd) .landing-workflow__content {
+    text-align: right;
+  }
+
+  .landing-workflow__content,
+  .landing-workflow__evidence {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+}
+
+/* Node = decision/state (audit §5.2 "Nodo: decisión o estado"). Filled
+   circle sitting on the spine, one per stage. */
+.landing-workflow__marker {
   position: absolute;
-  left: calc(-1 * var(--space-8) + 13px);
-  top: var(--space-5);
+  left: -23px;
+  top: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+}
+
+@media (min-width: 860px) {
+  .landing-workflow__marker {
+    left: 50%;
+    top: 8px;
+    transform: translateX(-50%);
+  }
+}
+
+.landing-workflow__marker-dot {
   width: 14px;
   height: 14px;
   border-radius: var(--radius-full);
-  background: var(--landing-paper);
-  border: 3px solid var(--landing-signal);
+  background: var(--landing-signal);
+  border: 3px solid var(--landing-canvas);
+  box-shadow: 0 0 0 1px var(--landing-signal);
 }
 
-.landing-workflow__step h3 {
-  font-size: var(--landing-text-body);
+.landing-workflow__number {
+  font-family: var(--landing-font-mono);
+  font-size: var(--landing-text-eyebrow);
+  font-weight: 500;
+  color: var(--landing-signal);
+  letter-spacing: 0.04em;
+  margin-bottom: var(--space-1);
+}
+
+.landing-workflow__content h3 {
+  font-size: var(--landing-text-h3);
+  font-family: var(--landing-font-display);
   font-weight: 700;
+  color: var(--landing-ink);
+  margin-bottom: var(--space-2);
+}
+
+.landing-workflow__action {
+  font-size: var(--landing-text-body);
   color: var(--landing-ink);
   margin-bottom: var(--space-1);
 }
 
-.landing-workflow__step p {
+.landing-workflow__rule {
   font-size: var(--landing-text-small);
   color: var(--landing-muted);
+}
+
+.landing-workflow__evidence {
+  margin-top: var(--space-4);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--landing-line);
+  box-shadow: var(--shadow-sm);
+  max-width: 320px;
+}
+
+@media (min-width: 860px) {
+  .landing-workflow__evidence {
+    margin-top: 0;
+    max-width: none;
+  }
+
+  .landing-workflow__step:nth-of-type(odd) .landing-workflow__evidence {
+    margin-left: auto;
+  }
+}
+
+.landing-workflow__evidence img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Bifurcation = frontend/backend elsewhere (audit §5.2); here, reused for
+   Blocked as a temporary branch off the Active work node — visually
+   distinct (amber, dashed) from the signal-colored main line so it never
+   reads as a sixth destination stage. */
+.landing-workflow__branch {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: 1px dashed var(--landing-amber);
+  border-radius: var(--radius-md);
+  background: var(--landing-paper);
+}
+
+.landing-workflow__branch-line {
+  flex: 0 0 auto;
+  width: 10px;
+  height: 10px;
+  margin-top: 3px;
+  border-radius: var(--radius-full);
+  border: 2px solid var(--landing-amber);
+  background: var(--landing-canvas);
+}
+
+.landing-workflow__branch-label {
+  font-size: var(--landing-text-small);
+  color: var(--landing-muted);
+}
+
+.landing-workflow__example {
+  margin-top: var(--space-3);
+}
+
+.landing-workflow__example code {
+  display: inline-block;
+  padding: var(--space-2) var(--space-3);
+  background: var(--landing-ink);
+  color: var(--landing-canvas);
+  border-radius: var(--radius-sm);
+  font-family: var(--landing-font-mono);
+  font-size: var(--landing-text-eyebrow);
+}
+
+/* Punto final = trabajo auditado (audit §5.2 "Punto final: trabajo
+   auditado"). A closing mark capping the line after the last stage. */
+.landing-workflow__step--end .landing-workflow__marker::after {
+  content: '';
+  position: absolute;
+  top: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--landing-signal);
+}
+
+/* ---------- Workflow reveal (F4/T4.4, T4.5) ----------
+ * The landing's single motion moment. Default state (no JS, no
+ * IntersectionObserver, or reduced motion) is fully visible — the
+ * `--motion` modifier is only added by JS once it has confirmed animation
+ * is safe to run, so every fallback path renders the finished state with
+ * no transition at all. */
+.landing-workflow--motion .landing-workflow__step {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity var(--duration-deliberate) var(--ease-decelerate),
+              transform var(--duration-deliberate) var(--ease-decelerate);
+}
+
+.landing-workflow--motion .landing-workflow__step.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-workflow--motion .landing-workflow__step {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
 }
 
 /* ---------- Tabs (product previews) ---------- */
@@ -881,6 +1074,55 @@
   width: 100%;
   height: 1px;
   background: var(--landing-line);
+}
+
+/* T4.1 — "double trazo" variation: the OpenAPI contract edge is the one
+   relationship a contract binds on both sides, so it gets two parallel
+   strokes in --landing-signal instead of the single muted hairline used
+   elsewhere in the diagram. */
+.landing-eng-diagram__edge-line--double {
+  position: relative;
+  height: 5px;
+  background: none;
+}
+
+.landing-eng-diagram__edge-line--double::before,
+.landing-eng-diagram__edge-line--double::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--landing-signal);
+}
+
+.landing-eng-diagram__edge-line--double::before {
+  top: 0;
+}
+
+.landing-eng-diagram__edge-line--double::after {
+  bottom: 0;
+}
+
+/* T4.1 — "bifurcación" variation: React and NestJS each branch down into a
+   shared PostgreSQL node. Decorative only (aria-hidden svg + sr-only prose
+   above carries the meaning). */
+.landing-eng-diagram__fork {
+  display: block;
+  width: 100%;
+  height: 32px;
+  margin-top: var(--space-1);
+  overflow: visible;
+}
+
+.landing-eng-diagram__fork path {
+  fill: none;
+  stroke: var(--landing-line);
+  stroke-width: 1.5;
+}
+
+.landing-eng-diagram__fork circle {
+  fill: var(--landing-signal);
 }
 
 .landing-eng-diagram__stems {
@@ -1449,4 +1691,19 @@
 @keyframes landing-lightbox-zoom {
   from { opacity: 0; transform: translate(-50%, -50%) scale(0.97); }
   to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+/* T4.5 — explicit reduced-motion guard for the lightbox open animation.
+ * global.css already forces every animation-duration to ~0 under reduced
+ * motion, which makes this a no-op in practice — but that coverage is
+ * implicit (a blanket `*` rule elsewhere). Guarding it here too, locally,
+ * means the fix travels with the component it belongs to and doesn't rely
+ * on remembering a rule in a different file. `animation: none` (not just a
+ * shorter duration) so the overlay/content resolve straight to their base,
+ * non-animated styles — instant, not just fast. */
+@media (prefers-reduced-motion: reduce) {
+  .landing-lightbox__overlay,
+  .landing-lightbox__content {
+    animation: none;
+  }
 }
