@@ -13,6 +13,7 @@
     "lint": "pnpm -r lint",
     "test": "pnpm -r test",
     "test:e2e": "pnpm --filter @briefline/api test:e2e && pnpm --filter @briefline/web test:e2e",
+    "collect-test-counts": "node scripts/collect-test-counts.mjs",
     "render-build": "pnpm install --frozen-lockfile && pnpm --filter @briefline/web build && pnpm --filter @briefline/api build",
     "format": "prettier --write .",
     "format:check": "prettier --check ."

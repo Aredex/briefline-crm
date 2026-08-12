@@ -827,70 +827,336 @@
   white-space: pre;
 }
 
-/* ---------- Engineering list ---------- */
+/* ---------- Engineering diagram + decisions (F3/T3.1) ---------- */
 
-.landing-eng {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-2) var(--space-6);
-  list-style: none;
-  padding: 0;
+.landing-eng-diagram {
+  max-width: 640px;
+  margin: 0 auto var(--space-9);
 }
 
-.landing-eng li {
-  font-size: var(--landing-text-small);
-  color: var(--landing-ink);
-  padding: var(--space-2) 0;
-}
-
-.landing-eng__actions {
+.landing-eng-diagram__top {
   display: flex;
+  align-items: center;
   justify-content: center;
   gap: var(--space-3);
-  flex-wrap: wrap;
-  margin-top: var(--space-6);
 }
 
-/* ---------- Quality list ---------- */
-
-.landing-quality {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-2) var(--space-6);
-  list-style: none;
-  padding: 0;
-}
-
-.landing-quality li {
-  font-size: var(--landing-text-small);
-  color: var(--landing-ink);
-  padding: var(--space-2) 0;
-}
-
-/* ---------- Case study card ---------- */
-
-.landing-case-study {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-3) var(--space-6);
-  padding: var(--space-6);
+.landing-eng-diagram__node {
+  flex: 0 0 auto;
+  padding: var(--space-3) var(--space-4);
   background: var(--landing-paper);
   border: 1px solid var(--landing-line);
-  border-radius: var(--radius-lg);
-}
-
-.landing-case-study dt {
+  border-radius: var(--radius-md);
   font-family: var(--landing-font-mono);
   font-size: var(--landing-text-eyebrow);
   font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  color: var(--landing-ink);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.landing-eng-diagram__node--db {
+  margin: 0 auto;
+  border-color: var(--landing-signal);
+  color: var(--landing-signal);
+}
+
+.landing-eng-diagram__edge {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 64px;
+}
+
+.landing-eng-diagram__edge-label {
+  font-family: var(--landing-font-mono);
+  font-size: 0.6875rem; /* 11px, decorative label on a hairline — not primary copy */
+  color: var(--landing-muted);
+  white-space: nowrap;
+}
+
+.landing-eng-diagram__edge-line {
+  width: 100%;
+  height: 1px;
+  background: var(--landing-line);
+}
+
+.landing-eng-diagram__stems {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .landing-eng-diagram__stems {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--space-2) var(--space-6) 0;
+    font-family: var(--landing-font-mono);
+    font-size: 0.6875rem;
+    color: var(--landing-muted);
+  }
+}
+
+.landing-eng-diagram__bottom {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px dashed var(--landing-line);
+}
+
+.landing-eng-decisions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-5);
+  list-style: none;
+  padding: 0;
+  counter-reset: eng-decision;
+}
+
+@media (min-width: 768px) {
+  .landing-eng-decisions {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.landing-eng-decision {
+  padding: var(--space-5);
+  background: var(--landing-paper);
+  border: 1px solid var(--landing-line);
+  border-radius: var(--radius-lg);
+  counter-increment: eng-decision;
+}
+
+.landing-eng-decision h3 {
+  font-family: var(--landing-font-display);
+  font-size: var(--landing-text-h3);
+  font-weight: 700;
+  color: var(--landing-ink);
+  margin-bottom: var(--space-2);
+}
+
+.landing-eng-decision h3::before {
+  content: counter(eng-decision, decimal-leading-zero) ' ';
+  color: var(--landing-signal);
+  font-family: var(--landing-font-mono);
+  font-size: var(--landing-text-small);
+}
+
+.landing-eng-decision p {
+  font-size: var(--landing-text-small);
+  color: var(--landing-ink);
+  line-height: 1.6;
+}
+
+.landing-eng-decision__code {
+  margin: var(--space-3) 0;
+  padding: var(--space-3);
+  background: var(--landing-ink);
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+}
+
+.landing-eng-decision__code code {
+  font-family: var(--landing-font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--landing-canvas);
+  white-space: pre;
+}
+
+/* Evidence reference (not a link — see Engineering.tsx header comment):
+   the label names what the decision is backed by, the path shows exactly
+   where it lives in the repo. */
+.landing-evidence-ref {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  font-size: var(--landing-text-small);
+}
+
+.landing-evidence-ref__label {
+  font-weight: 500;
+  color: var(--landing-ink);
+}
+
+.landing-evidence-ref__path {
+  font-family: var(--landing-font-mono);
+  font-size: var(--landing-text-eyebrow);
   color: var(--landing-muted);
 }
 
-.landing-case-study dd {
+.landing-evidence-ref-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-6);
+}
+
+.landing-eng-stack {
+  margin-top: var(--space-8);
+  text-align: center;
+  font-family: var(--landing-font-mono);
+  font-size: var(--landing-text-eyebrow);
+  letter-spacing: 0.02em;
+  color: var(--landing-muted);
+}
+
+/* ---------- Quality matrix + evidence (F3/T3.2) ---------- */
+
+.landing-quality-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+@media (min-width: 900px) {
+  .landing-quality-layout {
+    grid-template-columns: 1.5fr 1fr;
+  }
+}
+
+.landing-quality-matrix {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--landing-text-small);
+}
+
+.landing-quality-matrix th,
+.landing-quality-matrix td {
+  text-align: left;
+  padding: var(--space-3) var(--space-3);
+  border-bottom: 1px solid var(--landing-line);
+  vertical-align: top;
+}
+
+.landing-quality-matrix th {
+  font-family: var(--landing-font-mono);
+  font-size: var(--landing-text-eyebrow);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--landing-muted);
+  font-weight: 500;
+}
+
+.landing-quality-matrix td:first-child {
+  font-weight: 600;
+  color: var(--landing-ink);
+}
+
+.landing-quality-matrix td {
+  color: var(--landing-ink);
+}
+
+.landing-quality-evidence {
+  padding: var(--space-5);
+  background: var(--landing-ink);
+  border-radius: var(--radius-lg);
+  color: var(--landing-canvas);
+}
+
+.landing-quality-evidence__label {
+  font-family: var(--landing-font-mono);
+  font-size: var(--landing-text-eyebrow);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--landing-line);
+  margin-bottom: var(--space-3);
+}
+
+.landing-quality-evidence__figure {
+  font-family: var(--landing-font-display);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--color-white);
+  margin-bottom: var(--space-2);
+}
+
+.landing-quality-evidence__figure span {
+  display: block;
+  font-family: var(--landing-font-mono);
+  font-size: var(--landing-text-eyebrow);
+  font-weight: 400;
+  color: var(--landing-line);
+}
+
+.landing-quality-evidence__note {
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid #333d36; /* --landing-ink, lightened for a visible divider on dark bg */
+  font-size: var(--landing-text-small);
+  color: var(--landing-line);
+}
+
+.landing-quality-evidence__date {
+  margin-top: var(--space-2);
+  font-family: var(--landing-font-mono);
+  font-size: 0.75rem;
+  color: var(--landing-muted);
+}
+
+/* ---------- Case study moments (F3/T3.3) ---------- */
+
+.landing-case-moments {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+  list-style: none;
+  padding: 0;
+  margin-bottom: var(--space-8);
+}
+
+@media (min-width: 768px) {
+  .landing-case-moments {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
+.landing-case-moment__number {
+  display: block;
+  font-family: var(--landing-font-mono);
+  font-size: var(--landing-text-eyebrow);
+  font-weight: 500;
+  color: var(--landing-signal);
+  margin-bottom: var(--space-2);
+}
+
+.landing-case-moment h3 {
+  font-family: var(--landing-font-display);
+  font-size: var(--landing-text-h3);
+  font-weight: 700;
+  color: var(--landing-ink);
+  margin-bottom: var(--space-2);
+}
+
+.landing-case-moment p {
   font-size: var(--landing-text-small);
   color: var(--landing-ink);
+  line-height: 1.6;
+}
+
+.landing-case-scope,
+.landing-case-honesty {
+  max-width: 720px;
+  margin: 0 auto var(--space-3);
+  text-align: center;
+  font-size: var(--landing-text-small);
+  line-height: 1.6;
+}
+
+.landing-case-scope {
+  color: var(--landing-ink);
+  font-weight: 500;
+}
+
+.landing-case-honesty {
+  color: var(--landing-muted);
+  margin-bottom: var(--space-6);
 }
 
 /* ---------- Final CTA ---------- */
@@ -904,7 +1170,14 @@
   font-size: var(--landing-text-h2);
   font-weight: 700;
   color: var(--landing-ink);
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-4);
+}
+
+.landing-cta__support {
+  max-width: 560px;
+  margin: 0 auto var(--space-6);
+  font-size: var(--landing-text-lead);
+  color: var(--landing-muted);
 }
 
 .landing-cta__actions {
@@ -912,6 +1185,16 @@
   justify-content: center;
   gap: var(--space-3);
   flex-wrap: wrap;
+}
+
+.landing-cta__notices {
+  margin-top: var(--space-5);
+  font-size: var(--landing-text-small);
+  color: var(--landing-muted);
+}
+
+.landing-cta__notices p {
+  margin: var(--space-1) 0;
 }
 
 /* ---------- Footer ---------- */
@@ -1018,13 +1301,51 @@
   }
 }
 
-/* Two-column grids collapse to a single, readable column on mobile */
-@media (max-width: 767px) {
-  .landing-eng,
-  .landing-quality,
-  .landing-case-study {
-    grid-template-columns: 1fr;
-  }
+/* ---------- Accessibility page (F3/T3.5) ---------- */
+
+.landing-legal {
+  padding-top: calc(var(--landing-header-height) + var(--space-8));
+}
+
+.landing-legal__inner {
+  max-width: 760px;
+  text-align: left;
+}
+
+.landing-legal__intro {
+  margin: 0 0 var(--space-6);
+  max-width: none;
+  text-align: left;
+}
+
+.landing-legal h2 {
+  font-family: var(--landing-font-display);
+  font-size: var(--landing-text-h3);
+  font-weight: 700;
+  color: var(--landing-ink);
+  margin: var(--space-7) 0 var(--space-3);
+}
+
+.landing-legal p,
+.landing-legal li {
+  font-size: var(--landing-text-body);
+  color: var(--landing-ink);
+  line-height: 1.65;
+}
+
+.landing-legal ul {
+  padding-left: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.landing-legal__reviewed {
+  margin-top: var(--space-8);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--landing-line);
+  font-size: var(--landing-text-small);
+  color: var(--landing-muted);
 }
 
 /* ---------- Utility links ---------- */

@@ -119,7 +119,8 @@ function PublicFooter() {
           </div>
           <div className="landing-footer__col">
             <h3 className="landing-footer__heading">Project</h3>
-            <a href="https://github.com/username/briefline-crm">GitHub repository</a>
+            {/* D1: the repo isn't published yet — no placeholder GitHub link.
+                Re-add once a real URL exists; never a `#` stand-in (FUN-006). */}
             <a href="/accessibility">Accessibility</a>
           </div>
         </div>

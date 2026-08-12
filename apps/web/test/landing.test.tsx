@@ -5,7 +5,7 @@
  * against visual regressions in the upcoming F1+ passes.
  */
 import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest'
-import { screen } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import { server } from '../src/mocks/server'
 import { loginAs, renderApp, findByHeading } from './test-utils'
 
@@ -54,13 +54,18 @@ describe('Landing', () => {
     loginAs(null)
     renderApp({ initialPath: '/' })
 
-    await findByHeading('Permissions that mean something')
+    const heading = await findByHeading('Permissions that mean something')
+    expect(heading).toBeInTheDocument()
+    // T3.2 gave Quality its own <table> on the same page (F3) — scope the
+    // query to the Permissions section so this only asserts its own table.
+    const section = heading!.closest('section') as HTMLElement
+    const withinSection = within(section)
 
     expect(
-      screen.getByText('Capability matrix for Administrator and Member roles'),
+      withinSection.getByText('Capability matrix for Administrator and Member roles'),
     ).toBeInTheDocument()
 
-    const columnHeaders = screen.getAllByRole('columnheader')
+    const columnHeaders = withinSection.getAllByRole('columnheader')
     expect(columnHeaders).toHaveLength(3)
     columnHeaders.forEach((header) => {
       expect(header).toHaveAttribute('scope', 'col')
@@ -74,5 +79,23 @@ describe('Landing', () => {
     await findByHeading('Client work, clearly owned.')
 
     expect(screen.getByRole('contentinfo')).toBeInTheDocument()
+  })
+
+  it('renders no placeholder links (F3/T3.5 gate: D1 hides the unpublished GitHub URL)', async () => {
+    loginAs(null)
+    renderApp({ initialPath: '/' })
+
+    await findByHeading('Client work, clearly owned.')
+
+    const hrefs = screen
+      .getAllByRole('link')
+      .map((link) => link.getAttribute('href'))
+      .filter((href): href is string => href !== null)
+
+    expect(hrefs.length).toBeGreaterThan(0)
+    for (const href of hrefs) {
+      expect(href).not.toMatch(/username\//)
+      expect(href).not.toBe('#')
+    }
   })
 })

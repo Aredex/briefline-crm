@@ -14,6 +14,7 @@ import type { UserResponse } from './api/types'
 import { getSession, setSession } from './lib/auth-session'
 import { AppShell } from './components/layout/AppShell'
 import { ErrorState } from './components/ui/ErrorState'
+import { Accessibility } from './pages/Accessibility'
 import { Landing } from './pages/Landing'
 import { ArchivedTasks } from './pages/ArchivedTasks'
 import { Board } from './pages/Board'
@@ -105,6 +106,7 @@ export function createAppRouter() {
       errorElement: <RouteError />,
       children: [
         { index: true, element: <Landing /> },
+        { path: 'accessibility', element: <Accessibility /> },
         {
           element: <AppShell />,
           loader: requireAuth,
