@@ -89,25 +89,28 @@ Hook `apps/web/src/hooks/useDemoWarmup.ts` con timeout corto, backoff limitado y
 
 ---
 
-## 2. Decisiones abiertas — bloquean F1
+## 2. Decisiones — resueltas 2026-08-12
 
-Estas tres necesitan respuesta del usuario antes de empezar F1. No se resuelven por criterio técnico.
+**D1 — URL real del repositorio y del deploy: el repo aún no está publicado en GitHub.**
+`https://github.com/username/briefline-crm` sigue siendo placeholder hoy en `LandingLayout.tsx`,
+`Landing.tsx` y `README.md`. Resolución: **ocultar** ese enlace en la landing (footer y CTA final)
+hasta que exista una URL real, en vez de dejarlo apuntando a un placeholder — cumple FUN-006 ("ocultar
+cualquier enlace sin destino publicado"). No se crea un `<a>` deshabilitado ni un `href="#"`: el nodo
+simplemente no se renderiza. Mantener el enlace al deploy en vivo (Render) y a la documentación
+interna (`docs/`), que sí existen. T3.5 y T6.2 deben registrar esto como decisión, no como pendiente.
 
-**D1 — URL real del repositorio y del deploy.**
-Hoy `https://github.com/username/briefline-crm` es placeholder (aparece en `LandingLayout.tsx`,
-`Landing.tsx` y `README.md`). Sin URL real, FUN-006 obliga a **ocultar** el enlace, no a dejarlo.
+**D2 — Webfonts: se adoptan.** Se revierte la decisión de `tokens.css` ("system stack, no webfonts").
+Self-hostear subset `woff2` de **dos** familias: Archivo (display, hero/H2/H3) e IBM Plex Mono
+(eyebrow/data/labels); el cuerpo (Public Sans o system stack, decidir en T1.8 según legibilidad) usa
+`font-display: swap` y `preload` solo de los pesos del display. Coste estimado ~45–60 KiB, dentro del
+presupuesto §19. Actualizar el comentario de `tokens.css` para que documente la nueva decisión y su
+razón (identidad editorial de la landing), no solo borrar la nota anterior.
 
-**D2 — Webfonts sí o no.** La auditoría §5.4 pide Archivo + Public Sans + IBM Plex Mono. `tokens.css`
-documenta la decisión contraria. Recomendación: self-hostear subset `woff2` de **dos** familias
-(Archivo para display, IBM Plex Mono para eyebrow/data), `font-display: swap` y `preload` solo del
-display; el cuerpo sigue en system stack. Coste ~45–60 KiB, dentro del presupuesto §19, y da la voz
-editorial sin arriesgar el LCP. Si la respuesta es "no webfonts", F1 se limita a escala y contraste.
-
-**D3 — Destino de los documentos de evidencia.** `permission-matrix.md`, `test-matrix.md`,
-`data-model.md` y `adrs.md` viven en `.claude/plans/` (están trackeados, pero es un directorio de
-herramienta). Los enlaces de Engineering apuntarían a rutas `.claude/` en GitHub. Recomendación:
-mover o publicar copias en `docs/` antes de enlazarlas. Alternativa: enlazar a `.claude/plans/` y
-aceptar la rareza.
+**D3 — Destino de los documentos de evidencia: enlazar a `.claude/plans/` tal cual.**
+`permission-matrix.md`, `test-matrix.md`, `data-model.md` y `adrs.md` se quedan donde están; no se
+duplican en `docs/`. Los enlaces de Engineering apuntan a esas rutas dentro del repo. Si D1 se resuelve
+más adelante (repo publicado), esos enlaces automáticamente funcionan porque ya son rutas relativas del
+propio repositorio.
 
 ---
 
@@ -121,7 +124,7 @@ aceptar la rareza.
 
 | ID | Tarea | Archivos |
 |---|---|---|
-| T0.1 | Resolver D1, D2, D3 con el usuario y anotarlas en `docs/01-decision-log.md` | `docs/01-decision-log.md` |
+| T0.1 | Registrar D1, D2, D3 (ya resueltas §2) en `docs/01-decision-log.md` | `docs/01-decision-log.md` |
 | T0.2 | Commitear o aislar el trabajo en curso del design system (58 archivos sin commitear) en su propio commit, con `verify_cmd` verde, antes de tocar la landing | — (git) |
 | T0.3 | Partir `Landing.tsx` en `sections/*` (A1), sin ningún cambio visual: mismo DOM, mismas clases | `apps/web/src/pages/Landing.tsx`, `apps/web/src/components/landing/sections/*.tsx` (9 nuevos) |
 | T0.4 | Test de baseline de la landing: H1, las 9 secciones presentes, roles de tabs, `caption`/`scope` de la tabla, un único `contentinfo` | `apps/web/test/landing.test.tsx` (nuevo) |
@@ -149,7 +152,7 @@ propuesta, CTA y una captura legible.
 | T1.5 | Contraste: sustituir `--color-gray-400`/`500` sobre blanco en texto de apoyo por `--landing-muted` verificado a 4.5:1 | `Landing.css` |
 | T1.6 | Header: altura 72–80 px, wordmark ≥24 px, nav 14–15 px con gap 28–36 px, CTA ≥40 px, sticky tras 80–120 px, estado activo por sección con peso además de color | `LandingLayout.tsx`, `Landing.css`, `--header-height` en `tokens.css` si aplica |
 | T1.7 | Footer: padding 64–80 px, wordmark 22–24 px, columnas con jerarquía, versión + estado de demo con punto **y** texto | `LandingLayout.tsx`, `Landing.css` |
-| T1.8 | Fuentes según D2, si la decisión es afirmativa | `apps/web/public/fonts/*`, `tokens.css`, `apps/web/index.html` (preload) |
+| T1.8 | Self-hostear Archivo + IBM Plex Mono (D2), subset `woff2`, `font-display: swap`, `preload` del display; actualizar el comentario de `tokens.css` | `apps/web/public/fonts/*`, `tokens.css`, `apps/web/index.html` (preload) |
 
 **verify_cmd:** `pnpm typecheck && pnpm test`
 **Gate:** `router.test.tsx:30` afirma el H1 `Client work, clearly owned.` — la auditoría §2.1 dice
@@ -193,7 +196,7 @@ conservarlo, así que ese test debe seguir verde sin editarlo. Si hay que editar
 | T3.2 | Quality: matriz de cuatro pruebas + panel de evidencia leído del JSON derivado (A6), no del JSX | `sections/Quality.tsx`, `apps/web/src/data/quality-evidence.json` |
 | T3.3 | Case study teaser en tres momentos + línea de alcance + línea de honestidad, sustituyendo el `<dl>` de metadata | `sections/CaseStudy.tsx`, `Landing.css` |
 | T3.4 | CTA final §15: copy nuevo, `Open administrator demo` / `Open member demo` con `?demo=`, aviso de reset diario y de 60 s de arranque | `sections/FinalCta.tsx` |
-| T3.5 | Enlaces de evidencia reales según D1/D3; **ocultar** los que no tengan destino publicado. Crear `/accessibility` como ruta real (FUN-009) o retirar el enlace del footer (H7) | `apps/web/src/pages/Accessibility.tsx` (nuevo), `router.tsx`, `LandingLayout.tsx` |
+| T3.5 | Enlaces de evidencia a `.claude/plans/` (D3); **ocultar** el enlace a GitHub mientras el repo no esté publicado (D1) — no renderizar el nodo, no dejar `href="#"`. Crear `/accessibility` como ruta real (FUN-009) o retirar el enlace del footer (H7) | `apps/web/src/pages/Accessibility.tsx` (nuevo), `router.tsx`, `LandingLayout.tsx` |
 | T3.6 | Script de conteo de tests (A6) | `scripts/collect-test-counts.mjs` (nuevo) |
 
 **verify_cmd:** `pnpm typecheck && pnpm test`
