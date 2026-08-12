@@ -368,3 +368,32 @@ de landing. Esta línea base (648.51 kB / 188.26 kB gzip para todo, sin separar 
 número de referencia; T5.3 debe introducir `lazy()` + `Suspense` en las rutas autenticadas de
 `router.tsx` y volver a medir con el mismo comando, reportando el tamaño del chunk que carga `/` en
 solitario frente a este total.
+
+### Resultado post-T5.3
+
+**Comando:** `pnpm --filter @briefline/web build` (mismo comando, ejecutado tras `lazy()` + `Suspense`
+en `router.tsx` para las 14 páginas autenticadas; `dist/` medido y borrado después).
+
+| Archivo | Tamaño | Gzip |
+|---|---|---|
+| `dist/assets/index-BGsPtcu6.js` (entry: landing + login + 403/404 + accesibilidad + providers) | 528.86 kB | 164.97 kB |
+| `dist/assets/index-Bi7G-TVr.css` | 76.80 kB | 13.12 kB |
+| `dist/assets/TaskDetailModal-DDgLlzkV.js` (lazy, solo tras auth) | 71.37 kB | 21.89 kB |
+| `dist/assets/Users-rE6XqNuF.js` (lazy) | 15.75 kB | 4.57 kB |
+| `dist/assets/Board-CCHbo1lo.js` (lazy) | 15.06 kB | 5.12 kB |
+| ... 29 chunks lazy adicionales (Dashboard, TaskList, TaskDetail, ClientList/Detail/Create,
+ContactList/Detail/Create/Edit, ArchivedTasks, Profile, y sus CSS/JS de soporte) | 0.18–10.20 kB c/u | — |
+
+**34 chunks JS + 4 CSS** (antes: 1 JS + 1 CSS). El entry que carga `/` pasa de **648.51 kB → 528.86 kB**
+(−18.5 %) y de **188.26 kB → 164.97 kB gzip** (−12.4 %). La reducción es menor de lo que sugeriría
+"18 páginas fuera del bundle" porque el entry sigue cargando el runtime compartido por todas las rutas
+(React, React Router, TanStack Query, Radix, `AuthProvider`/`QueryProvider`, y las propias landing +
+login, que son públicas por diseño — A8/F5) más `TaskDetailModal` no se separó del todo porque
+`TaskBoard`/`Dashboard` la importan de forma síncrona (fuera del alcance de T5.3, que solo tocaba
+`router.tsx`). No se alcanza el ≤100 KiB de JS "específico de landing" del §19 porque ese runtime
+compartido no es exclusivo de la landing — separarlo más exigiría diferir la carga de TanStack Query/
+Radix hasta el primer uso autenticado, cambio de mayor alcance que T5.3 no cubre. Sí se cumple el
+criterio duro de §25/H2: **`/` ya no carga el bundle completo de la app autenticada** — las 14 páginas
+protegidas (Dashboard, Board, TaskList, TaskDetail, ClientList/Detail/Create, ContactList/Detail/
+Create/Edit, ArchivedTasks, Users, Profile) están en chunks separados que solo se piden tras pasar
+`requireAuth`.

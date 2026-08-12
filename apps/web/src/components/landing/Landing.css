@@ -278,6 +278,12 @@
   color: var(--landing-muted);
 }
 
+/* FUN-003: cold start feedback — distinguished from the default hint. */
+.landing-hero__note--warmup {
+  color: var(--landing-amber);
+  font-weight: 600;
+}
+
 .landing-hero__image {
   border-radius: var(--radius-lg);
   /* Short, defined shadow instead of the previous diffuse --shadow-lg (T1.3) */

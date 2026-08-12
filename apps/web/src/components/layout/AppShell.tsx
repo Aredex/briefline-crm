@@ -3,7 +3,7 @@
  * <main id="main"> landmark, mobile drawer navigation. Rendered by the router
  * as the protected layout; 403/404 pages reuse it via the children prop.
  */
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { Suspense, useEffect, useRef, useState, type ReactNode } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../../providers/AuthProvider'
@@ -197,7 +197,19 @@ export function AppShell({ children }: AppShellProps) {
       </header>
 
       <main id="main" tabIndex={-1} className="app-shell__main">
-        {children ?? <Outlet />}
+        {/* T5.3 (H2): protected pages are React.lazy() — the router itself
+            never suspends, this boundary covers only the route content. */}
+        {children ?? (
+          <Suspense
+            fallback={
+              <div className="app-shell__main--center" role="status" aria-live="polite">
+                Loading…
+              </div>
+            }
+          >
+            <Outlet />
+          </Suspense>
+        )}
       </main>
 
       <Dialog

@@ -61,7 +61,7 @@ pnpm dev
 | Role | Email | Password |
 |---|---|---|
 | Admin | admin@briefline.demo | briefline-demo-2026 |
-| Member | maria@briefline.demo | briefline-demo-2026 |
+| Member | member@briefline.demo | briefline-demo-2026 |
 
 The seed creates 8 users, 12 clients, 3 contacts, 36 tasks, and 124 task history events (plus 20 client changes and 3 comments).
 

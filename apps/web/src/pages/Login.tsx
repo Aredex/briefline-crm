@@ -34,12 +34,27 @@ type LoginError =
   | { kind: 'rate-limited'; retryAfterSeconds: number }
   | { kind: 'server' }
 
-const DEMO_ACCOUNTS = import.meta.env.PROD
-  ? []
-  : [
-      { label: 'Admin (Alex Rivera)', email: 'admin@briefline.demo', password: 'briefline-demo-2026' },
-      { label: 'Member (Marco Díaz)', email: 'member@briefline.demo', password: 'briefline-demo-2026' },
-    ]
+// Public demo credentials (README, landing CTA). This app has no real user
+// accounts to protect — the whole product is a fictional, daily-reset demo —
+// so the quick-fill list stays available in production too; hiding it there
+// would silently break the landing's "Open administrator/member demo" links
+// (FUN-002, plan T5.2).
+const DEMO_ACCOUNTS = [
+  {
+    role: 'admin' as const,
+    label: 'Admin (Alex Rivera)',
+    email: 'admin@briefline.demo',
+    password: 'briefline-demo-2026',
+    description: 'Full workspace: manage clients, contacts, users, and permissions.',
+  },
+  {
+    role: 'member' as const,
+    label: 'Member (Marco Díaz)',
+    email: 'member@briefline.demo',
+    password: 'briefline-demo-2026',
+    description: 'Ownership-based access: work the board, but only edit tasks you created.',
+  },
+]
 
 export function Login() {
   const { login } = useAuth()
@@ -93,6 +108,18 @@ export function Login() {
     // Sign in, so one Enter finishes the flow.
     submitButtonRef.current?.focus()
   }
+
+  // FUN-002 / plan T5.2: /login?demo=admin|member (from the landing CTA)
+  // preselects the matching demo account. It only fills the form and moves
+  // focus to Sign in — it never submits on its own, the visitor still has to
+  // confirm explicitly.
+  useEffect(() => {
+    const demo = searchParams.get('demo')
+    if (demo !== 'admin' && demo !== 'member') return
+    const account = DEMO_ACCOUNTS.find((candidate) => candidate.role === demo)
+    if (account) fillDemo(account.email, account.password)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount, driven by the URL only.
+  }, [])
 
   const isRateLimited = error?.kind === 'rate-limited' && countdown > 0
 
@@ -181,6 +208,8 @@ export function Login() {
                   <span>{account.label}</span>
                   <span className="login-page__demo-email">{account.email}</span>
                 </button>
+                {/* FUN-002: the copy explains what each role can test. */}
+                <p className="login-page__demo-description">{account.description}</p>
               </li>
             ))}
           </ul>

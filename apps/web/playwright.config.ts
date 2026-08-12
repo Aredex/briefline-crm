@@ -1,8 +1,10 @@
 /*
  * Playwright e2e (INT-002/003) — full-stack journeys against the real API
  * (no MSW). The webServer array boots the Postgres-migrated API on :3000 and
- * Vite on :5173 (which proxies /api). The API has no /health endpoint, so the
- * CSRF route is the public readiness probe.
+ * Vite on :5173 (which proxies /api). `GET /api/v1/health` exists (public
+ * liveness probe, OPS-006) but the webServer readiness check below still
+ * targets the CSRF route on purpose: these specs need the CSRF cookie
+ * plumbing up, not just the process alive, so the probe checks that instead.
  *
  * Database: the default is the local compose Postgres on :5432
  * (docker/compose.yml). Override with E2E_DATABASE_URL when that port is

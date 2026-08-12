@@ -1010,6 +1010,13 @@
   color: var(--color-gray-500);
 }
 
+.login-page__demo-description {
+  margin: var(--space-1) 0 0;
+  padding: 0 var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--color-gray-500);
+}
+
 .error-page {
   display: flex;
   flex-direction: column;

@@ -8,6 +8,7 @@
  * Loaders run outside React, so they consult the module-level session store and
  * only hit the network on deep-link refreshes (session empty in memory).
  */
+import { lazy } from 'react'
 import { createBrowserRouter, redirect, useRouteError, type LoaderFunctionArgs } from 'react-router'
 import { api, ApiError } from './api/client'
 import type { UserResponse } from './api/types'
@@ -16,23 +17,30 @@ import { AppShell } from './components/layout/AppShell'
 import { ErrorState } from './components/ui/ErrorState'
 import { Accessibility } from './pages/Accessibility'
 import { Landing } from './pages/Landing'
-import { ArchivedTasks } from './pages/ArchivedTasks'
-import { Board } from './pages/Board'
-import { TaskList } from './pages/TaskList'
-import { ClientCreate } from './pages/ClientCreate'
-import { ClientDetail } from './pages/ClientDetail'
-import { ClientList } from './pages/ClientList'
-import { ContactCreate } from './pages/ContactCreate'
-import { ContactDetail } from './pages/ContactDetail'
-import { ContactEdit } from './pages/ContactEdit'
-import { ContactList } from './pages/ContactList'
-import { Dashboard } from './pages/Dashboard'
 import { Forbidden } from './pages/Forbidden'
 import { Login } from './pages/Login'
 import { NotFound } from './pages/NotFound'
-import { Profile } from './pages/Profile'
-import { TaskDetail } from './pages/TaskDetail'
-import { Users } from './pages/Users'
+
+/*
+ * Authenticated-app pages (T5.3, H2) — lazy-loaded so `/`, `/login`,
+ * `/accessibility`, `/403` and `/404` (all public, all eager above) don't
+ * pull the entire authenticated bundle. Each of these only renders inside
+ * the `requireAuth`-gated branch below, which AppShell wraps in <Suspense>.
+ */
+const ArchivedTasks = lazy(() => import('./pages/ArchivedTasks').then((m) => ({ default: m.ArchivedTasks })))
+const Board = lazy(() => import('./pages/Board').then((m) => ({ default: m.Board })))
+const TaskList = lazy(() => import('./pages/TaskList').then((m) => ({ default: m.TaskList })))
+const ClientCreate = lazy(() => import('./pages/ClientCreate').then((m) => ({ default: m.ClientCreate })))
+const ClientDetail = lazy(() => import('./pages/ClientDetail').then((m) => ({ default: m.ClientDetail })))
+const ClientList = lazy(() => import('./pages/ClientList').then((m) => ({ default: m.ClientList })))
+const ContactCreate = lazy(() => import('./pages/ContactCreate').then((m) => ({ default: m.ContactCreate })))
+const ContactDetail = lazy(() => import('./pages/ContactDetail').then((m) => ({ default: m.ContactDetail })))
+const ContactEdit = lazy(() => import('./pages/ContactEdit').then((m) => ({ default: m.ContactEdit })))
+const ContactList = lazy(() => import('./pages/ContactList').then((m) => ({ default: m.ContactList })))
+const Dashboard = lazy(() => import('./pages/Dashboard').then((m) => ({ default: m.Dashboard })))
+const Profile = lazy(() => import('./pages/Profile').then((m) => ({ default: m.Profile })))
+const TaskDetail = lazy(() => import('./pages/TaskDetail').then((m) => ({ default: m.TaskDetail })))
+const Users = lazy(() => import('./pages/Users').then((m) => ({ default: m.Users })))
 
 /* ---------- Auth loaders ---------- */
 
