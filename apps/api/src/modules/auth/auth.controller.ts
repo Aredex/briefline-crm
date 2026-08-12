@@ -18,9 +18,18 @@ import type { AuthUser } from './auth.types'
 import { AuthService } from './auth.service'
 import { LoginDto } from './dto/login.dto'
 
-const LOGIN_THROTTLE = process.env.NODE_ENV === 'production'
-  ? { auth: { limit: 5, ttl: seconds(60), blockDuration: seconds(300) } }
-  : { auth: { limit: 50, ttl: seconds(60), blockDuration: seconds(5) } }
+// Relaxed only for 'development' (Playwright's webServer, apps/web/playwright.config.ts,
+// and plain `pnpm dev`) so local/E2E UI runs aren't throttled. 'test' (vitest integration,
+// Testcontainers) and 'production' both enforce the real 5/min limit — the integration
+// suite asserts the 429 behavior and must exercise the same limit production uses.
+//
+// process.env here is read at module load, before ConfigModule.forRoot() applies the
+// .env file — a bare `pnpm dev` (no NODE_ENV exported in the shell) sees `undefined`,
+// not 'development'. Default it the same way Joi does in config/configuration.ts.
+const NODE_ENV = process.env.NODE_ENV ?? 'development'
+const LOGIN_THROTTLE = NODE_ENV === 'development'
+  ? { auth: { limit: 50, ttl: seconds(60), blockDuration: seconds(5) } }
+  : { auth: { limit: 5, ttl: seconds(60), blockDuration: seconds(300) } }
 
 @Controller('auth')
 export class AuthController {

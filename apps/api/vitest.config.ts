@@ -9,5 +9,6 @@ export default defineConfig({
     environment: 'node',
     include: ['test/**/*.spec.ts'],
     exclude: ['test/integration/**', 'node_modules/**'],
+    maxWorkers: 2,
   },
 })

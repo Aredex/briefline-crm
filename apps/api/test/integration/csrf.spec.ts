@@ -6,6 +6,12 @@
 // once the JWT session exists; the rotated token from the login body is the
 // one unsafe requests must echo. Logout clears the JWT and re-binds the token
 // to 'anonymous'.
+//
+// Throttle budget (AUTH-004, 5 logins/min per IP): this file's tests share one
+// `app` and thus one in-memory ThrottlerStorage. 4 of 5 logins are already
+// spent (the two CSRF-rejected POST /auth/login calls don't count — the CSRF
+// middleware runs before the ThrottlerGuard). Adding another login here will
+// tip it into 429s that cascade through the rest of the file.
 import type { INestApplication } from '@nestjs/common'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { createTestApp } from './helpers/test-app'

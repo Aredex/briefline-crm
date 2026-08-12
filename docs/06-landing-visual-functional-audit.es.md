@@ -942,3 +942,54 @@ El visitante debe terminar con tres ideas claras:
 1. Briefline resuelve un problema empresarial comprensible.
 2. La aplicación existe, funciona y está cuidada.
 3. Quien la construyó sabe tomar decisiones de producto, frontend, backend, accesibilidad, seguridad y entrega.
+
+## 28. Cierre — estado de implementación (F6)
+
+**Fecha:** 2026-08-12 · **Plan de ejecución:** `.claude/plans/landing-audit-plan.md` (fases F0–F6) · **Implementación:** `docs/08-landing-page.md`
+
+### P0 — completo
+
+Los ocho puntos P0 (§23) están implementados: reconstrucción de `Explore the product` con capturas reales, hero corregido, tipografía/contraste, Engineering con decisiones y enlaces reales, Quality con evidencia verificable derivada de script, case study teaser, manejo visible del cold start, y validación de responsive/teclado/foco/reduced motion/enlaces (suite e2e `apps/web/test/e2e/landing.spec.ts` + axe).
+
+### P1 — completo salvo lo registrado abajo
+
+`the brief line` con sus cinco variaciones, paleta `ink/canvas/signal` como tokens `--landing-*`, previews ampliables (lightbox) y deep links, tabla de permisos con caso negativo, header sticky y footer, y Open Graph están implementados. Excepciones:
+
+| Punto P1 | Estado | Decisión |
+|---|---|---|
+| Enlaces "View the repository" / "Prefer the code?" | Omitidos, no placeholder | **D1** (registrada en §2): el repositorio no está publicado en GitHub. Los nodos no se renderizan hasta que exista una URL real — no se deja un enlace roto ni un `href="#"`. Se reintroducen automáticamente en cuanto D1 se resuelva, porque los enlaces de evidencia de Engineering/Quality ya son rutas relativas del propio repo (D3). |
+| Documentos de evidencia (`permission-matrix.md`, `test-matrix.md`, `data-model.md`, `adrs.md`) como enlaces reales de la landing | Se muestran como referencia de texto (`label` + ruta en `<code>`), no como `<a href>` | La SPA desplegada no sirve archivos `.md`/`.yaml` en crudo — un `<a href=".claude/plans/...">` habría sido un enlace roto (recarga la landing o 404), lo cual el propio §22 prohíbe. Documentado en el comentario de cabecera de `Engineering.tsx`. |
+
+### P2 — fuera de alcance, con decisión registrada
+
+| Punto P2 | Estado | Decisión |
+|---|---|---|
+| P2.1 — Vídeos silenciosos de 8–12 s | No implementado | El pipeline de medios (`apps/web/scripts/capture-landing-media.ts`) solo genera capturas estáticas AVIF/WebP. Producir vídeo añade una superficie de trabajo (grabación, recorte, presupuesto de peso) que no se justificaba dentro del alcance de F2; el resto de la evidencia visual (capturas reales, lightbox) ya cumple el principio rector §4. |
+| P2.2 — Reveal único del workflow | **Implementado** en F4 (T4.4) | — |
+| P2.3 — Estado público de versión/demo en footer | **Implementado** en F1 (T1.7), `v1.0.0 · Live demo` con punto y texto | — |
+| P2.4 — Prueba moderada de comprensión con cinco evaluadores | No implementado | Requiere reclutamiento y sesiones con usuarios reales, fuera del alcance de un plan de ejecución de código. Queda como recomendación para una iteración posterior al lanzamiento. |
+| FUN-010 — Verificación automática de enlaces en CI | No implementado | No estaba en la tabla de fases del plan de ejecución (F0–F6); los enlaces existentes se verificaron manualmente durante F3/F5. Recomendado como mejora de CI independiente. |
+
+### Hallazgos adicionales, fuera del árbol de prioridades original
+
+La ejecución del plan encontró y corrigió problemas que esta auditoría no pudo ver por estar basada en una captura y no en el código real (documentados con detalle en `.claude/plans/landing-audit-plan.md` §0 y en los mensajes de commit de cada fase):
+
+- **Code splitting** (H2): `/` cargaba el bundle completo de la app autenticada; corregido en F5 (T5.3) — no estaba en el plan de fases original de la auditoría, se añadió como F0/F5 al leer el código real.
+- **Enlaces muertos** (H7): `/accessibility` no existía como ruta; corregido en F3.
+- **Bug de cold-start real** encontrado por el QA obligatorio de F5: el aviso "the demo is waking up" no se llegaba a renderizar nunca porque el componente que lo mostraba se desmontaba al navegar. Corregido moviendo el estado a `Login.tsx`.
+- **Sourcemaps públicos** (hallazgo de QA, no corregido en este plan): los 34 chunks del code splitting se sirven con sourcemaps completos, exponiendo el código fuente de páginas admin-only. Es una decisión de configuración de producción anterior a este plan (`sourcemap: true` desde el MVP inicial) y de alcance más amplio que la landing — **queda como decisión pendiente del propietario del proyecto**, no como parte de este cierre.
+
+### Definition of Done (§26) — checklist final
+
+- [x] P0 implementado íntegramente.
+- [x] P1 implementado, con dos exclusiones registradas arriba (enlaces GitHub por D1, evidencia como texto no como link).
+- [ ] Capturas definitivas de desktop y móvil — las capturas del pipeline (§8 de `docs/08-landing-page.md`) cubren desktop; no se generó un pase dedicado de capturas mobile.
+- [ ] Matriz de navegadores Chrome/Firefox/Safari/Edge — no ejecutada en este plan; la verificación fue Playwright (Chromium) + revisión de CSS estándar.
+- [x] axe y revisión manual de teclado/foco/zoom/reduced motion — `apps/web/test/e2e/landing.spec.ts`.
+- [ ] Landing probada con backend dormido y no disponible — el hook de cold start (§7) se probó por lectura de código y test unitario del hook, no con una API real puesta a dormir deliberadamente en un entorno de staging.
+- [x] Enlaces a demo, arquitectura, pruebas y accesibilidad reales; GitHub y case study quedan como excepciones registradas (D1, ausencia de `/case-study`).
+- [x] Open Graph verificado (contenido correcto; limitación de tamaño de imagen documentada en `docs/08-landing-page.md` §11).
+- [x] README actualizado con cifras de test reales; el caso de estudio enlaza a documentación existente, no a capturas nuevas.
+- [x] Revisión visual final — realizada por el orquestador y por `qa-risk-analyzer` sobre F5; ninguna sección se dejó como placeholder o lista de CV.
+
+Los tres puntos sin marcar (capturas mobile dedicadas, matriz de navegadores, prueba de cold-start contra un backend real dormido) quedan como trabajo pendiente explícito, no como huecos silenciosos.
