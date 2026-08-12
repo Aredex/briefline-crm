@@ -164,8 +164,14 @@ async function rawFetch<T>(
     // Session expired/invalid → logout + redirect, preserving the destination.
     if (!options.skipUnauthorizedRedirect) {
       clearSession()
-      const destination = new URL(url, window.location.origin)
-      redirectToLogin(destination.pathname + destination.search)
+      // Use the current page URL as the destination, not the API fetch URL.
+      // The user expects to return to the page they were viewing, not an API
+      // endpoint they never visited.
+      const next =
+        window.location.pathname !== '/login'
+          ? window.location.pathname + window.location.search
+          : '/dashboard'
+      redirectToLogin(next)
     }
     throw toApiError(problem, response.status)
   }
