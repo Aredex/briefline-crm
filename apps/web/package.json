@@ -10,7 +10,8 @@
     "lint": "eslint src/ test/",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "capture:landing": "tsx scripts/capture-landing-media.ts"
   },
   "dependencies": {
     "@briefline/api-contract": "workspace:*",
@@ -55,6 +56,8 @@
     "axe-core": "4.13.0",
     "jsdom": "30.0.1",
     "msw": "2.15.0",
+    "sharp": "^0.34.4",
+    "tsx": "^4.23.12",
     "vite": "8.2.1",
     "vitest": "4.1.10"
   }

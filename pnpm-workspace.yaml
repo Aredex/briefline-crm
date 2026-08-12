@@ -10,6 +10,7 @@ packages:
 #   esbuild      — platform binary (Vite/vitest toolchain)
 #   msw          — service-worker mock generation (web dev)
 #   protobufjs, ssh2 — transitive natives (web/dev tooling)
+#   sharp        — libvips native bindings (landing media pipeline, T2.1/A5)
 onlyBuiltDependencies:
   - argon2
   - '@prisma/engines'
@@ -18,3 +19,4 @@ onlyBuiltDependencies:
   - msw
   - protobufjs
   - ssh2
+  - sharp
