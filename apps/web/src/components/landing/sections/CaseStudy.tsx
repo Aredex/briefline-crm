@@ -26,7 +26,7 @@ const MOMENTS = [
 
 export function CaseStudy() {
   return (
-    <section className="landing-section landing-section--alt" aria-labelledby="case-title">
+    <section id="case-study" className="landing-section landing-section--alt" aria-labelledby="case-title">
       <div className="landing-section__inner">
         <div className="landing-section__header">
           <h2 id="case-title" className="landing-section__title">About this case study</h2>

@@ -6,13 +6,26 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { IconMenu, IconShield, IconX } from '../ui/icons'
 
+/*
+ * T5.4/FUN-004: stable hashes are `#product`, `#workflow`, `#engineering`,
+ * `#quality`, `#case-study` — but primary nav only surfaces four of them
+ * (audit §6: "Add a `Case study` link or replace `Quality` with `Case
+ * study`; Quality stays in the page but doesn't need primary nav"). `#quality`
+ * remains a valid, reachable anchor — just not linked from the header.
+ *
+ * `observeId` lets the "active section" IntersectionObserver watch a
+ * different element than the one the href scrolls to: `#product` is a
+ * zero-height anchor span (ProductExplorer.tsx) placed just above the real
+ * explorer section, so highlighting "Product" uses the explorer's own id
+ * (`explore-product`, which has real height and reliable intersection
+ * ratios) instead of the invisible anchor.
+ */
 const NAV_SECTIONS = [
-  { id: 'product', label: 'Product' },
+  { id: 'product', label: 'Product', observeId: 'explore-product' },
   { id: 'workflow', label: 'Workflow' },
   { id: 'engineering', label: 'Engineering' },
-  { id: 'quality', label: 'Quality' },
+  { id: 'case-study', label: 'Case study' },
 ]
-const NAV_SECTION_IDS = NAV_SECTIONS.map(section => section.id)
 
 function PublicHeader() {
   const [menuOpen, setMenuOpen] = useState(false)
@@ -34,7 +47,10 @@ function PublicHeader() {
   }, [])
 
   useEffect(() => {
-    const sections = NAV_SECTION_IDS
+    // Map the observed DOM element id back to its nav id (see NAV_SECTIONS
+    // comment above — `product` observes `explore-product`, not itself).
+    const navIdByObservedId = new Map(NAV_SECTIONS.map(({ id, observeId }) => [observeId ?? id, id]))
+    const sections = [...navIdByObservedId.keys()]
       .map(id => document.getElementById(id))
       .filter((el): el is HTMLElement => el !== null)
     if (sections.length === 0) return
@@ -44,7 +60,7 @@ function PublicHeader() {
         const visible = entries
           .filter(entry => entry.isIntersecting)
           .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0]
-        if (visible) setActiveSection(visible.target.id)
+        if (visible) setActiveSection(navIdByObservedId.get(visible.target.id) ?? null)
       },
       { rootMargin: '-40% 0px -50% 0px', threshold: [0, 0.25, 0.5, 0.75, 1] },
     )

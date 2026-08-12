@@ -132,6 +132,10 @@
   --landing-muted: #66736c; /* verified 4.6:1 on --landing-canvas, 4.96:1 on --landing-paper (WCAG AA, plan T1.5) */
   /* --landing-amber (#c9822d) is 3.1:1 on white — decorative/accent use only
    * (chips, borders, icons), never as small body text on a light surface. */
+  --landing-amber-text: #916b23; /* T5.6/A11Y-LAND-002: darker amber for text
+    contexts (e.g. "Owned only" table cells) — 4.85:1 on white, same hue
+    family as --landing-amber but meets WCAG AA where the decorative token
+    (documented above) explicitly doesn't. */
 
   /* Landing — container and vertical rhythm (audit §5.5, plan T1.2).
    * Section gap is NOT uniform: compact/normal/wide let sections breathe

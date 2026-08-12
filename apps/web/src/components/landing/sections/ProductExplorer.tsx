@@ -88,8 +88,12 @@ const EXPLORER_ANCHOR = 'explore-product'
 /**
  * T2.4: tab state lives in the URL fragment as `#explore-product?tab=<key>`
  * so a tab can be shared or bookmarked directly. This is a deliberately
- * distinct anchor from `#product` (still owned by ProblemSolution, H5 —
- * renaming anchors is F5/T5.4, out of scope here), so the two don't collide.
+ * distinct id from the stable `#product` nav anchor (T5.4/H5): a single
+ * element cannot carry two ids, so `#product` is a separate zero-height
+ * `.landing-anchor` span rendered as the section's first child (below) —
+ * jumping to `#product` lands right above this section's heading, and the
+ * `#explore-product?tab=<key>` hash keeps working independently for tab
+ * deep-linking.
  */
 function readTabFromHash(): string | null {
   const hash = window.location.hash
@@ -164,6 +168,7 @@ export function ProductExplorer() {
       className="landing-section landing-section--alt"
       aria-labelledby="preview-title"
     >
+      <span id="product" className="landing-anchor" aria-hidden="true" />
       <div className="landing-section__inner">
         <div className="landing-section__header">
           <h2 id="preview-title" className="landing-section__title">Explore the product</h2>

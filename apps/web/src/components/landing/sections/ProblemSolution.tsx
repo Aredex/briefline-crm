@@ -1,10 +1,16 @@
-/* LAND-SEC-002: Problem & Solution */
+/*
+ * LAND-SEC-002: Problem & Solution.
+ * T5.4 (plan H5/FUN-004): this section is `#problem`, not `#product` — the
+ * stable `#product` anchor now belongs to the real product explorer
+ * (ProductExplorer.tsx), which is what "Product" in the header nav should
+ * scroll to.
+ */
 export function ProblemSolution() {
   return (
-    <section id="product" className="landing-section landing-section--alt" aria-labelledby="product-title">
+    <section id="problem" className="landing-section landing-section--alt" aria-labelledby="problem-title">
       <div className="landing-section__inner">
         <div className="landing-section__header">
-          <h2 id="product-title" className="landing-section__title">When client work lives everywhere</h2>
+          <h2 id="problem-title" className="landing-section__title">When client work lives everywhere</h2>
           <p className="landing-section__subtitle">
             A client request starts in chat, priorities live in a spreadsheet, and delivery status
             depends on who remembers to update whom.

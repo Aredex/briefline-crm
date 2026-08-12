@@ -144,6 +144,18 @@
   cursor: pointer;
 }
 
+/* T5.6/A11Y-LAND-012: below ~360px the brand + CTA pill + hamburger no
+   longer fit on one row and force page-level horizontal scroll. The CTA
+   already exists prominently in the hero and final CTA sections, so hiding
+   the header's copy (not its function — the hamburger menu and every
+   in-page CTA remain) is the narrowest fix that doesn't touch layout at any
+   width phones actually ship at (smallest current devices are 360px+). */
+@media (max-width: 359px) {
+  .landing-header__cta {
+    display: none;
+  }
+}
+
 /* Mobile nav open */
 @media (max-width: 767px) {
   .landing-header__nav.is-open {
@@ -339,6 +351,21 @@
 .landing-section {
   padding: var(--landing-section-gap-normal) var(--landing-gutter);
   background: var(--landing-paper);
+  /* T5.4/A11Y-LAND-003: precise sticky-header offset for hash navigation,
+     using the real header height token instead of the generic global
+     scroll-padding-top fallback (global.css). Extra --space-6 keeps a
+     little breathing room above the heading instead of touching the header. */
+  scroll-margin-top: calc(var(--landing-header-height) + var(--space-6));
+}
+
+/* T5.4: zero-height anchor target for `#product` (ProductExplorer.tsx) — a
+   real element cannot carry two ids (the section already owns
+   `#explore-product` for tab-state deep links), so this sits as the
+   section's first child purely to give `#product` a landing spot. */
+.landing-anchor {
+  display: block;
+  height: 0;
+  scroll-margin-top: calc(var(--landing-header-height) + var(--space-6));
 }
 
 .landing-section--compact {
@@ -384,7 +411,7 @@
    tab-driven sections breathe more; narrative/list sections stay tighter.
    Targeted by the stable aria-labelledby id already on each <section> so
    this stays a Landing.css-only change (no JSX edits, plan T1.2 scope). */
-.landing-section[aria-labelledby='product-title'],
+.landing-section[aria-labelledby='problem-title'],
 .landing-section[aria-labelledby='eng-title'],
 .landing-section[aria-labelledby='quality-title'] {
   padding-top: var(--landing-section-gap-compact);
@@ -968,7 +995,10 @@
 }
 
 .landing-roles-table .allowed { color: var(--landing-signal); font-weight: 600; }
-.landing-roles-table .owned-only { color: var(--landing-amber); font-weight: 600; }
+/* T5.6/A11Y-LAND-002: --landing-amber itself is documented as
+   decorative-only (3.1:1 on white, tokens.css) — this is small table body
+   text, so it uses the darker --landing-amber-text variant instead. */
+.landing-roles-table .owned-only { color: var(--landing-amber-text); font-weight: 600; }
 .landing-roles-table .not-allowed { color: var(--landing-muted); }
 
 /* ---------- Permissions: negative-path evidence ---------- */
@@ -1067,6 +1097,23 @@
   align-items: center;
   gap: var(--space-1);
   min-width: 64px;
+}
+
+/* T5.6/A11Y-LAND-012: the two node labels are deliberately non-shrinking
+   (`white-space: nowrap`, decorative diagram), so below ~380px they no
+   longer fit beside the edge's 64px minimum on one row. Wrapping is
+   decorative-only (aria-hidden; the sr-only paragraph above carries the
+   real content) and only changes the layout at widths where it was
+   already overflowing. */
+@media (max-width: 380px) {
+  .landing-eng-diagram__top {
+    flex-wrap: wrap;
+    row-gap: var(--space-2);
+  }
+
+  .landing-eng-diagram__edge {
+    min-width: 40px;
+  }
 }
 
 .landing-eng-diagram__edge-label {
@@ -1175,6 +1222,13 @@
   border: 1px solid var(--landing-line);
   border-radius: var(--radius-lg);
   counter-increment: eng-decision;
+  /* T5.6/A11Y-LAND-012: grid items default to min-width:auto, so this item's
+     width was tracking its widest content — the `pre.landing-eng-decision__code`
+     child — instead of its grid track. That pushed the whole page past
+     320px (the `pre` already has `overflow-x: auto`, but that only scrolls
+     internally once the item itself can shrink). One-line fix, no visual
+     change at the breakpoints where it already fit. */
+  min-width: 0;
 }
 
 .landing-eng-decision h3 {
@@ -1269,6 +1323,17 @@
   }
 }
 
+/* T5.6/A11Y-LAND-012: this is now the grid item (Quality.tsx wraps the
+   table), so it needs its own min-width:0 — grid items default to
+   min-width:auto, which tracks the table's intrinsic content width instead
+   of the column track and defeats overflow-x:auto (same root cause as the
+   .landing-eng-decision fix above). */
+.landing-quality-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  min-width: 0;
+}
+
 .landing-quality-matrix {
   width: 100%;
   border-collapse: collapse;
@@ -1345,7 +1410,11 @@
   margin-top: var(--space-2);
   font-family: var(--landing-font-mono);
   font-size: 0.75rem;
-  color: var(--landing-muted);
+  /* T5.6/A11Y-LAND-002: this sits on the dark --landing-ink background (see
+     .landing-quality-evidence above) — --landing-muted is tuned for light
+     surfaces (3.36:1 here) and doesn't meet AA on dark. --landing-line is
+     what the sibling __label/__note already use on this same background. */
+  color: var(--landing-line);
 }
 
 /* ---------- Case study moments (F3/T3.3) ---------- */

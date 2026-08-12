@@ -19,7 +19,7 @@ leads the visitor to the live demo — before any login is requested.
 | Route | `/` |
 | Access | Public — no authentication required |
 | Auth redirect | None. An authenticated visitor may keep browsing `/` (not redirected to the dashboard) |
-| Case-study anchor targets | `#product`, `#workflow`, `#engineering`, `#quality` |
+| Case-study anchor targets | `#product`, `#workflow`, `#engineering`, `#quality`, `#case-study` (T5.4: `#product` now targets the real product explorer, not Problem/Solution — see §4.2/§4.4 below; `#quality` stays reachable but isn't linked from primary nav) |
 | Demo entry | `/login` (primary CTA) |
 
 All copy is English. Sections are marked in code with `LAND-SEC-001` … `LAND-SEC-009`
@@ -55,8 +55,10 @@ authenticated app has no traditional footer.
 - **Brand:** `IconShield` logo in a 28px `--color-primary-600` rounded square (white icon,
   `aria-hidden`), wordmark "Briefline", link to `/` with `aria-label="Briefline home"`.
 - **Nav** (`<nav aria-label="Main">`): four anchor links — Product (`#product`),
-  Workflow (`#workflow`), Engineering (`#engineering`), Quality (`#quality`). Hidden on
-  mobile (`display: none`), shown as a row at ≥ 768px. Hover: gray-900 text on gray-100.
+  Workflow (`#workflow`), Engineering (`#engineering`), Case study (`#case-study`) (T5.4:
+  `Quality` was replaced with `Case study` in primary nav per audit §6; `#quality` still
+  exists as a reachable anchor). Hidden on mobile (`display: none`), shown as a row at
+  ≥ 768px. Hover: gray-900 text on gray-100.
 - **CTA:** "Open live demo" → `/login`, primary-600 pill, 36px tall.
 - **Mobile hamburger:** `#menu-toggle` button (40×40, `IconMenu`/`IconX`), dynamic
   `aria-label` ("Open/Close navigation menu") and `aria-expanded`. When open, the nav
@@ -72,8 +74,8 @@ authenticated app has no traditional footer.
 - H1: *"Client work, clearly owned."* (weight 800, `--text-4xl` mobile / 3.5rem desktop)
 - Description: *"Briefline connects client context, priorities, ownership, and change
   history in one focused workspace for small digital agencies."*
-- CTAs: primary "Open live demo" → `/login`; secondary "View case study" → `#engineering`
-  (outline).
+- CTAs: primary "Open live demo" → `/login`; secondary "View case study" → `#case-study`
+  (outline; T5.4 fixed this to match its own label — it previously pointed at `#engineering`).
 - Note (xs, gray-400): *"Try the administrator and member accounts. All data is fictional
   and resets daily."*
 - Screenshot: `hero-board.png` (see [§8 Screenshot](#8-screenshot)).
@@ -81,7 +83,10 @@ authenticated app has no traditional footer.
   `min-height: 80vh` and `padding-top: 140px` (120px on mobile). Image card: `--radius-lg`,
   `--shadow-lg`, 1px gray-200 border.
 
-### 4.2 Problem / Solution — `LAND-SEC-002` (`#product`, alt background)
+### 4.2 Problem / Solution — `LAND-SEC-002` (`#problem`, alt background)
+
+_(T5.4: this section moved from `#product` to `#problem` — the stable `#product` anchor
+now targets §4.4 Explore the product, the real product explorer.)_
 
 - Title: *"When client work lives everywhere"* — subtitle: *"Briefline replaces scattered
   spreadsheets and chat threads with one operational view."*
@@ -117,7 +122,10 @@ authenticated app has no traditional footer.
   `left: 19px`; each step has a 14px white dot with a 3px primary-600 border
   (`::before`, positioned off the left padding).
 
-### 4.4 Product Previews — `LAND-SEC-004` (alt background)
+### 4.4 Product Previews — `LAND-SEC-004` (`#product`, alt background)
+
+_(T5.4: `#product` is a zero-height anchor rendered as this section's first child — the
+section itself already owns `#explore-product`, used separately for tab-state deep links.)_
 
 - Title: *"Explore the product"* — subtitle: *"Real screens from the working application —
   not mockups."*
@@ -176,7 +184,7 @@ authenticated app has no traditional footer.
   Accessible alternative to drag-and-drop · PostgreSQL integration tests ·
   Negative authorization tests · Playwright end-to-end journeys · Daily demo reset.
 
-### 4.8 Case Study — `LAND-SEC-008` (alt background)
+### 4.8 Case Study — `LAND-SEC-008` (`#case-study`, alt background)
 
 - Title: *"About this case study"* — presented as a `<dl>` grid (2 columns; dt uppercase xs
   gray-400, dd sm gray-700):

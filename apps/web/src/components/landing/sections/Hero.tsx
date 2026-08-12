@@ -20,7 +20,9 @@ export function Hero() {
             <Link to="/login" className="landing-hero__cta-primary" onClick={() => void check()}>
               Open live demo
             </Link>
-            <a href="#engineering" className="landing-hero__cta-secondary">View case study</a>
+            {/* T5.4/FUN-004: the label says "case study", so it should land
+                on the actual #case-study anchor, not #engineering. */}
+            <a href="#case-study" className="landing-hero__cta-secondary">View case study</a>
           </div>
           {status === 'waking' && (
             <p className="landing-hero__note landing-hero__note--warmup" role="status">

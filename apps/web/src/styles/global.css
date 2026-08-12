@@ -20,9 +20,15 @@ html {
   /* Smooth anchor scrolling (landing page). Reduced-motion users get
      `auto` via the media query below. */
   scroll-behavior: smooth;
-  /* Offset for the landing's 56px sticky header so anchored sections
-     are not hidden underneath it. */
-  scroll-padding-top: 5rem;
+  /*
+   * Generic fallback offset for the landing's sticky header (T5.4/A11Y-LAND-003):
+   * per-section `scroll-margin-top` in Landing.css (using the real
+   * `--landing-header-height` token) is the precise mechanism for the
+   * landing's own anchors. This stays as a smaller safety-net default for
+   * any other in-app hash target that doesn't opt into its own
+   * scroll-margin-top.
+   */
+  scroll-padding-top: 2rem;
 }
 
 body {

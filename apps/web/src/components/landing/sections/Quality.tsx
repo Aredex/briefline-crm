@@ -51,25 +51,30 @@ export function Quality() {
         </div>
 
         <div className="landing-quality-layout">
-          <table className="landing-quality-matrix">
-            <caption className="sr-only">Four categories of test evidence and what each one demonstrates</caption>
-            <thead>
-              <tr>
-                <th scope="col">Evidence</th>
-                <th scope="col">What it demonstrates</th>
-                <th scope="col">Destination</th>
-              </tr>
-            </thead>
-            <tbody>
-              {PROOF_MATRIX.map((row) => (
-                <tr key={row.evidence}>
-                  <td>{row.evidence}</td>
-                  <td>{row.demonstrates}</td>
-                  <td>{row.destination}</td>
+          {/* T5.6/A11Y-LAND-012: scroll wrapper so the matrix scrolls
+              horizontally on narrow viewports instead of forcing the whole
+              page to (same pattern as .landing-roles-scroll in Permissions). */}
+          <div className="landing-quality-scroll">
+            <table className="landing-quality-matrix">
+              <caption className="sr-only">Four categories of test evidence and what each one demonstrates</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Evidence</th>
+                  <th scope="col">What it demonstrates</th>
+                  <th scope="col">Destination</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {PROOF_MATRIX.map((row) => (
+                  <tr key={row.evidence}>
+                    <td>{row.evidence}</td>
+                    <td>{row.demonstrates}</td>
+                    <td>{row.destination}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
           <aside className="landing-quality-evidence" aria-label="Quality evidence">
             <p className="landing-quality-evidence__label">Quality evidence</p>

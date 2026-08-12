@@ -10,7 +10,44 @@
          small text (eyebrow/data/labels) and is not preloaded to avoid delaying
          the hero H1 paint. Both are self-hosted, so this never touches Google Fonts. -->
     <link rel="preload" href="/fonts/archivo-variable-latin-wght.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
-    <title>Briefline CRM</title>
+    <title>Briefline CRM — Client work, clearly owned.</title>
+    <meta
+      name="description"
+      content="Briefline connects client context, priorities, ownership, and change history in one focused workspace for small digital agencies. A full-stack portfolio case study — try the live demo."
+    />
+
+    <!--
+      T5.5/FUN-008 — Open Graph + Twitter Card.
+      og:url uses the real Render deploy (README.md, D1's only confirmed real
+      URL — the GitHub repo isn't published yet, so no og:url/canonical
+      references it). og:image reuses board-overview@2x.webp from the F2
+      media pipeline (apps/web/public/media/): it shows the product (the
+      board, not the whole page reduced) with real content, matching
+      FUN-008's "product + headline, not the whole page" requirement.
+      LIMITATION: it's 2292x1630 (~1.4:1), not the recommended 1200x630
+      (1.91:1) OG crop — no image at that exact ratio exists yet (T2.2 only
+      generated the explorer's three tab crops). Documented here rather than
+      generating a dedicated crop, which is out of T5.5's scope.
+    -->
+    <meta property="og:title" content="Briefline CRM — Client work, clearly owned." />
+    <meta
+      property="og:description"
+      content="A full-stack CRM workflow case study: client context, priorities, ownership, and change history in one focused workspace for small digital agencies."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://briefline-crm.onrender.com" />
+    <meta property="og:image" content="https://briefline-crm.onrender.com/media/board-overview@2x.webp" />
+    <meta property="og:image:width" content="2292" />
+    <meta property="og:image:height" content="1630" />
+    <meta property="og:image:alt" content="Task board with backlog, pending, in progress, blocked, and completed columns" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Briefline CRM — Client work, clearly owned." />
+    <meta
+      name="twitter:description"
+      content="A full-stack CRM workflow case study: client context, priorities, ownership, and change history in one focused workspace for small digital agencies."
+    />
+    <meta name="twitter:image" content="https://briefline-crm.onrender.com/media/board-overview@2x.webp" />
   </head>
   <body>
     <div id="root"></div>
