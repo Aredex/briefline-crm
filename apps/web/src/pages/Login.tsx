@@ -10,6 +10,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { ApiError } from '../api/client'
+import { useDemoWarmup } from '../hooks/useDemoWarmup'
 import { useAuth } from '../providers/AuthProvider'
 import { Alert } from '../components/ui/Alert'
 import { Button } from '../components/ui/Button'
@@ -62,6 +63,8 @@ export function Login() {
   const [searchParams] = useSearchParams()
   const [error, setError] = useState<LoginError | null>(null)
   const [countdown, setCountdown] = useState(0)
+  const [prefilledRole, setPrefilledRole] = useState<'admin' | 'member' | null>(null)
+  const { status: warmupStatus, check: checkWarmup } = useDemoWarmup()
   const alertRef = useRef<HTMLDivElement>(null)
   const submitButtonRef = useRef<HTMLButtonElement>(null)
 
@@ -81,12 +84,30 @@ export function Login() {
     if (error) alertRef.current?.focus()
   }, [error])
 
+  // QA F5 (#1): this used to live in Hero/FinalCta, triggered by the demo
+  // CTA's onClick — but that click navigates to /login in the same tick,
+  // unmounting the landing before the first ping could ever resolve, so the
+  // "waking up" status never rendered anywhere. Login is where the visitor
+  // actually lands and waits, and it stays mounted for the whole check —
+  // check unconditionally on mount, not just for ?demo= arrivals, since an
+  // organic /login visit hits the same possibly-sleeping API.
+  useEffect(() => {
+    void checkWarmup()
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount.
+  }, [])
+
   const submit = async (values: LoginValues) => {
     setError(null)
     try {
       await login(values.email, values.password)
       const next = searchParams.get('next')
-      navigate(next && next.startsWith('/') ? next : '/dashboard', { replace: true })
+      // QA F5: `startsWith('/')` alone accepts `//host/...` and `/\host/...`,
+      // the two classic same-prefix redirect bypasses. Today's router version
+      // happens to normalize both back to same-origin, but that's the
+      // router's behavior, not this guard's — require a single leading slash
+      // explicitly so a future router bump can't silently reopen it.
+      const isSafeNext = next != null && next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/\\')
+      navigate(isSafeNext ? next : '/dashboard', { replace: true })
     } catch (caught) {
       if (caught instanceof ApiError) {
         if (caught.status === 401) setError({ kind: 'invalid' })
@@ -101,23 +122,34 @@ export function Login() {
     }
   }
 
-  const fillDemo = (email: string, password: string) => {
+  const fillDemo = (email: string, password: string, moveFocus: boolean) => {
     form.setValue('email', email, { shouldValidate: false })
     form.setValue('password', password, { shouldValidate: false })
     // Wireframe §2.1: picking a demo account fills the form and moves focus to
-    // Sign in, so one Enter finishes the flow.
-    submitButtonRef.current?.focus()
+    // Sign in, so one Enter finishes the flow. Only for a manual click, though
+    // — see the mount effect below for why the URL-driven prefill skips this.
+    if (moveFocus) submitButtonRef.current?.focus()
   }
 
   // FUN-002 / plan T5.2: /login?demo=admin|member (from the landing CTA)
-  // preselects the matching demo account. It only fills the form and moves
-  // focus to Sign in — it never submits on its own, the visitor still has to
-  // confirm explicitly.
+  // preselects the matching demo account. It only fills the form — it never
+  // submits on its own, the visitor still has to confirm explicitly.
+  //
+  // QA F5: does NOT move focus to Sign in like the manual demo-account
+  // buttons do. autoFocus already puts focus on the email field on mount;
+  // moving it to the submit button here would race that (this effect commits
+  // after autoFocus), landing an arriving screen-reader user on a submit
+  // button with no announced context, one stray Enter away from signing in
+  // with no idea why. The email field's already-focused, already-filled
+  // state is a safe, discoverable landing spot instead.
   useEffect(() => {
     const demo = searchParams.get('demo')
     if (demo !== 'admin' && demo !== 'member') return
     const account = DEMO_ACCOUNTS.find((candidate) => candidate.role === demo)
-    if (account) fillDemo(account.email, account.password)
+    if (account) {
+      fillDemo(account.email, account.password, false)
+      setPrefilledRole(account.role)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount, driven by the URL only.
   }, [])
 
@@ -156,6 +188,26 @@ export function Login() {
             </Alert>
           )}
         </div>
+
+        {prefilledRole && (
+          <p role="status" className="login-page__demo-prefilled">
+            {prefilledRole === 'admin' ? 'Administrator' : 'Member'} demo credentials filled in — review and sign in below.
+          </p>
+        )}
+
+        {/* FUN-003 cold start — see the useEffect above for why this lives
+            here and not on the landing CTA that linked here. */}
+        {warmupStatus === 'waking' && (
+          <p role="status" className="login-page__warmup">
+            The demo is waking up. This can take up to 60 seconds on the free hosting tier.
+          </p>
+        )}
+        {warmupStatus === 'failed' && (
+          <p role="status" className="login-page__warmup">
+            The demo is taking longer than usual to wake up. Signing in still works — it may just
+            take a little longer on the first try.
+          </p>
+        )}
 
         <Form form={form} onSubmit={submit} aria-label="Sign in form">
           <FormField form={form} name="email" label="Email address" required>
@@ -203,7 +255,7 @@ export function Login() {
                 <button
                   type="button"
                   className="login-page__demo-button"
-                  onClick={() => fillDemo(account.email, account.password)}
+                  onClick={() => fillDemo(account.email, account.password, true)}
                 >
                   <span>{account.label}</span>
                   <span className="login-page__demo-email">{account.email}</span>

@@ -1,5 +1,4 @@
 import { Link } from 'react-router'
-import { useDemoWarmup } from '../../../hooks/useDemoWarmup'
 
 /*
  * LAND-SEC-009: Final CTA (F3/T3.4)
@@ -8,8 +7,6 @@ import { useDemoWarmup } from '../../../hooks/useDemoWarmup'
  * rendered for it — not a disabled link, not a `#` placeholder.
  */
 export function FinalCta() {
-  const { status, check } = useDemoWarmup()
-
   return (
     <section className="landing-section" aria-labelledby="cta-title">
       <div className="landing-section__inner landing-cta">
@@ -19,30 +16,17 @@ export function FinalCta() {
           test ownership-based permissions. No registration required.
         </p>
         <div className="landing-cta__actions">
-          {/* FUN-003: the ping never blocks the click — it only informs it. */}
-          <Link to="/login?demo=admin" className="landing-link" onClick={() => void check()}>
-            Open administrator demo
-          </Link>
-          <Link
-            to="/login?demo=member"
-            className="landing-link landing-link--outline"
-            onClick={() => void check()}
-          >
+          <Link to="/login?demo=admin" className="landing-link">Open administrator demo</Link>
+          <Link to="/login?demo=member" className="landing-link landing-link--outline">
             Open member demo
           </Link>
         </div>
+        {/* QA F5 (#1): the cold-start status used to be tracked here too —
+            same dead-on-arrival problem as Hero (see its comment). It now
+            lives on Login.tsx, which is where the wait actually happens. */}
         <div className="landing-cta__notices">
           <p>Demo data resets daily.</p>
           <p>First load may take up to 60 seconds on the free hosting tier.</p>
-          {status === 'waking' && (
-            <p role="status">The demo is waking up. This can take up to 60 seconds.</p>
-          )}
-          {status === 'failed' && (
-            <p role="status">
-              Still waking up — the link works, but the first load may take a little longer than
-              usual.
-            </p>
-          )}
         </div>
       </div>
     </section>

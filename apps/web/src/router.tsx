@@ -8,7 +8,7 @@
  * Loaders run outside React, so they consult the module-level session store and
  * only hit the network on deep-link refreshes (session empty in memory).
  */
-import { lazy } from 'react'
+import { lazy, useEffect } from 'react'
 import { createBrowserRouter, redirect, useRouteError, type LoaderFunctionArgs } from 'react-router'
 import { api, ApiError } from './api/client'
 import type { UserResponse } from './api/types'
@@ -87,13 +87,44 @@ export async function loginLoader() {
 
 /* ---------- Route errors ---------- */
 
+// QA F5 (#7): T5.3's React.lazy() split means a tab left open across a
+// deploy references chunk hashes that no longer exist on the server (the
+// classic SPA "stale chunk" failure) — dynamic import() rejects with this
+// message shape in both Vite/Rollup and native ESM.
+const STALE_CHUNK_PATTERN = /Failed to fetch dynamically imported module|Importing a module script failed/i
+const STALE_CHUNK_RELOAD_KEY = 'briefline:stale-chunk-reload'
+
 export function RouteError() {
   const error = useRouteError()
-  const detail =
-    error instanceof Error ? error.message : 'Something went wrong while loading this page.'
+  const message = error instanceof Error ? error.message : String(error)
+  const isStaleChunk = STALE_CHUNK_PATTERN.test(message)
+
+  useEffect(() => {
+    if (!isStaleChunk) return
+    // Reload once automatically — a fresh index.html carries the new chunk
+    // hashes, so this actually recovers. Guarded in sessionStorage so a
+    // *permanently* broken chunk (bad deploy, not a stale tab) fails visibly
+    // after one attempt instead of reload-looping forever.
+    if (sessionStorage.getItem(STALE_CHUNK_RELOAD_KEY)) return
+    sessionStorage.setItem(STALE_CHUNK_RELOAD_KEY, '1')
+    window.location.reload()
+  }, [isStaleChunk])
+
+  if (isStaleChunk) {
+    return (
+      <main id="main" tabIndex={-1} className="app-shell__main app-shell__main--center">
+        <ErrorState
+          title="A new version was deployed"
+          message="Reloading to get the latest version…"
+          onRetry={() => window.location.reload()}
+        />
+      </main>
+    )
+  }
+
   return (
     <main id="main" tabIndex={-1} className="app-shell__main app-shell__main--center">
-      <ErrorState title="Could not load this page" message={detail} onRetry={() => window.location.reload()} />
+      <ErrorState title="Could not load this page" message={message} onRetry={() => window.location.reload()} />
     </main>
   )
 }

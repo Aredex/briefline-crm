@@ -14,7 +14,7 @@
  *  - ready: the health check answered inside the timeout.
  *  - failed: every retry inside the ~60s window was exhausted.
  */
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 const HEALTH_URL = '/api/v1/health'
 const REQUEST_TIMEOUT_MS = 4000
@@ -57,12 +57,18 @@ export function useDemoWarmup(): UseDemoWarmupResult {
   const [status, setStatus] = useState<DemoWarmupStatus>('idle')
   // Guards against overlapping calls if the visitor clicks more than once.
   const inFlight = useRef(false)
+  // QA F5 (#2): without this, a caller that unmounts mid-retry (navigating
+  // away again before the ~32s window closes) leaves setState calls firing
+  // on a dead component and the retry loop's sleep()s running for nothing.
+  const cancelled = useRef(false)
+  useEffect(() => () => { cancelled.current = true }, [])
 
   const check = useCallback(async () => {
-    if (inFlight.current) return
+    if (inFlight.current || cancelled.current) return
     inFlight.current = true
     try {
       const firstAttemptOk = await pingHealth()
+      if (cancelled.current) return
       if (firstAttemptOk) {
         setStatus('ready')
         return
@@ -72,14 +78,16 @@ export function useDemoWarmup(): UseDemoWarmupResult {
       for (let attempt = 1; attempt < MAX_ATTEMPTS; attempt += 1) {
         const delay = RETRY_DELAYS_MS[attempt - 1] ?? RETRY_DELAYS_MS[RETRY_DELAYS_MS.length - 1] ?? 5000
         await sleep(delay)
+        if (cancelled.current) return
         const ok = await pingHealth()
+        if (cancelled.current) return
         if (ok) {
           setStatus('ready')
           return
         }
       }
 
-      setStatus('failed')
+      if (!cancelled.current) setStatus('failed')
     } finally {
       inFlight.current = false
     }
