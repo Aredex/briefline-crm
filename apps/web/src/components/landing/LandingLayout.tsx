@@ -141,11 +141,20 @@ function PublicFooter() {
                 Re-add once a real URL exists; never a `#` stand-in (FUN-006). */}
             <a href="/accessibility">Accessibility</a>
           </div>
+          <div className="landing-footer__col">
+            <h3 className="landing-footer__heading">Author</h3>
+            <a href="https://alexcuesta.dev" target="_blank" rel="noreferrer">
+              alexcuesta.dev
+            </a>
+            <a href="https://www.linkedin.com/in/pacuestar/" target="_blank" rel="noreferrer">
+              LinkedIn
+            </a>
+          </div>
         </div>
       </div>
 
       <div className="landing-footer__bottom">
-        <p>© {year} Built as a portfolio case study. Inspired by a real freelance brief. Fictional company and data.</p>
+        <p>© {year} Built by Alex Cuesta as a portfolio case study. Inspired by a real freelance brief. Fictional company and data.</p>
         <p className="landing-footer__status">
           <span className="landing-footer__status-dot" aria-hidden="true" />
           v1.0.0 · Live demo
