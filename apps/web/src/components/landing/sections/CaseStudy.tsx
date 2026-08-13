@@ -4,8 +4,10 @@
  * scope line and an honesty line. "Read the full case study" points at the
  * English PRD (docs/02-prd.en.md) — the closest existing document to a case
  * study narrative; no standalone /case-study route exists yet (decision
- * recorded here rather than left as a TODO, plan T3.3).
+ * recorded here rather than left as a TODO, plan T3.3). Evidence-refs link
+ * to their GitHub blob view (see Engineering.tsx for the full reasoning).
  */
+import { repoFileUrl } from '../githubRepo'
 const MOMENTS = [
   {
     number: '01',
@@ -53,11 +55,25 @@ export function CaseStudy() {
         <div className="landing-evidence-ref-group">
           <p className="landing-evidence-ref">
             <span className="landing-evidence-ref__label">Read the full case study</span>
-            <code className="landing-evidence-ref__path">docs/02-prd.en.md</code>
+            <a
+              className="landing-evidence-ref__path"
+              href={repoFileUrl('docs/02-prd.en.md')}
+              target="_blank"
+              rel="noreferrer"
+            >
+              docs/02-prd.en.md
+            </a>
           </p>
           <p className="landing-evidence-ref">
             <span className="landing-evidence-ref__label">View the development plan</span>
-            <code className="landing-evidence-ref__path">docs/plans/04-development-plan.en.md</code>
+            <a
+              className="landing-evidence-ref__path"
+              href={repoFileUrl('docs/plans/04-development-plan.en.md')}
+              target="_blank"
+              rel="noreferrer"
+            >
+              docs/plans/04-development-plan.en.md
+            </a>
           </p>
         </div>
       </div>

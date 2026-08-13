@@ -5,6 +5,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { IconMenu, IconShield, IconX } from '../ui/icons'
+import { GITHUB_REPO_URL } from './githubRepo'
 
 /*
  * T5.4/FUN-004: stable hashes are `#product`, `#workflow`, `#engineering`,
@@ -137,8 +138,9 @@ function PublicFooter() {
           </div>
           <div className="landing-footer__col">
             <h3 className="landing-footer__heading">Project</h3>
-            {/* D1: the repo isn't published yet — no placeholder GitHub link.
-                Re-add once a real URL exists; never a `#` stand-in (FUN-006). */}
+            <a href={GITHUB_REPO_URL} target="_blank" rel="noreferrer">
+              GitHub
+            </a>
             <a href="/accessibility">Accessibility</a>
           </div>
           <div className="landing-footer__col">

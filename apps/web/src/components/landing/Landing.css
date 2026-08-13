@@ -1293,9 +1293,8 @@ html:has(.landing) {
   white-space: pre;
 }
 
-/* Evidence reference (not a link — see Engineering.tsx header comment):
-   the label names what the decision is backed by, the path shows exactly
-   where it lives in the repo. */
+/* Evidence reference: the label names what the decision is backed by, the
+   path links to that file's GitHub blob view. */
 .landing-evidence-ref {
   display: flex;
   flex-wrap: wrap;
@@ -1314,6 +1313,15 @@ html:has(.landing) {
   font-family: var(--landing-font-mono);
   font-size: var(--landing-text-eyebrow);
   color: var(--landing-muted);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  transition: color var(--duration-fast), text-decoration-color var(--duration-fast);
+}
+
+.landing-evidence-ref__path:hover,
+.landing-evidence-ref__path:focus-visible {
+  color: var(--landing-ink);
+  text-decoration-color: currentColor;
 }
 
 .landing-evidence-ref-group {

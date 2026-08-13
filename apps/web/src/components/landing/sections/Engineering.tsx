@@ -2,13 +2,12 @@
  * LAND-SEC-006: Engineering (F3/T3.1)
  * Replaces the flat technology <ul> (AUD-006) with a small architecture
  * diagram plus four decisions, each backed by a real file in this repo
- * (plan D3 — .claude/plans/* stays where it is). These are repo paths, not
- * <a href>s: the deployed SPA has no route that serves raw .md/.yaml files,
- * so a live anchor would 404 or silently reload the landing. Until D1 (repo
- * published on GitHub) resolves, they render as evidence-ref text — real
- * proof the decision exists on disk, without a broken clickable link
- * (audit §22 "no placeholder links" / FUN-006).
+ * (plan D3 — .claude/plans/* stays where it is). Evidence-refs link to the
+ * file's GitHub blob view (D1 resolved, repo public) rather than a route in
+ * this SPA: the deployed app has no handler for raw .md/.yaml files, so a
+ * same-origin anchor would 404 or silently reload the landing.
  */
+import { repoFileUrl } from '../githubRepo'
 interface Decision {
   title: string
   description: string
@@ -110,7 +109,14 @@ export function Engineering() {
               )}
               <p className="landing-evidence-ref">
                 <span className="landing-evidence-ref__label">{decision.evidence.label}</span>
-                <code className="landing-evidence-ref__path">{decision.evidence.href}</code>
+                <a
+                  className="landing-evidence-ref__path"
+                  href={repoFileUrl(decision.evidence.href)}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {decision.evidence.href}
+                </a>
               </p>
             </li>
           ))}
