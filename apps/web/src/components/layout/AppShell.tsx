@@ -30,7 +30,7 @@ const NAV_ITEMS: NavItem[] = [
 ]
 
 /** Landing-page spec: secondary "About this project" block at the end of the nav. */
-const GITHUB_REPO_URL = 'https://github.com/username/briefline-crm'
+const GITHUB_REPO_URL = 'https://github.com/Aredex/briefline-crm'
 const APP_VERSION = 'v1.0.0'
 
 /**
@@ -42,7 +42,7 @@ function AppAbout({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <div className="app-about">
       <NavLink to="/" end className="app-about__link" onClick={onNavigate}>
-        About this project
+        About
       </NavLink>
       <a
         href="/api/docs"

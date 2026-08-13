@@ -3,9 +3,11 @@
 **Task & client management for small creative teams.**  
 A portfolio case study built with NestJS, React, PostgreSQL, and TypeScript.
 
-[![CI](https://github.com/username/briefline-crm/actions/workflows/ci.yml/badge.svg)](https://github.com/username/briefline-crm/actions/workflows/ci.yml)
-[![Deploy](https://img.shields.io/badge/deploy-Render-2b6eb2)](https://briefline-crm.onrender.com)
-[![PRD](docs/02-prd.en.md)](docs/02-prd.en.md)
+[![CI](https://github.com/Aredex/briefline-crm/actions/workflows/ci.yml/badge.svg)](https://github.com/Aredex/briefline-crm/actions/workflows/ci.yml)
+[![Live demo](https://img.shields.io/badge/live%20demo-briefline.alexcuesta.dev-2b6eb2)](https://briefline.alexcuesta.dev)
+[![PRD](https://img.shields.io/badge/docs-PRD-6b7280)](docs/02-prd.en.md)
+
+**Live demo:** [briefline.alexcuesta.dev](https://briefline.alexcuesta.dev) — log in with the [demo credentials](#demo-credentials-local-only) below.
 
 ---
 
@@ -56,7 +58,9 @@ pnpm --filter @briefline/api tsx prisma/seed.ts
 pnpm dev
 ```
 
-### Demo Credentials (local only)
+### Demo Credentials
+
+Same accounts work locally and on the [live demo](https://briefline.alexcuesta.dev) — the production database is reset daily (see [Free Tier Limitations](#️-free-tier-limitations)).
 
 | Role | Email | Password |
 |---|---|---|
@@ -185,11 +189,15 @@ Test matrix: `.claude/plans/test-matrix.md`
 
 ## Deployment
 
+Split-origin topology: the SPA and API are on different hosts, bridged by a Cloudflare Pages Function so the browser only ever talks to `briefline.alexcuesta.dev` — required because the session cookie is `__Host-` prefixed with `SameSite=Lax` (same-origin only).
+
 | Service | Provider | Plan | Region |
 |---|---|---|---|
-| API + SPA | Render | Free | Frankfurt (eu-central-1) |
-| Database | Neon | Free | eu-central-1 |
+| SPA | Cloudflare Pages | Free | Global edge |
+| API | Render | Free | Ohio (us-east-2) |
+| Database | Neon | Free | us-east-2 |
 
+- **Frontend:** `briefline.alexcuesta.dev` (Cloudflare Pages) — `apps/web/functions/api/[[path]].js` proxies `/api/*` to the Render API at the edge
 - **Build:** `pnpm run render-build` (install → build web → build API)
 - **Start:** `prisma migrate deploy && node dist/main.js`
 - **Health:** `GET /api/v1/health`
@@ -233,4 +241,4 @@ This is a portfolio project. Not licensed for production use.
 
 ---
 
-Built with [Claude Code](https://claude.com/claude-code) · 17 multi-agent phases · ~290h agent-time
+Built by [Alex Cuesta](https://alexcuesta.dev) ([LinkedIn](https://www.linkedin.com/in/pacuestar/)) with [Claude Code](https://claude.com/claude-code) · 17 multi-agent phases · ~290h agent-time
