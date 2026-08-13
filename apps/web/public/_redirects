@@ -1,12 +1,10 @@
-# Cloudflare Pages proxy — keeps briefline.alexcuesta.dev as the single
-# browser-visible origin. The app's auth cookie is __Host- prefixed with
-# SameSite=Lax (apps/api/src/modules/auth/auth.constants.ts): it only works
-# same-origin, so /api/* is proxied (status 200 = proxy, not a redirect) to
-# the Render API instead of served cross-origin.
-/api/*  https://briefline-crm.onrender.com/api/:splat  200
+# /api/* is handled by functions/api/[[path]].js, not here — Cloudflare
+# Pages' 200-status _redirects rewrite only targets paths inside this same
+# project, it cannot proxy to an external absolute URL (that's a
+# Netlify-only feature). See that file for why the proxy exists at all.
 
 # SPA fallback: React Router (Data Mode) client-side routes like /tasks/:id
 # have no matching static file — serve index.html and let the router resolve
-# them. Cloudflare Pages checks real static assets first, so this only
-# catches paths with no matching file.
+# them. Cloudflare Pages checks real static assets and Functions first, so
+# this only catches paths with no matching file.
 /*  /index.html  200
