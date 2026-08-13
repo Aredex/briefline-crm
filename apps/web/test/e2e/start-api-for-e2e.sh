@@ -1,15 +1,10 @@
 #!/usr/bin/env bash
-# E2E API boot (INT-002/003) — the repo's `pnpm dev` cannot boot the API
-# under Node 24:
-#   1. `nest build` hoists rootDir (the app imports the generated Prisma
-#      client from packages/api-contract/src/...), so the entry lands at
-#      dist/apps/api/src/main.js while the `start` script hardcodes
-#      dist/main.
-#   2. The emitted client.js carries `import.meta.url` inside otherwise-CJS
-#      code; Node 24's module detection treats the file as ESM and crashes
-#      with "exports is not defined in ES module scope".
-# This script builds from source and patches the emitted artifact (dist/ is
-# regenerable — source is untouched), then runs the real server.
+# E2E API boot (INT-002/003) — normal boot sequence: deploy migrations, reset
+# the database to a known fixture state, build the API, run the compiled
+# server. The Prisma client lives inside apps/api/src (render-build-path-fix
+# plan, ADR-005), so the build lands at the expected dist/main.js and the
+# generated client is plain CJS — no rootDir hoist and no ESM/CJS patching
+# needed anymore.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../../../.." && pwd)"
@@ -23,14 +18,4 @@ pnpm --filter @briefline/api prisma:deploy
 pnpm --filter @briefline/api prisma:reset
 pnpm --filter @briefline/api build
 
-CLIENT_JS="apps/api/dist/packages/api-contract/src/generated/prisma/client.js"
-test -f "$CLIENT_JS" || {
-  echo "E2E boot: expected $CLIENT_JS from the build, missing — check the build output" >&2
-  exit 1
-}
-sed -i.bak \
-  "s|globalThis\['__dirname'\] = path.dirname((0, node_url_1.fileURLToPath)(import.meta.url));|globalThis['__dirname'] = __dirname;|" \
-  "$CLIENT_JS"
-rm -f "${CLIENT_JS}.bak"
-
-exec node apps/api/dist/apps/api/src/main.js
+exec node apps/api/dist/main.js

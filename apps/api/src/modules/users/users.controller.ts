@@ -25,7 +25,7 @@ import {
 } from '@nestjs/common'
 import type { Request, Response } from 'express'
 import { Roles } from '../auth/decorators/roles.decorator'
-import { UserRole } from '../../../../../packages/api-contract/src/generated/prisma/client'
+import { UserRole } from '../../generated/prisma/client'
 import { UsersService } from './users.service'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'

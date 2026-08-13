@@ -10,7 +10,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { createTestApp } from '../helpers/test-app'
 import { USERS, dockerAvailable, seedBaseUsers, startTestDb, truncateAll, type TestDb } from '../helpers/fixtures'
 import { loginAs, newAgent, type AuthSession } from '../helpers/auth-flow'
-import type { TaskPriority, TaskStatus } from '../../../../../packages/api-contract/src/generated/prisma/client'
+import type { TaskPriority, TaskStatus } from '../../../src/generated/prisma/client'
 
 const CLIENT_ID = 'aaaaaaaa-aaaa-4000-8000-000000000101'
 

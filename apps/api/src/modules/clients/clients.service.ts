@@ -25,7 +25,7 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common'
-import { Prisma } from '../../../../../packages/api-contract/src/generated/prisma/client'
+import { Prisma } from '../../generated/prisma/client'
 import type { AuthUser } from '../auth/auth.types'
 import { CustomLogger } from '../../common/logger/custom.logger'
 import { PrismaService } from '../../database/prisma.service'

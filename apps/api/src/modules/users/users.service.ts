@@ -14,7 +14,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common'
-import { Prisma, UserRole } from '../../../../../packages/api-contract/src/generated/prisma/client'
+import { Prisma, UserRole } from '../../generated/prisma/client'
 import { CustomLogger } from '../../common/logger/custom.logger'
 import { PrismaService } from '../../database/prisma.service'
 import { hashPassword } from '../auth/utils/argon2.util'

@@ -5,7 +5,7 @@
 // string the OpenAPI declares (ADR-003), and TaskChange entries gain their
 // derived version (D-5: version = 1 + index in createdAt order). Every response
 // path MUST go through here — never the raw Prisma model.
-import type { Task, TaskChange, TaskChangeEvent } from '../../../../../packages/api-contract/src/generated/prisma/client'
+import type { Task, TaskChange, TaskChangeEvent } from '../../generated/prisma/client'
 import type { TaskChangeResponse, TaskResponse, TaskSummary } from './dto/task-response.dto'
 
 export interface UserRefShape {

@@ -27,6 +27,11 @@ playwright/.cache/
 # NOTE: packages/api-contract/src/generated/api-types.ts is intentionally NOT
 # ignored — generated contract types are checked in (ADR-005, REP-006) and
 # regeneration must produce no diff.
+#
+# The same applies to apps/api/src/generated/prisma/** — the generated Prisma
+# client (moved inside apps/api by the render-build-path-fix plan, ADR-005)
+# is also checked in, not ignored, and `prisma generate` must be deterministic
+# (no diff) for the same reason.
 
 # OS
 .DS_Store

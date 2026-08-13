@@ -2,7 +2,16 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "noEmit": false,
-    "sourceMap": true
+    "sourceMap": true,
+    // Guard against the build rootDir hoist that broke the compiled
+    // entrypoint (render-build-path-fix plan): without an explicit rootDir,
+    // tsc infers it from the common ancestor of every file reached by
+    // import, so a single relative import crossing outside src/ silently
+    // pushes the emit layout up to the repo root (dist/apps/api/src/main.js
+    // instead of dist/main.js). Declaring rootDir turns any future import
+    // that escapes src/ into a compile error (TS6059) instead of a silent
+    // layout change.
+    "rootDir": "./src"
   },
   "exclude": ["node_modules", "dist", "test", "**/*.spec.ts", "**/*.e2e-spec.ts"]
 }

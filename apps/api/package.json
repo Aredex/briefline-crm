@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "nest start --watch",
     "build": "nest build",
+    "postbuild": "node -e \"require('node:fs').accessSync('dist/main.js')\"",
     "start": "node dist/main",
     "start:prod": "node dist/main",
     "start:deploy": "prisma migrate deploy && node dist/main.js",

@@ -5,7 +5,7 @@
 // validation with a 400 VALIDATION_ERROR instead of silently passing through.
 import { Type } from 'class-transformer'
 import { IsEnum, IsInt, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator'
-import { UserRole, UserStatus } from '../../../../../../packages/api-contract/src/generated/prisma/client'
+import { UserRole, UserStatus } from '../../../generated/prisma/client'
 
 export class UserQueryDto {
   @IsOptional()

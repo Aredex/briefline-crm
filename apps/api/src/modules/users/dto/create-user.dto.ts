@@ -5,7 +5,7 @@
 // before persistence. role/status default to MEMBER/ACTIVE.
 import { Transform } from 'class-transformer'
 import { IsEmail, IsEnum, IsOptional, IsString, Length, MaxLength } from 'class-validator'
-import { UserRole, UserStatus } from '../../../../../../packages/api-contract/src/generated/prisma/client'
+import { UserRole, UserStatus } from '../../../generated/prisma/client'
 import { normalizeEmail } from '../../auth/utils/normalize-email'
 
 export class CreateUserDto {

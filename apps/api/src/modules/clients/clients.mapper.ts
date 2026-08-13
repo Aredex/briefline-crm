@@ -4,7 +4,7 @@
 // the API contract: `createdById` becomes the resolved `createdBy` user ref,
 // and no internal columns leak into responses. Every response path MUST go
 // through it.
-import type { Client as PrismaClient, ClientChange } from '../../../../../packages/api-contract/src/generated/prisma/client'
+import type { Client as PrismaClient, ClientChange } from '../../generated/prisma/client'
 import type { ClientChangeResponse, ClientResponse, TaskSummary } from './dto/client-response.dto'
 
 export type ClientWithCreator = PrismaClient & { creator: { id: string; name: string } }

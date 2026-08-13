@@ -4,7 +4,7 @@
 // contract: the raw `clientId` FK becomes the resolved `client` { id,
 // companyName } ref, and no internal columns leak into responses. Every
 // response path MUST go through it.
-import type { Contact as PrismaContact } from '../../../../../packages/api-contract/src/generated/prisma/client'
+import type { Contact as PrismaContact } from '../../generated/prisma/client'
 import type { ContactResponse } from './dto/contact-response.dto'
 
 export type ContactWithClient = PrismaContact & { client: { id: string; companyName: string } }

@@ -6,7 +6,7 @@
 // changes take effect immediately — AP-06, no stale-token role trust).
 import { ForbiddenException, Injectable, type CanActivate, type ExecutionContext } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
-import type { UserRole } from '../../../../../../packages/api-contract/src/generated/prisma/client'
+import type { UserRole } from '../../../generated/prisma/client'
 import type { AuthUser } from '../auth.types'
 import { ROLES_KEY } from '../decorators/roles.decorator'
 

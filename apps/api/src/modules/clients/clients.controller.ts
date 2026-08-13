@@ -32,7 +32,7 @@ import {
 import type { Response } from 'express'
 import { CurrentUser } from '../auth/decorators/current-user.decorator'
 import { Roles } from '../auth/decorators/roles.decorator'
-import { UserRole } from '../../../../../packages/api-contract/src/generated/prisma/client'
+import { UserRole } from '../../generated/prisma/client'
 import type { AuthUser } from '../auth/auth.types'
 import { ClientsService } from './clients.service'
 import { ClientQueryDto } from './dto/client-query.dto'

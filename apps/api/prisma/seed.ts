@@ -14,7 +14,7 @@
 // (tsx prisma/seed.ts, DATABASE_URL = Neon pooled URL at runtime).
 import { pathToFileURL } from 'node:url'
 import { PrismaPg } from '@prisma/adapter-pg'
-import { PrismaClient } from '../../../packages/api-contract/src/generated/prisma/client'
+import { PrismaClient } from '../src/generated/prisma/client'
 
 // ---------------------------------------------------------------------------
 // Demo password and precomputed hash

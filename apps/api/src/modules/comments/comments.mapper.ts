@@ -3,7 +3,7 @@
 // The single place where Prisma Comment rows become the API contract: the raw
 // authorId FK becomes the resolved `author` { id, name } ref. Every response
 // path MUST go through here — never the raw Prisma model.
-import type { Comment } from '../../../../../packages/api-contract/src/generated/prisma/client'
+import type { Comment } from '../../generated/prisma/client'
 import type { CommentResponse, TaskComment } from './dto/comment-response.dto'
 
 export interface UserRefShape {

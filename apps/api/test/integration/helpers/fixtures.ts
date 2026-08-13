@@ -15,7 +15,7 @@ import {
   UserRole,
   UserStatus,
   type User,
-} from '../../../../../packages/api-contract/src/generated/prisma/client'
+} from '../../../src/generated/prisma/client'
 
 export const DEMO_PASSWORD = 'briefline-demo-2026'
 // argon2id PHC for DEMO_PASSWORD, precomputed — same string as prisma/seed.ts.

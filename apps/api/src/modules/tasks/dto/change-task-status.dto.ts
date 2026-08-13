@@ -7,7 +7,7 @@
 // append-only history (BR-011). `expectedVersion` is REQUIRED (ADR-004).
 import { Transform } from 'class-transformer'
 import { IsEnum, IsInt, IsOptional, IsString, MaxLength, Min } from 'class-validator'
-import { TaskStatus } from '../../../../../../packages/api-contract/src/generated/prisma/client'
+import { TaskStatus } from '../../../generated/prisma/client'
 
 const trimString = ({ value }: { value: unknown }): unknown =>
   typeof value === 'string' ? value.trim() : value

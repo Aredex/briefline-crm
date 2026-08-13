@@ -4,7 +4,7 @@
 // (JWT sub -> fresh DB row per request), never from client-supplied ids — the
 // resource is implicitly scoped to the requester (AP-05).
 import { Injectable, NotFoundException } from '@nestjs/common'
-import type { User as PrismaUser } from '../../../../../packages/api-contract/src/generated/prisma/client'
+import type { User as PrismaUser } from '../../generated/prisma/client'
 import { PrismaService } from '../../database/prisma.service'
 import type { UserWithoutPassword } from './profile.types'
 import type { UpdateProfileDto } from './dto/update-profile.dto'

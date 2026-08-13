@@ -8,7 +8,7 @@
 // the service enforces that per-actor.
 import { Type } from 'class-transformer'
 import { IsEnum, IsInt, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator'
-import { ClientStatus } from '../../../../../../packages/api-contract/src/generated/prisma/client'
+import { ClientStatus } from '../../../generated/prisma/client'
 
 export class ClientQueryDto {
   @IsOptional()

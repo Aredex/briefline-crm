@@ -1,7 +1,7 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { PrismaPg } from '@prisma/adapter-pg'
-import { PrismaClient } from '../../../../packages/api-contract/src/generated/prisma/client'
+import { PrismaClient } from '../generated/prisma/client'
 
 /**
  * Single injected Prisma client lifecycle for the whole API (PH-03 DB-001).

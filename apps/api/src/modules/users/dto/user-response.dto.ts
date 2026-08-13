@@ -2,7 +2,7 @@
 //
 // UserResponse NEVER carries passwordHash (PH-04 constraint, D-19/ADR-001.4).
 // List endpoints wrap rows in the `{ data: UserResponse[], meta }` envelope.
-import type { UserRole, UserStatus } from '../../../../../../packages/api-contract/src/generated/prisma/client'
+import type { UserRole, UserStatus } from '../../../generated/prisma/client'
 
 export interface UserResponse {
   id: string

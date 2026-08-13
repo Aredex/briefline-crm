@@ -14,7 +14,7 @@
 // These pure predicates are the ONLY authorization surface for tasks — every
 // read/write path in TasksService routes through them inside the mutation
 // transaction, so authorization and mutation commit atomically (TASK-API-008).
-import type { UserRole } from '../../../../../packages/api-contract/src/generated/prisma/client'
+import type { UserRole } from '../../generated/prisma/client'
 
 export interface TaskRowLike {
   archivedAt: Date | null

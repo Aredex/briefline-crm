@@ -8,7 +8,7 @@ import type {
   TaskChangeEvent,
   TaskPriority,
   TaskStatus,
-} from '../../../../../../packages/api-contract/src/generated/prisma/client'
+} from '../../../generated/prisma/client'
 import type { TaskComment } from '../../comments/dto/comment-response.dto'
 import type { TaskLabelRef } from '../../labels/dto/label-response.dto'
 

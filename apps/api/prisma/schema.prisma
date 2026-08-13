@@ -1,8 +1,16 @@
 // schema.prisma
 // Location: apps/api/prisma/schema.prisma (PH-02 workspace layout, ADR-005).
-// Generated client output target: packages/api-contract/src/generated/prisma
-// (DATA-001 spec). If the schema lives at a different depth, adjust the
-// relative path depth but keep the destination package.
+// Generated client output target: apps/api/src/generated/prisma. The client
+// lives inside apps/api on purpose (render-build-path-fix plan, ADR-005): it
+// is an implementation detail with zero consumers outside this package — the
+// public integration contract stays openapi.yaml + api-types.ts only. Moving
+// it out of packages/api-contract also removes a cross-package relative
+// import that used to force tsc to hoist the build rootDir to the repo root,
+// which broke the compiled entrypoint path.
+// moduleFormat = "cjs" is explicit (not inferred) because Prisma 7.9.1 with
+// tsconfig module=NodeNext otherwise emits ESM (import.meta.url), which
+// crashes a CommonJS Nest build under Node 24 ("exports is not defined in ES
+// module scope").
 // Prisma 7.9.1: generator "prisma-client" is the Rust-free client; the
 // @prisma/adapter-pg driver adapter is REQUIRED at runtime and is configured
 // in code (PrismaService), not here. previewFeatures is empty in v7 — no
@@ -10,7 +18,8 @@
 
 generator client {
   provider        = "prisma-client"
-  output          = "../../../packages/api-contract/src/generated/prisma"
+  output          = "../src/generated/prisma"
+  moduleFormat    = "cjs"
   previewFeatures = []
 }
 

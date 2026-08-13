@@ -11,7 +11,7 @@
 // instead of being silently truncated.
 import { Transform } from 'class-transformer'
 import { IsDate, IsEnum, IsInt, IsOptional, IsString, IsUUID, Length, Max, MaxLength, Min } from 'class-validator'
-import { TaskPriority, TaskStatus } from '../../../../../../packages/api-contract/src/generated/prisma/client'
+import { TaskPriority, TaskStatus } from '../../../generated/prisma/client'
 
 const trimString = ({ value }: { value: unknown }): unknown =>
   typeof value === 'string' ? value.trim() : value

@@ -6,7 +6,7 @@
 //     (archivedAt IS NULL AND status NOT IN [COMPLETED])
 //   - created:  open tasks created by the user that are not yet completed
 //     (archivedAt IS NULL AND status != COMPLETED)
-import type { TaskPriority, TaskStatus } from '../../../../../../packages/api-contract/src/generated/prisma/client'
+import type { TaskPriority, TaskStatus } from '../../../generated/prisma/client'
 
 export interface TaskSummary {
   id: string

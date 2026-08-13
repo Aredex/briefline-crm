@@ -29,7 +29,7 @@ import {
   Res,
 } from '@nestjs/common'
 import type { Response } from 'express'
-import { UserRole } from '../../../../../packages/api-contract/src/generated/prisma/client'
+import { UserRole } from '../../generated/prisma/client'
 import { CurrentUser } from '../auth/decorators/current-user.decorator'
 import { Roles } from '../auth/decorators/roles.decorator'
 import type { AuthUser } from '../auth/auth.types'

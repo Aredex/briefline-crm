@@ -8,7 +8,7 @@
 // Run with: pnpm --filter @briefline/api prisma:reset
 // (tsx prisma/reset.ts)
 import { PrismaPg } from '@prisma/adapter-pg'
-import { PrismaClient } from '../../../packages/api-contract/src/generated/prisma/client'
+import { PrismaClient } from '../src/generated/prisma/client'
 import { runSeed } from './seed'
 
 // TRUNCATE is DDL — Neon's pooled (pgbouncer transaction-mode) URL rejects it.

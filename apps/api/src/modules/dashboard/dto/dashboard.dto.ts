@@ -1,5 +1,5 @@
 // Dashboard response shapes — TASK-API-011 (PH-06, FR-DASH-001..003).
-import type { TaskChangeEvent } from '../../../../../../packages/api-contract/src/generated/prisma/client'
+import type { TaskChangeEvent } from '../../../generated/prisma/client'
 import type { PageMeta, TaskSummary } from '../../tasks/dto/task-response.dto'
 
 /** GET /dashboard/kpis — server-side counts over all active tasks (DASH-001). */

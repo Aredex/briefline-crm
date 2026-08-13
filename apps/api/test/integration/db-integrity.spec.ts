@@ -12,7 +12,7 @@ import { execFileSync } from 'node:child_process'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql'
 import { PrismaPg } from '@prisma/adapter-pg'
-import { PrismaClient } from '../../../../packages/api-contract/src/generated/prisma/client'
+import { PrismaClient } from '../../src/generated/prisma/client'
 
 // ---------------------------------------------------------------------------
 // Docker availability gate

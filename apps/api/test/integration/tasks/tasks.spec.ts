@@ -18,7 +18,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { createTestApp } from '../helpers/test-app'
 import { USERS, dockerAvailable, seedBaseUsers, startTestDb, truncateAll, type TestDb } from '../helpers/fixtures'
 import { loginAs, newAgent, type AuthSession } from '../helpers/auth-flow'
-import { Prisma, type TaskPriority, type TaskStatus } from '../../../../../packages/api-contract/src/generated/prisma/client'
+import { Prisma, type TaskPriority, type TaskStatus } from '../../../src/generated/prisma/client'
 
 const DAY = 24 * 3_600_000
 

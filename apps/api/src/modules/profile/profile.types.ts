@@ -1,5 +1,5 @@
 // Public user shape for profile responses — never contains passwordHash (PH-04).
-import type { UserRole, UserStatus } from '../../../../../packages/api-contract/src/generated/prisma/client'
+import type { UserRole, UserStatus } from '../../generated/prisma/client'
 
 export interface UserWithoutPassword {
   id: string

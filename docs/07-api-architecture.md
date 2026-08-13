@@ -397,7 +397,7 @@ Hidden resources are indistinguishable from missing ones: a member requesting an
 
 ## 6. Data Model
 
-Location: `apps/api/prisma/schema.prisma` (Prisma 7.9.1, generated client output to `packages/api-contract/src/generated/prisma`).
+Location: `apps/api/prisma/schema.prisma` (Prisma 7.9.1, generated client output to `apps/api/src/generated/prisma` — moved inside `apps/api` by the render-build-path-fix plan, ADR-005; it has no consumers outside this package, so the integration contract stays `openapi.yaml` + `api-types.ts` only).
 
 ### 6.1 Enums
 

@@ -1,5 +1,5 @@
 // Auth shared types — ADR-001.
-import type { UserRole, UserStatus } from '../../../../../packages/api-contract/src/generated/prisma/client'
+import type { UserRole, UserStatus } from '../../generated/prisma/client'
 
 /** Decoded JWT payload claims (verified by the strategy, ADR-001). */
 export interface JwtPayload {

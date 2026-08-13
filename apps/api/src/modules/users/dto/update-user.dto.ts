@@ -5,7 +5,7 @@
 // present — the service rejects an empty object with 400 VALIDATION_ERROR.
 import { Transform } from 'class-transformer'
 import { IsEnum, IsOptional, IsString, Length } from 'class-validator'
-import { UserRole, UserStatus } from '../../../../../../packages/api-contract/src/generated/prisma/client'
+import { UserRole, UserStatus } from '../../../generated/prisma/client'
 
 export class UpdateUserDto {
   @IsOptional()

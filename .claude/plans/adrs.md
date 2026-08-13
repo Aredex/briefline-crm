@@ -232,3 +232,28 @@ DEC-031: monorepo with `apps/web`, `apps/api`, and a versioned OpenAPI contract 
 - **Hand-written shared types package:** rejected — drift risk; deterministic generation from OpenAPI is the guard (REP-006, "no third hand-written shared model").
 - **Separate frontend origin with CORS credentials:** rejected — DEC-036; same-origin removes cookie/CORS complexity and matches the free-tier single-service deployment.
 - **npm/yarn workspaces:** rejected — pnpm is pinned by PH-00 (v10) for deterministic frozen-lockfile installs and filter-based orchestration.
+
+### Update (2026-08-13): Prisma client relocated inside `apps/api`
+
+The generated Prisma client moved from `packages/api-contract/src/generated/prisma` to
+`apps/api/src/generated/prisma` (`render-build-path-fix` plan). This does **not** amend
+decision 2 above: the client was never part of the contract package's public surface
+(`exports` map only ever exposed `api-types.ts` and `openapi.yaml`), so the integration
+boundary is unchanged — it remains `openapi.yaml` + generated `api-types.ts` only, and no
+package outside `apps/api` ever consumed `generated/prisma`.
+
+**Why it moved:** `apps/api`'s cross-package relative import into
+`packages/api-contract/src/generated/prisma` forced `tsc` to infer the build `rootDir` as
+the repo root (no explicit `rootDir` was declared), which pushed the compiled entrypoint to
+`dist/apps/api/src/main.js` instead of the `dist/main.js` every start script assumed —
+the direct cause of the Render deploy `MODULE_NOT_FOUND` failure. Moving the client inside
+`apps/api/src` collapses the build's common ancestor back to `src/`, and
+`apps/api/tsconfig.build.json` now declares `rootDir: "./src"` explicitly as a guard: any
+future import that escapes `src/` becomes a compile error (`TS6059`) instead of a silent
+layout change. The regenerated client also sets `moduleFormat = "cjs"` in the Prisma
+generator block, removing an unrelated `import.meta.url` ESM/CJS crash under Node 24.
+
+This is a local path change with zero external consumers, exactly the kind of move
+`.claude/plans/data-model.md:369` pre-authorized ("if ARCH/BE move the client inside
+`apps/api`, that is a local path change only — but register it in the plan/ADR-005"). See
+`.claude/plans/render-build-path-fix-plan.md` for the full diagnosis and change list.

@@ -15,16 +15,21 @@ Schema, migración inicial, seed y reset del demo data.
 ## Generación del cliente
 
 El generator `prisma-client` (Prisma 7, sin runtime Rust) tiene `output` obligatorio;
-aquí apunta a `../../packages/api-contract/src/generated/prisma` (fuera de `apps/api`).
+aquí apunta a `../src/generated/prisma` (dentro de `apps/api`, ADR-005 —
+render-build-path-fix plan). `moduleFormat = "cjs"` es explícito: sin él, Prisma
+7.9.1 con `tsconfig` en `module: NodeNext` emite ESM (`import.meta.url`), que
+revienta un build Nest/CJS bajo Node 24.
 
 ```bash
 pnpm --filter @briefline/api prisma:generate
 ```
 
-> **Advertencia (TS6059 / layout de emit):** importar el cliente desde fuera de
-> `apps/api` es intencional (contrato compartido, un solo client — AP-37), pero
-> puede provocar avisos de `noEmit`/layout en algunos setups de `tsc`. Resuelto
-> para PH-04/ARCH si aparece en `verify_cmd`.
+El cliente vive dentro de `apps/api` porque es un detalle de implementación sin
+consumidores externos — `packages/api-contract` nunca lo exportó en su `exports`
+map. Mantenerlo fuera de `apps/api/src` obligaba a `tsc` a hoistear el `rootDir`
+del build a la raíz del repo (el entrypoint compilado dejaba de ser
+`dist/main.js`); con el cliente dentro de `src/`, `tsconfig.build.json` declara
+`rootDir: "./src"` como guardia explícita contra ese hoist.
 
 ## Migraciones en dev
 

@@ -4,7 +4,7 @@
 // through the mapper (clients.mapper.ts) into these envelopes. The Prisma
 // model carries `createdById`; the API exposes the resolved `createdBy`
 // { id, name } user reference instead.
-import type { ClientStatus } from '../../../../../../packages/api-contract/src/generated/prisma/client'
+import type { ClientStatus } from '../../../generated/prisma/client'
 import type { TaskSummary } from '../../users/dto/deactivation-impact.dto'
 import type { ContactResponse } from '../../contacts/dto/contact-response.dto'
 

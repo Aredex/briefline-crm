@@ -14,7 +14,7 @@
 // non-date dueBefore/dueAfter fails validation instead of passing through.
 import { Transform, Type } from 'class-transformer'
 import { IsDate, IsEnum, IsIn, IsInt, IsOptional, IsString, IsUUID, Max, MaxLength, Min } from 'class-validator'
-import { TaskPriority, TaskStatus } from '../../../../../../packages/api-contract/src/generated/prisma/client'
+import { TaskPriority, TaskStatus } from '../../../generated/prisma/client'
 
 const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/
 
