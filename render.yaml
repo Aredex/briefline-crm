@@ -2,13 +2,20 @@
 # https://render.com/docs/blueprint-spec
 #
 # Deploy: connect GitHub repo → Render → "Blueprints" → select this file.
-# The API serves the Vite SPA through Nest ServeStaticModule (OPS-001).
-
+#
+# Split-origin deploy (Aug 2026): the API serves the SPA build via Nest
+# ServeStaticModule (OPS-001) as a fallback, but the actual browser-facing
+# origin is Cloudflare Pages (briefline.alexcuesta.dev) — see
+# apps/web/public/_redirects, which proxies /api/* here so the app's __Host-
+# prefixed, SameSite=Lax auth cookie still binds to a single origin. CORS_ORIGINS
+# below matches that Cloudflare Pages origin, not this service's own domain,
+# because OriginValidationMiddleware checks the browser's original Origin
+# header, which the proxy forwards unchanged.
 services:
   - type: web
     name: briefline-crm
     env: node
-    region: frankfurt
+    region: ohio # matches the Neon Postgres project's aws-us-east-2 region
     plan: free
     buildCommand: pnpm run render-build
     startCommand: pnpm --filter @briefline/api start:deploy
@@ -28,4 +35,4 @@ services:
       - key: CSRF_SECRET
         sync: false
       - key: CORS_ORIGINS
-        value: https://briefline-crm.onrender.com
+        value: https://briefline.alexcuesta.dev
