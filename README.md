@@ -136,7 +136,7 @@ Base: `/api/v1`
 | Dashboard | `GET /dashboard/kpis`, `GET /dashboard/my-tasks`, `GET /dashboard/recent-activity` | Auth |
 | Health | `GET /health` | Public |
 
-Full contract: `packages/api-contract/openapi.yaml` · Error catalog: `.claude/plans/openapi-and-errors.md`
+Full contract: `packages/api-contract/openapi.yaml`
 
 ## Key Decisions (ADRs)
 
@@ -148,8 +148,6 @@ Full contract: `packages/api-contract/openapi.yaml` · Error catalog: `.claude/p
 | ADR-004 | Optimistic concurrency (expectedVersion) | Avoid lost updates on free-tier latency |
 | ADR-005 | pnpm monorepo; generated types committed | Runtime-free CI; no build step for contract |
 
-Full log: `.claude/plans/adrs.md`
-
 ## Security
 
 - JWT HS256 in `HttpOnly; Secure; SameSite=Lax; __Host-` cookie
@@ -159,7 +157,6 @@ Full log: `.claude/plans/adrs.md`
 - Helmet (CSP, nosniff, HSTS), CORS allowlist, body limit 100KB
 - No `$queryRaw`/`$executeRaw` — 100% Prisma typed queries
 - Sensitive data redaction in logs
-- Security review: `.claude/plans/ph11-security-review.md`
 
 ## Design System
 
@@ -173,7 +170,7 @@ Full log: `.claude/plans/adrs.md`
 ## Data Model
 
 10 models: `User`, `Client`, `Contact`, `Task`, `Label`, `TaskLabel`, `Comment`, `ChecklistItem`, `TaskChange`, `ClientChange`  
-Full schema: `apps/api/prisma/schema.prisma` · ERD: `.claude/plans/data-model.md` · Permissions: `.claude/plans/permission-matrix.md`
+Full schema: `apps/api/prisma/schema.prisma`
 
 ## Testing Strategy
 
@@ -184,8 +181,6 @@ Full schema: `apps/api/prisma/schema.prisma` · ERD: `.claude/plans/data-model.m
 | Integration (API) | Vitest + Testcontainers | `apps/api/test/integration/` | 206 |
 | E2E (Web) | Playwright | `apps/web/test/e2e/` | 74 |
 | A11y | axe-core | `apps/web/test/a11y.test.tsx` | 2 |
-
-Test matrix: `.claude/plans/test-matrix.md`
 
 ## Deployment
 
@@ -203,7 +198,6 @@ Split-origin topology: the SPA and API are on different hosts, bridged by a Clou
 - **Health:** `GET /api/v1/health`
 - **Cold start:** 30-60s after 15min inactivity (Render free tier)
 
-Runbook: `.claude/plans/ph12-operations-runbook.md`  
 Deploy config: `render.yaml`
 
 ## ⚠️ Free Tier Limitations
@@ -225,15 +219,6 @@ Deploy config: `render.yaml`
 | `docs/06-landing-visual-functional-audit.es.md` | Visual and functional landing audit, redesign priorities, implementation phases, and acceptance criteria (Spanish) |
 | `docs/plans/04-development-plan.en.md` | Master development plan (English) |
 | `docs/plans/04-development-plan.es.md` | Master development plan (Spanish) |
-| `.claude/plans/adrs.md` | Architecture decision records |
-| `.claude/plans/data-model.md` | Database schema + ERD |
-| `.claude/plans/permission-matrix.md` | 31 operations × roles × states |
-| `.claude/plans/openapi-and-errors.md` | API contract + error catalog |
-| `.claude/plans/ux-wireframes-tokens.md` | Design tokens + a11y contract |
-| `.claude/plans/test-matrix.md` | Requirement-to-test traceability matrix |
-| `.claude/plans/technology-matrix.md` | 52 dependencies, exact versions |
-| `.claude/plans/ph11-security-review.md` | Security audit (SEC-002) |
-| `.claude/plans/ph12-operations-runbook.md` | Deploy, rollback, rotate, reset |
 
 ## License
 
